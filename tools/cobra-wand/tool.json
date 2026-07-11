@@ -17,7 +17,7 @@
   "updated": "2026-07-11",
   "canonicalPath": "/tools/cobra-wand/",
   "icon": "🐍",
-  "ogImage": "/assets/tool-default-1200x630.png",
+  "ogImage": "/assets/tool-default-1200x630.svg",
   "robots": "index,follow",
   "capabilities": [
     "Create and edit multiple named 2D traces with stable shape identifiers.",
