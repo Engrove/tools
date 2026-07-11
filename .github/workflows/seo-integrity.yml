@@ -12,7 +12,9 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
+    env:
+      PUPPETEER_SKIP_DOWNLOAD: 'true'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -20,7 +22,11 @@ jobs:
           node-version: '22.16.0'
           cache: npm
           cache-dependency-path: tools/cobra-wand/package-lock.json
-      - name: Verify source, build, SEO parity, and determinism
-        env:
-          PUPPETEER_SKIP_DOWNLOAD: 'true'
-        run: npm run check:sanitation
+      - name: Source and schema contracts
+        run: npm run check
+      - name: Production build
+        run: npm run build
+      - name: Generated SEO parity
+        run: npm run check:seo
+      - name: Deterministic build
+        run: npm run check:determinism
