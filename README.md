@@ -4,20 +4,27 @@ Engrove Tools is a deterministic static hub for browser-based engineering and au
 
 ## AI governance
 
-AI coding agents must read `AGENTS.md`, `EIC.md`, and `AI_CODING_DOCTRINE.md` before changing the repository. Public SEO, route, claim, privacy, analytics, and AI-discovery state is owned only by `config/site.json` and validated `tools/*/tool.json` manifests.
+All AI coding agents, regardless of model, vendor, IDE, connector, task type, or change size, must read `AI_VIBE_CODING_RULES.md`, `AGENTS.md`, `EIC.md`, and `AI_CODING_DOCTRINE.md` before analyzing or changing the repository. Tool-specific bootstrap files and the repository skill under `.agents/skills/ai-vibe-coding/` point to the same canonical policy and may not weaken it.
+
+Correctness, code quality, contract preservation, safety, and verification take priority over speed, response latency, token use, and token optimization. `npm run check` blocks missing or disconnected governance files.
+
+Public SEO, route, claim, privacy, analytics, and AI-discovery state is owned only by `config/site.json` and validated `tools/*/tool.json` manifests.
 
 ## Source model
 
 ```text
-config/site.json              global public identity, policy and analytics IDs
-schema/site.schema.json       strict site schema
-schema/tool.schema.json       strict per-tool schema
-tools/<slug>/tool.json        required public metadata
-scripts/lib/registry.mjs      immutable normalized registry
-scripts/lib/render.mjs        deterministic HTML, discovery and analytics renderer
-scripts/build.mjs             deterministic build orchestrator
-functions/_middleware.ts      preview noindex and Markdown negotiation
-dist/                         disposable generated deployment output
+AI_VIBE_CODING_RULES.md     canonical AI Vibe coding policy
+AGENTS.md                   repository-specific execution contract
+.agents/skills/             repository AI skill bootstrap
+config/site.json            global public identity, policy and analytics IDs
+schema/site.schema.json     strict site schema
+schema/tool.schema.json     strict per-tool schema
+tools/<slug>/tool.json      required public metadata
+scripts/lib/registry.mjs    immutable normalized registry
+scripts/lib/render.mjs      deterministic HTML, discovery and analytics renderer
+scripts/build.mjs           deterministic build orchestrator
+functions/_middleware.ts    preview noindex and Markdown negotiation
+dist/                       disposable generated deployment output
 ```
 
 A public tool manifest must be complete. The build fails on missing fields, unknown properties, invalid routes, stale inferred dates, unresolved related tools, unsafe paths, unsupported claims, analytics drift, or parity differences.
@@ -38,6 +45,7 @@ Requirements: Node.js `>=22.12.0`, npm `>=10`.
 
 ```bash
 npm run clean
+npm run check
 npm run build
 npm run check:seo
 npm run check:determinism
@@ -46,14 +54,15 @@ npm run check:sanitation
 
 The build:
 
-1. validates site and tool manifests;
-2. creates one normalized immutable registry;
-3. builds each buildable tool with a reproducible lockfile;
-4. copies only allowed runtime assets;
-5. generates static hub and per-tool landing HTML;
-6. generates canonical metadata, JSON-LD, sitemaps, robots, AI discovery resources, analytics bootstrap, and headers;
-7. rejects unsupported claims, route drift, missing parity, analytics configuration drift, and files above Cloudflare Pages' 25 MiB limit;
-8. writes `dist/` only after pre-write validation and runs post-write checks.
+1. validates mandatory AI governance and source contracts;
+2. validates site and tool manifests;
+3. creates one normalized immutable registry;
+4. builds each buildable tool with a reproducible lockfile;
+5. copies only allowed runtime assets;
+6. generates static hub and per-tool landing HTML;
+7. generates canonical metadata, JSON-LD, sitemaps, robots, AI discovery resources, analytics bootstrap, and headers;
+8. rejects unsupported claims, route drift, missing parity, analytics configuration drift, and files above Cloudflare Pages' 25 MiB limit;
+9. writes `dist/` only after pre-write validation and runs post-write checks.
 
 `dist/` and per-tool build output are generated and must not be committed.
 
