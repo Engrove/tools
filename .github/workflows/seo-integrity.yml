@@ -31,21 +31,8 @@ jobs:
           node --check scripts/check-entry.mjs
           node --check scripts/clean.mjs
           node --check src/app.js
-      - name: Capture registry diagnostics
-        id: registry
-        shell: bash
-        run: |
-          set +e
-          npm run check:schema > registry-diagnostics.txt 2>&1
-          status=$?
-          echo "status=$status" >> "$GITHUB_OUTPUT"
-          exit 0
-      - uses: actions/upload-artifact@v4
-        with:
-          name: registry-diagnostics
-          path: registry-diagnostics.txt
-      - name: Enforce registry result
-        run: test "${{ steps.registry.outputs.status }}" = "0"
+      - name: Schema and registry
+        run: npm run check:schema
       - name: Source governance
         run: npm run check
       - name: Production build
