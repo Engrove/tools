@@ -1,0 +1,24 @@
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()
+  Link: </llms.txt>; rel="alternate"; type="text/plain", </agent-capabilities.json>; rel="describedby"; type="application/json", </for-agents.md>; rel="alternate"; type="text/markdown"
+
+/*.json
+  Content-Type: application/json; charset=utf-8
+  Cache-Control: public, max-age=0, must-revalidate
+
+/*.xml
+  Content-Type: application/xml; charset=utf-8
+  Cache-Control: public, max-age=0, must-revalidate
+
+/*.md
+  Content-Type: text/markdown; charset=utf-8
+  Cache-Control: public, max-age=0, must-revalidate
+
+/*.txt
+  Content-Type: text/plain; charset=utf-8
+  Cache-Control: public, max-age=0, must-revalidate
+
+/assets/*
+  Cache-Control: public, max-age=86400
