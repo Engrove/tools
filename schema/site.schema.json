@@ -4,16 +4,7 @@
   "title": "Engrove Tools site configuration",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "$schema",
-    "schemaVersion",
-    "siteId",
-    "name",
-    "canonicalOrigin",
-    "language",
-    "organization",
-    "contentPolicy"
-  ],
+  "required": ["$schema", "schemaVersion", "siteId", "name", "canonicalOrigin", "language", "organization", "contentPolicy", "analytics"],
   "properties": {
     "$schema": { "type": "string", "const": "../schema/site.schema.json" },
     "schemaVersion": { "type": "string", "const": "1.0.0" },
@@ -47,6 +38,17 @@
             "enforcement": { "const": "policy signal; not a technical access-control guarantee" }
           }
         }
+      }
+    },
+    "analytics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enabled", "productionHostname", "googleAnalyticsMeasurementId", "microsoftClarityProjectId"],
+      "properties": {
+        "enabled": { "const": true },
+        "productionHostname": { "const": "tools.engroveaudio.com" },
+        "googleAnalyticsMeasurementId": { "type": "string", "pattern": "^G-[A-Z0-9]+$" },
+        "microsoftClarityProjectId": { "type": "string", "pattern": "^[a-z0-9]+$" }
       }
     }
   }
