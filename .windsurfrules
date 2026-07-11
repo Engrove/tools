@@ -1,0 +1,10 @@
+# Mandatory Engrove/tools AI governance
+
+Before analysis, planning, editing, testing, reviewing, committing, publishing, or reporting:
+
+1. Read `AI_VIBE_CODING_RULES.md` completely.
+2. Read root `AGENTS.md` completely.
+3. Read `EIC.md` and `AI_CODING_DOCTRINE.md`.
+4. Apply nearer path-scoped `AGENTS.md` files only as additional or stricter requirements.
+
+The canonical policy applies to every task regardless of size and may not be weakened, summarized away, or replaced. Correctness, code quality, contract preservation, safety, and verifiable evidence outrank speed, response latency, token use, and token optimization. Never report an unqualified `PASS`.
