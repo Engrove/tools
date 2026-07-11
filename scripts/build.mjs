@@ -15,6 +15,7 @@
  *      static html/js).
  *   4. Copy the hub UI (`src/`) into `dist/`.
  *   5. Emit `dist/tools.json` — the manifest the hub page fetches at runtime.
+ *   6. Reject any output asset larger than Cloudflare Pages accepts.
  *
  * Adding a new static tool is therefore just: drop a folder into `tools/`.
  * Adding a buildable tool: drop a folder with its own package.json + "build"
@@ -35,6 +36,10 @@ const TOOLS_DIR = path.join(ROOT, 'tools');
 const SRC_DIR = path.join(ROOT, 'src');
 const DIST_DIR = path.join(ROOT, 'dist');
 const DIST_TOOLS_DIR = path.join(DIST_DIR, 'tools');
+
+// Cloudflare Pages hard limit per uploaded file. Keep the exact binary limit
+// in the build so oversized WASM/media fails before the deployment upload.
+const CLOUDFLARE_PAGES_MAX_ASSET_BYTES = 25 * 1024 * 1024;
 
 /** Turn a folder name into a human-readable title: "audio-eq" -> "Audio Eq". */
 function titleFromSlug(slug) {
@@ -96,14 +101,70 @@ async function isBuildableTool(toolPath) {
 /** Runs `npm ci`/`npm install` + `npm run build` inside a tool's own folder. */
 function runToolBuild(toolPath, slug) {
   const hasLockfile = existsSync(path.join(toolPath, 'package-lock.json'));
-  const installCmd = hasLockfile ? ['ci'] : ['install'];
+  const installCmd = hasLockfile
+    ? ['ci', '--no-audit', '--no-fund']
+    : ['install', '--no-audit', '--no-fund'];
+
+  // Puppeteer is a browser-test dependency. Its Chromium download is not
+  // required to produce the static Pages bundle and wastes build time/storage.
+  const env = {
+    ...process.env,
+    PUPPETEER_SKIP_DOWNLOAD: 'true',
+  };
+
   for (const args of [installCmd, ['run', 'build']]) {
     console.log(`  $ npm ${args.join(' ')}  (tools/${slug})`);
-    const res = spawnSync('npm', args, { cwd: toolPath, stdio: 'inherit' });
+    const res = spawnSync('npm', args, {
+      cwd: toolPath,
+      stdio: 'inherit',
+      env,
+    });
     if (res.status !== 0) {
       throw new Error(`tools/${slug}: "npm ${args.join(' ')}" failed (exit ${res.status})`);
     }
   }
+}
+
+async function collectFilesRecursively(dir) {
+  const files = [];
+  const entries = await fs.readdir(dir, { withFileTypes: true });
+  for (const entry of entries) {
+    const absolute = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      files.push(...(await collectFilesRecursively(absolute)));
+    } else if (entry.isFile()) {
+      files.push(absolute);
+    }
+  }
+  return files;
+}
+
+/** Fail locally before Cloudflare rejects an oversized deployment asset. */
+async function assertCloudflarePagesAssetLimits() {
+  const oversized = [];
+  for (const file of await collectFilesRecursively(DIST_DIR)) {
+    const stat = await fs.stat(file);
+    if (stat.size > CLOUDFLARE_PAGES_MAX_ASSET_BYTES) {
+      oversized.push({
+        path: path.relative(DIST_DIR, file),
+        size: stat.size,
+      });
+    }
+  }
+
+  if (oversized.length === 0) return;
+
+  const details = oversized
+    .map(
+      (file) =>
+        `  - ${file.path}: ${file.size} bytes (limit ${CLOUDFLARE_PAGES_MAX_ASSET_BYTES})`,
+    )
+    .join('\n');
+
+  throw new Error(
+    `CLOUDFLARE_PAGES_ASSET_LIMIT_EXCEEDED\n${details}\n` +
+      'Move the asset to external object storage/CDN and load it by URL.',
+  );
 }
 
 async function collectTools() {
@@ -192,6 +253,9 @@ async function main() {
     tools,
   };
   await fs.writeFile(path.join(DIST_DIR, 'tools.json'), JSON.stringify(manifest, null, 2));
+
+  // 4. Stop before upload if any generated file exceeds Pages' hard limit.
+  await assertCloudflarePagesAssetLimits();
 
   console.log(`\nDone. ${tools.length} tool(s) indexed into dist/.`);
 }
