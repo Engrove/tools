@@ -23,7 +23,8 @@
     "check:preview-policy": "node scripts/check-entry.mjs preview-policy",
     "check:determinism": "node scripts/check-entry.mjs determinism",
     "check:seo": "node scripts/check-entry.mjs seo",
-    "check:sanitation": "npm run check && npm run build && npm run check:seo && npm run check:determinism"
+    "check:tools": "node scripts/check-tools.mjs",
+    "check:sanitation": "npm run check && npm run build && npm run check:tools && npm run check:seo && npm run check:determinism"
   },
   "engines": {
     "node": ">=22.12.0",
