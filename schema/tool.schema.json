@@ -1,0 +1,143 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tools.engroveaudio.com/schema/tool.schema.json",
+  "title": "Engrove Tools public tool manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema", "schemaVersion", "slug", "name", "shortName", "summary",
+    "description", "category", "tags", "keywords", "entry", "public",
+    "hidden", "language", "version", "updated", "canonicalPath", "icon",
+    "ogImage", "robots", "capabilities", "inputs", "outputs", "whenToUse",
+    "whenNotToUse", "limitations", "privacy", "access", "claims", "faq",
+    "evidence", "relatedTools"
+  ],
+  "properties": {
+    "$schema": { "type": "string", "const": "../../schema/tool.schema.json" },
+    "schemaVersion": { "type": "string", "const": "1.0.0" },
+    "slug": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+    "name": { "type": "string", "minLength": 1 },
+    "shortName": { "type": "string", "minLength": 1 },
+    "summary": { "type": "string", "minLength": 20 },
+    "description": { "type": "string", "minLength": 40 },
+    "category": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+    "tags": { "$ref": "#/$defs/nonEmptyStringArray" },
+    "keywords": { "$ref": "#/$defs/nonEmptyStringArray" },
+    "entry": { "type": "string", "minLength": 1 },
+    "buildOutputDir": { "type": "string", "minLength": 1 },
+    "public": { "type": "boolean" },
+    "hidden": { "type": "boolean" },
+    "language": { "type": "string", "const": "en" },
+    "version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?$" },
+    "updated": { "type": "string", "format": "date" },
+    "canonicalPath": { "type": "string", "pattern": "^/tools/[a-z0-9]+(?:-[a-z0-9]+)*/$" },
+    "icon": { "type": "string", "minLength": 1 },
+    "ogImage": { "type": "string", "minLength": 1 },
+    "robots": { "type": "string", "enum": ["index,follow", "noindex,nofollow"] },
+    "capabilities": { "$ref": "#/$defs/nonEmptyStringArray" },
+    "inputs": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/io" }
+    },
+    "outputs": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/output" }
+    },
+    "whenToUse": { "$ref": "#/$defs/nonEmptyStringArray" },
+    "whenNotToUse": { "$ref": "#/$defs/nonEmptyStringArray" },
+    "limitations": { "$ref": "#/$defs/nonEmptyStringArray" },
+    "privacy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["processing", "storesApplicationUserDataOnServer", "requiresAccount", "requiresOAuth"],
+      "properties": {
+        "processing": { "enum": ["local", "mixed", "server"] },
+        "storesApplicationUserDataOnServer": { "type": "boolean" },
+        "requiresAccount": { "type": "boolean" },
+        "requiresOAuth": { "type": "boolean" }
+      }
+    },
+    "access": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cost", "registrationRequired"],
+      "properties": {
+        "cost": { "enum": ["free", "paid", "mixed"] },
+        "registrationRequired": { "type": "boolean" }
+      }
+    },
+    "claims": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mayClaim", "negativeClaimBoundaries", "mustNotClaim"],
+      "properties": {
+        "mayClaim": { "$ref": "#/$defs/nonEmptyStringArray" },
+        "negativeClaimBoundaries": { "$ref": "#/$defs/nonEmptyStringArray" },
+        "mustNotClaim": { "$ref": "#/$defs/nonEmptyStringArray" }
+      }
+    },
+    "faq": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["question", "answer"],
+        "properties": {
+          "question": { "type": "string", "minLength": 5 },
+          "answer": { "type": "string", "minLength": 10 }
+        }
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["type", "label", "url"],
+        "properties": {
+          "type": { "enum": ["documentation", "source", "standard", "research"] },
+          "label": { "type": "string", "minLength": 1 },
+          "url": { "type": "string", "pattern": "^https://" }
+        }
+      }
+    },
+    "relatedTools": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" }
+    }
+  },
+  "$defs": {
+    "nonEmptyStringArray": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "io": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "type", "required", "description"],
+      "properties": {
+        "name": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+        "type": { "type": "string", "minLength": 1 },
+        "required": { "type": "boolean" },
+        "description": { "type": "string", "minLength": 1 }
+      }
+    },
+    "output": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "type", "description"],
+      "properties": {
+        "name": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+        "type": { "type": "string", "minLength": 1 },
+        "description": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

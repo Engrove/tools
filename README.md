@@ -1,153 +1,84 @@
 # Engrove Tools
 
-A static hub for self-developed **HTML / JavaScript / TypeScript / Node / Vite** tools, published through Cloudflare Pages at **<https://tools.engroveaudio.com>**.
+Engrove Tools is a deterministic static hub for browser-based engineering and audio utilities, published through Cloudflare Pages at <https://tools.engroveaudio.com>.
 
-The landing page is generated automatically from the folders under `tools/`. Do not register tools manually in the hub UI.
+## AI governance
 
-## AI coding agents
+AI coding agents must read `AGENTS.md`, `EIC.md`, and `AI_CODING_DOCTRINE.md` before changing the repository. Public SEO, route, claim, privacy, and AI-discovery state is owned only by `config/site.json` and validated `tools/*/tool.json` manifests.
 
-Repository-wide machine instructions are defined in [`AGENTS.md`](AGENTS.md). AI coding systems must read it before analysis, editing, testing, committing, or reporting.
-
-Compatibility bootstrap files are provided for Claude Code, Gemini, and GitHub Copilot. They point to `AGENTS.md`; they are not independent policy sources.
-
-## Repository layout
+## Source model
 
 ```text
-src/                         hub UI
-scripts/build.mjs            tool discovery, per-tool builds, manifest generation, deployment gates
-tools/
-  _template/                 ignored scaffold
-  <tool-slug>/
-    index.html               static entry or source entry
-    tool.json                optional hub metadata
-    package.json             optional; scripts.build makes the tool buildable
-    ...                      tool source and assets
-dist/                        generated Cloudflare Pages output; never commit
+config/site.json              global public identity and policy
+schema/site.schema.json       strict site schema
+schema/tool.schema.json       strict per-tool schema
+tools/<slug>/tool.json        required public metadata
+scripts/lib/registry.mjs      immutable normalized registry
+scripts/build.mjs             deterministic build orchestrator
+src/index.html                generated hub template
+functions/_middleware.ts      preview noindex and Markdown negotiation
+dist/                         disposable generated deployment output
 ```
 
-## Build behavior
+A public tool manifest must be complete. The build fails on missing fields, unknown properties, invalid routes, stale inferred dates, unresolved related tools, unsafe paths, unsupported claims, or parity differences.
 
-At build time, `scripts/build.mjs`:
+## Public routing
 
-1. removes and recreates the root `dist/`,
-2. copies the hub UI from `src/`,
-3. scans every non-hidden directory under `tools/`,
-4. reads optional `tool.json` metadata,
-5. identifies tools with a `package.json` `build` script,
-6. installs and builds each buildable tool,
-7. copies only that tool's configured build output, defaulting to its `dist/`,
-8. copies static tools as-is,
-9. writes `dist/tools.json`, and
-10. rejects any generated file larger than Cloudflare Pages' 25 MiB per-file limit.
-
-Buildable tools with a lockfile use `npm ci --no-audit --no-fund`. Puppeteer's browser download is disabled during the production build because browser binaries are not part of the static deployment.
-
-## Adding a static tool
-
-1. Copy the scaffold:
-
-   ```bash
-   cp -r tools/_template tools/my-new-tool
-   ```
-
-2. Edit `tools/my-new-tool/tool.json`:
-
-   ```json
-   {
-     "name": "My New Tool",
-     "description": "What it does, in one line.",
-     "icon": "🎛️",
-     "tags": ["audio", "static"],
-     "entry": "index.html",
-     "hidden": false
-   }
-   ```
-
-3. Add a self-contained `index.html` and any local assets.
-4. Run the root build before publishing.
-
-## Adding a buildable tool
-
-A tool is buildable when its own `package.json` contains `scripts.build`.
-
-Requirements:
-
-- commit the source and a reproducible lockfile;
-- produce static output in `dist/`, or declare another directory with `tool.json.buildOutputDir`;
-- use relative asset paths because the tool is hosted below `/tools/<slug>/`;
-- for Vite, normally set `base: "./"`;
-- do not commit generated `dist/`, `node_modules/`, browser binaries, or oversized WASM/media assets;
-- ensure every generated file is at most 25 MiB;
-- externally hosted runtime assets must be immutable, version-pinned, CORS-compatible, and browser-tested.
-
-Example `tool.json`:
-
-```json
-{
-  "name": "My Vite Tool",
-  "description": "A compiled browser tool.",
-  "icon": "🛠️",
-  "tags": ["vite", "typescript"],
-  "buildOutputDir": "dist",
-  "entry": "index.html",
-  "hidden": false
-}
-```
-
-## `tool.json` fields
-
-| Field | Default | Purpose |
-|---|---|---|
-| `name` | title-cased folder | Hub card title |
-| `description` | empty | Hub card subtitle |
-| `icon` | 🛠️ | Card icon |
-| `tags` | `[]` | Filterable tags |
-| `entry` | first supported `index.html` | Entry relative to the copied output directory |
-| `hidden` | `false` | Keep the folder in the repository but exclude it from the hub |
-| `buildOutputDir` | `dist` for buildable tools | Directory copied after the tool build |
-
-Entry candidates are checked in this order when `entry` is not specified: `index.html`, `dist/index.html`, `build/index.html`, `public/index.html`.
-
-Folders beginning with `_` or `.` are ignored. Use lowercase hyphenated slugs:
+Canonical tool routes are always:
 
 ```text
-tools/audio-eq/ -> https://tools.engroveaudio.com/tools/audio-eq/
+/tools/<slug>/
 ```
 
-## Local development and validation
+The canonical route is a statically generated semantic landing page. The interactive application is placed below `/tools/<slug>/app/`. Source entry filenames and build directories are never canonical URLs.
 
-Requirements:
+## Build
 
-- Node.js `>=22.12.0`
-- npm `>=10`
-
-From the repository root:
+Requirements: Node.js `>=22.12.0`, npm `>=10`.
 
 ```bash
 npm run clean
 npm run build
-npm run dev
+npm run check:seo
+npm run check:determinism
+npm run check:sanitation
 ```
 
-`npm run build` is mandatory before every push to `main`, including documentation-only changes, because Cloudflare rebuilds the complete repository state on every push.
+The build:
 
-Tool-specific type checks, tests, full geometry gates, and browser smoke tests are defined in `AGENTS.md` and the tool's own documentation.
+1. validates site and tool manifests;
+2. creates one normalized immutable registry;
+3. builds each buildable tool with a reproducible lockfile;
+4. copies only allowed runtime assets;
+5. generates static hub and per-tool landing HTML;
+6. generates canonical metadata, JSON-LD, sitemaps, robots, AI discovery resources, and headers;
+7. rejects unsupported claims, route drift, missing parity, and files above Cloudflare Pages' 25 MiB limit;
+8. writes `dist/` only after pre-write validation and runs post-write checks.
 
-## Deployment
+`dist/` and per-tool build output are generated and must not be committed.
 
-Cloudflare Pages configuration:
+## Generated discovery surfaces
 
-- **Production branch:** `main`
-- **Build command:** `npm run build`
-- **Build output directory:** `dist`
-- **Custom domain:** `tools.engroveaudio.com`
+The build generates:
 
-A successful GitHub commit does not prove that Cloudflare deployed successfully. A successful build does not prove that runtime assets, WASM initialization, routing, persistence, or exports work in the browser. Deployment-sensitive changes require verification of the actual Pages deployment and production URL.
+- `robots.txt`, `sitemap.xml`, `sitemap.json`, `sitemap.txt`;
+- `llms.txt`, `llms-full.txt`, `for-agents.md`, `for-agents/index.html`;
+- `ai.json`, `agent-capabilities.json`, `public-info.json`;
+- `.well-known/engrove-tools.json` and agent-skill manifests;
+- per-tool `tool.ai.json` and `tool.md`;
+- static HTML and JSON-LD for the hub and every public tool.
 
-`dist/` is generated, git-ignored, and must never be committed.
+These files are generated from the registry and must never be hand-edited.
 
-Use at your own risk.
+## Cloudflare Pages
+
+- Production branch: `main`
+- Build command: `npm run build`
+- Output directory: `dist`
+- Canonical domain: `tools.engroveaudio.com`
+
+Preview hosts ending in `.pages.dev` receive `X-Robots-Tag: noindex, nofollow`. A successful source commit is not proof of a successful production deployment; production verification must be performed against the custom domain.
 
 ## License
 
-Released into the public domain under the [Unlicense](LICENSE).
+Released into the public domain under the Unlicense.

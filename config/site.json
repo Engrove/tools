@@ -1,0 +1,21 @@
+{
+  "$schema": "../schema/site.schema.json",
+  "schemaVersion": "1.0.0",
+  "siteId": "engrove-tools",
+  "name": "Engrove Tools",
+  "canonicalOrigin": "https://tools.engroveaudio.com",
+  "language": "en",
+  "organization": {
+    "id": "https://tools.engroveaudio.com/#organization",
+    "name": "Engrove",
+    "url": "https://engroveaudio.com"
+  },
+  "contentPolicy": {
+    "searchIndexing": "permitted",
+    "aiRetrievalInputContext": "permitted",
+    "aiModelTraining": {
+      "policy": "not permitted without explicit permission",
+      "enforcement": "policy signal; not a technical access-control guarantee"
+    }
+  }
+}

@@ -1,13 +1,29 @@
 {
   "name": "engrove-tools-hub",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
-  "description": "Hub and auto-generated index for Engrove's self-developed html/js/node/vite tools.",
+  "description": "Deterministic static hub and SEO/AI-discovery compiler for Engrove browser tools.",
   "type": "module",
   "scripts": {
+    "clean": "node scripts/clean.mjs",
     "build": "node scripts/build.mjs",
     "dev": "node scripts/build.mjs && node scripts/serve.mjs",
-    "clean": "node -e \"import('node:fs').then(fs=>fs.rmSync('dist',{recursive:true,force:true}))\""
+    "check": "node scripts/check-source.mjs",
+    "check:schema": "node scripts/check-schema.mjs",
+    "check:registry": "node scripts/check-registry.mjs",
+    "check:routes": "node scripts/check-routes.mjs",
+    "check:html": "node scripts/check-html.mjs",
+    "check:canonical": "node scripts/check-canonical.mjs",
+    "check:structured-data": "node scripts/check-structured-data.mjs",
+    "check:sitemap": "node scripts/check-sitemap.mjs",
+    "check:robots": "node scripts/check-robots.mjs",
+    "check:agent-files": "node scripts/check-agent-files.mjs",
+    "check:agent-parity": "node scripts/check-agent-parity.mjs",
+    "check:claims": "node scripts/check-claims.mjs",
+    "check:preview-policy": "node scripts/check-preview-policy.mjs",
+    "check:determinism": "node scripts/check-determinism.mjs",
+    "check:seo": "node scripts/check-seo.mjs",
+    "check:sanitation": "npm run check && npm run build && npm run check:seo && npm run check:determinism"
   },
   "engines": {
     "node": ">=22.12.0",

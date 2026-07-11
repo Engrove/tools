@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tools.engroveaudio.com/schema/site.schema.json",
+  "title": "Engrove Tools site configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "schemaVersion",
+    "siteId",
+    "name",
+    "canonicalOrigin",
+    "language",
+    "organization",
+    "contentPolicy"
+  ],
+  "properties": {
+    "$schema": { "type": "string", "const": "../schema/site.schema.json" },
+    "schemaVersion": { "type": "string", "const": "1.0.0" },
+    "siteId": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+    "name": { "type": "string", "minLength": 1 },
+    "canonicalOrigin": { "type": "string", "const": "https://tools.engroveaudio.com" },
+    "language": { "type": "string", "const": "en" },
+    "organization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "url"],
+      "properties": {
+        "id": { "type": "string", "format": "uri" },
+        "name": { "type": "string", "minLength": 1 },
+        "url": { "type": "string", "format": "uri" }
+      }
+    },
+    "contentPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["searchIndexing", "aiRetrievalInputContext", "aiModelTraining"],
+      "properties": {
+        "searchIndexing": { "const": "permitted" },
+        "aiRetrievalInputContext": { "const": "permitted" },
+        "aiModelTraining": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["policy", "enforcement"],
+          "properties": {
+            "policy": { "const": "not permitted without explicit permission" },
+            "enforcement": { "const": "policy signal; not a technical access-control guarantee" }
+          }
+        }
+      }
+    }
+  }
+}
