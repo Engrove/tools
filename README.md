@@ -87,7 +87,7 @@ Production analytics configuration is source-owned in `config/site.json`:
 - Microsoft Clarity: `xkp2rvqux5`
 - permitted hostname: `tools.engroveaudio.com`
 
-The build generates `/analytics.js` and references it from the hub, semantic tool pages, agent HTML page, and interactive application entry pages. The loader exits before contacting either provider unless `window.location.hostname` exactly equals `tools.engroveaudio.com`; local development and Cloudflare preview hosts therefore do not generate analytics traffic.
+The build generates `/analytics.js` and references it from every generated HTML surface, including the hub, semantic tool pages, the agent HTML page, interactive application entries, and nested application help pages. The release gate scans the complete generated HTML tree and blocks any uncovered page. The loader exits before contacting either provider unless `window.location.hostname` exactly equals `tools.engroveaudio.com`; local development and Cloudflare preview hosts therefore do not generate analytics traffic.
 
 Analytics sends browser usage data to Google and Microsoft. Changes to provider IDs, host policy, loaded pages, CSP origins, or data-collection behavior require explicit approval and corresponding schema, renderer, verification, and documentation updates.
 

@@ -35,6 +35,9 @@ export async function checkOutput(root,out,registry){
   assert(analytics.includes('window.location.hostname!==expectedHost'),'analytics production-host guard missing');
   assert(analytics.includes('https://www.googletagmanager.com/gtag/js'),'Google Analytics loader missing');
   assert(analytics.includes('https://www.clarity.ms/tag/'),'Microsoft Clarity loader missing');
+  const generatedHtml=(await listFiles(out)).filter((file)=>path.extname(file).toLowerCase()==='.html');
+  assert(generatedHtml.length>0,'generated HTML surfaces missing');
+  for(const file of generatedHtml)assert((await fs.readFile(file,'utf8')).includes('<script defer src="/analytics.js"></script>'),`generated HTML analytics bootstrap missing: ${path.relative(out,file)}`);
   const hub=await fs.readFile(path.join(out,'index.html'),'utf8');
   assert((hub.match(/<h1[ >]/g)||[]).length===1,'hub H1 failure');
   assert(hub.includes('<script defer src="/analytics.js"></script>'),'hub analytics bootstrap missing');
