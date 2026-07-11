@@ -1,0 +1,8 @@
+{
+  "name": "Alien LT · Trace→3D",
+  "description": "Parametrisk 3D-generator för tonarmskropp (Alien LT): manuell/SVG-trace, AI-promptpipeline, OCCT-parametrisk modell, gated STL/STEP-export.",
+  "icon": "🐍",
+  "tags": ["3d", "cad", "vite", "occt", "tonearm"],
+  "buildOutputDir": "dist",
+  "entry": "index.html"
+}

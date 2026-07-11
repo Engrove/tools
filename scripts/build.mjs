@@ -6,17 +6,28 @@
  *   1. Scan the `tools/` directory. Every sub-folder is treated as a tool.
  *   2. Read the optional `tool.json` metadata file in each tool folder
  *      (falls back to sensible defaults derived from the folder name).
- *   3. Copy every tool folder into `dist/tools/<slug>/`.
+ *   3. For tools that carry a `package.json` with a `build` script (Vite/Node
+ *      tools), run `npm ci`/`npm install` + `npm run build` in that folder and
+ *      copy only its build output (default `dist/`, override via tool.json
+ *      `buildOutputDir`) into the site. This keeps generated artifacts and
+ *      `node_modules` out of git — the tool's own source is what's committed.
+ *      Tools without a build script are copied into the site as-is (plain
+ *      static html/js).
  *   4. Copy the hub UI (`src/`) into `dist/`.
  *   5. Emit `dist/tools.json` — the manifest the hub page fetches at runtime.
  *
- * Adding a new tool is therefore just: drop a folder into `tools/`.
- * No dependencies — runs on a bare Node install (fast on Cloudflare Pages).
+ * Adding a new static tool is therefore just: drop a folder into `tools/`.
+ * Adding a buildable tool: drop a folder with its own package.json + "build"
+ * script that emits static output. No dependencies of our own — runs on a
+ * bare Node install (fast on Cloudflare Pages); each buildable tool manages
+ * its own devDependencies via its own package.json.
  */
 
 import { promises as fs } from 'node:fs';
+import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { spawnSync } from 'node:child_process';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
@@ -70,6 +81,31 @@ async function readMetadata(toolPath) {
   }
 }
 
+/** True if the tool folder has its own package.json with a "build" script. */
+async function isBuildableTool(toolPath) {
+  const pkgPath = path.join(toolPath, 'package.json');
+  if (!(await exists(pkgPath))) return false;
+  try {
+    const pkg = JSON.parse(await fs.readFile(pkgPath, 'utf8'));
+    return typeof pkg.scripts?.build === 'string';
+  } catch {
+    return false;
+  }
+}
+
+/** Runs `npm ci`/`npm install` + `npm run build` inside a tool's own folder. */
+function runToolBuild(toolPath, slug) {
+  const hasLockfile = existsSync(path.join(toolPath, 'package-lock.json'));
+  const installCmd = hasLockfile ? ['ci'] : ['install'];
+  for (const args of [installCmd, ['run', 'build']]) {
+    console.log(`  $ npm ${args.join(' ')}  (tools/${slug})`);
+    const res = spawnSync('npm', args, { cwd: toolPath, stdio: 'inherit' });
+    if (res.status !== 0) {
+      throw new Error(`tools/${slug}: "npm ${args.join(' ')}" failed (exit ${res.status})`);
+    }
+  }
+}
+
 async function collectTools() {
   if (!(await exists(TOOLS_DIR))) return [];
 
@@ -90,13 +126,24 @@ async function collectTools() {
       continue;
     }
 
-    const entryFile = await resolveEntry(toolPath, meta.entry);
+    const buildable = await isBuildableTool(toolPath);
+    if (buildable) {
+      runToolBuild(toolPath, slug);
+    }
+
+    // Buildable tools ship only their build output; static tools ship as-is.
+    const outputDir = buildable ? path.join(toolPath, meta.buildOutputDir || 'dist') : toolPath;
+    if (buildable && !(await exists(outputDir))) {
+      throw new Error(`tools/${slug}: build succeeded but output dir "${path.relative(toolPath, outputDir)}" is missing`);
+    }
+
+    const entryFile = await resolveEntry(outputDir, meta.entry);
     if (!entryFile) {
       console.warn(`  ! skipping "${slug}" — no entry file (expected index.html or tool.json "entry")`);
       continue;
     }
 
-    const stat = await fs.stat(path.join(toolPath, entryFile));
+    const stat = await fs.stat(path.join(outputDir, entryFile));
 
     tools.push({
       slug,
@@ -106,9 +153,10 @@ async function collectTools() {
       tags: Array.isArray(meta.tags) ? meta.tags : [],
       url: `tools/${slug}/${entryFile}`,
       updated: meta.updated || stat.mtime.toISOString().slice(0, 10),
+      copyFrom: outputDir,
     });
 
-    console.log(`  + ${slug} -> ${entryFile}`);
+    console.log(`  + ${slug} -> ${entryFile}${buildable ? ' (built)' : ''}`);
   }
 
   // Newest first, then alphabetical as a stable tiebreaker.
@@ -127,13 +175,14 @@ async function main() {
     await copyDir(SRC_DIR, DIST_DIR);
   }
 
-  // 2. Discover tools and copy each folder into dist/tools/.
+  // 2. Discover tools, building any that need it, and copy each into dist/tools/.
   console.log('Scanning tools/ ...');
   const tools = await collectTools();
 
   await fs.mkdir(DIST_TOOLS_DIR, { recursive: true });
   for (const tool of tools) {
-    await copyDir(path.join(TOOLS_DIR, tool.slug), path.join(DIST_TOOLS_DIR, tool.slug));
+    await copyDir(tool.copyFrom, path.join(DIST_TOOLS_DIR, tool.slug));
+    delete tool.copyFrom; // internal-only, not part of the public manifest
   }
 
   // 3. Emit the manifest.

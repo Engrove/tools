@@ -1,0 +1,46 @@
+# Beroenden
+node_modules/
+
+# Byggartefakter
+dist/
+dist-electron/
+
+# Miljö
+.env
+.env.local
+.env.*.local
+
+# Editor/OS
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea/
+.vscode/settings.json
+
+# Testresultat
+coverage/
+*.lcov
+
+# Vite
+.vite/
+
+# TypeScript inkrementell kompilering
+*.tsbuildinfo
+tsconfig.trace.json
+tsconfig.core.json
+
+# Tillfälliga filer
+*.tmp
+*.bak
+index.html.reva.bak
+
+# Electron-distribution
+release/
+out/
+*.dmg
+*.exe
+*.AppImage
+*.deb
+*.rpm
+*.snap

@@ -1,0 +1,29 @@
+{
+  "name": "cobra-wand",
+  "version": "0.2.0",
+  "description": "Cobra-lik parametrisk wand-generator (MVP) - Engrove. Parametrisk tonarmskropp, 3D-preview, STL/STEP-export, AI-rundtur via urklipp.",
+  "author": "Jan-Eric (Engrove)",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "test": "vitest run",
+    "verify": "node scripts/verify-all.mjs",
+    "licenses": "node scripts/gen-licenses.mjs"
+  },
+  "dependencies": {
+    "ajv": "8.17.1",
+    "manifold-3d": "3.5.1",
+    "opencascade.js": "2.0.0-beta.b5ff984",
+    "three": "0.170.0"
+  },
+  "devDependencies": {
+    "@types/node": "22.10.2",
+    "@types/three": "0.170.0",
+    "puppeteer": "^25.3.0",
+    "typescript": "5.7.2",
+    "vite": "6.0.7",
+    "vitest": "2.1.8"
+  }
+}
