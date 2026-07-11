@@ -26,7 +26,7 @@ async function checkGovernance(){
   const canonicalPath='AI_VIBE_CODING_RULES.md';
   const skillPath='.agents/skills/ai-vibe-coding/SKILL.md';
   const metadataPath='.agents/skills/ai-vibe-coding/agents/openai.yaml';
-  const bootstrapPaths=['AGENTS.md','EIC.md','AI_CODING_DOCTRINE.md','README.md','CLAUDE.md','GEMINI.md','.github/copilot-instructions.md',skillPath];
+  const bootstrapPaths=['AGENTS.md','EIC.md','AI_CODING_DOCTRINE.md','README.md','CLAUDE.md','GEMINI.md','.github/copilot-instructions.md','.cursor/rules/ai-vibe-coding.mdc','.windsurfrules',skillPath];
   const required=[canonicalPath,...bootstrapPaths,metadataPath];
   for(const file of required)requireValue(await exists(path.join(ROOT,file)),`missing AI governance contract: ${file}`);
 
