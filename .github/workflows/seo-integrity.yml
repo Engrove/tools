@@ -22,24 +22,11 @@ jobs:
           node-version: '22.16.0'
           cache: npm
           cache-dependency-path: tools/cobra-wand/package-lock.json
-      - name: Capture syntax diagnostics
-        id: syntax
-        shell: bash
+      - name: JavaScript syntax
         run: |
-          set +e
-          node --check scripts/lib/seo-core.mjs > syntax-diagnostics.txt 2>&1
-          status=$?
-          echo "status=$status" >> "$GITHUB_OUTPUT"
-          cat syntax-diagnostics.txt
-          exit 0
-      - uses: actions/upload-artifact@v4
-        with:
-          name: syntax-diagnostics
-          path: syntax-diagnostics.txt
-      - name: Enforce syntax result
-        run: test "${{ steps.syntax.outputs.status }}" = "0"
-      - name: Syntax remaining sources
-        run: |
+          node --check scripts/lib/registry.mjs
+          node --check scripts/lib/render.mjs
+          node --check scripts/lib/verify.mjs
           node --check scripts/build.mjs
           node --check scripts/check-entry.mjs
           node --check scripts/clean.mjs
