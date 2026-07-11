@@ -1,0 +1,272 @@
+{
+  "schema": "tonearm-designer-session",
+  "version": 1,
+  "app": "V28.4.4-Fas15.3a",
+  "timestamp": "2026-05-10T14:58:11.248Z",
+  "name": "Gemini_3",
+  "inputs": {
+    "apex": 237.1,
+    "maxH": 24,
+    "maxW": 40,
+    "headH": 9,
+    "headW": 26,
+    "neckW": 26,
+    "neckL": 25,
+    "noseL": 9,
+    "bow": 8,
+    "bulge": 2,
+    "tailD": 14,
+    "asym": 0.75,
+    "padL": 24,
+    "thick": 0.7,
+    "padOffset": -0.5,
+    "cartX": -0.6,
+    "customMass": 7.6,
+    "customZ": 17.3,
+    "comp10": 13,
+    "comp100": 7.6,
+    "compK": 1.7,
+    "nomStylusX": 10,
+    "pivotSpindle": 214,
+    "fullLength": 289.5,
+    "pivotOffsetX": 0,
+    "pivotOffsetY": 0,
+    "verticalPivotHeightAboveLP": 0,
+    "armBodyDatumOffsetZ": 22.5,
+    "rearBendStartX": 238,
+    "rearBlendLength": 30,
+    "rearBendDropZ": 29,
+    "rearBendLength": 60,
+    "rearMouthWidth": 14,
+    "rearMouthLength": 20,
+    "rearWeightDiscDiameter": 20,
+    "rearWeightDiscThickness": 4,
+    "rearWeightDiscCount": 4,
+    "rearWeightDiscMass": 13,
+    "rearFineTrimScrewLength": 18,
+    "rearFineTrimScrewMassEquivalent": -2,
+    "splitClearance": 0,
+    "targetEffectiveMass": 12,
+    "targetLFResonance": 10.5,
+    "targetVTF": 2,
+    "targetFirstBendingMode": 600,
+    "targetSlendernessMin": 15,
+    "targetSlendernessMax": 40
+  },
+  "selects": {
+    "exportType": "solid",
+    "exportFormat": "stl_binary",
+    "rearMode": "cobra_integrated_tail",
+    "material": "carbon",
+    "cartMode": "g1042",
+    "alignmentPreset": "baerwald_iec",
+    "renderMode": "carbon"
+  },
+  "checkboxes": {
+    "showRearCG": true,
+    "showNeutralLine": true,
+    "showTowerClearance": true,
+    "includeRearWeightDiscsInExport": true,
+    "showRearWeights": true,
+    "showFineTrimScrew": false,
+    "showVerticalPivot": true,
+    "showTotalCOM": true,
+    "showRearCOM": true,
+    "showCounterweightCOM": true,
+    "showCartridgeCOM": true,
+    "showInertiaAxes": true,
+    "showMeasureLines": true,
+    "showForce": true,
+    "showMass": true,
+    "showLpTopPlane": true,
+    "stylusLockedToLP": true
+  },
+  "flags": {
+    "isEstimatedC10": false,
+    "selectedCartridge": {
+      "id": "goldring-1042",
+      "name": "Goldring 1042",
+      "manufacturer": "Goldring",
+      "model": "1042",
+      "type": "MM",
+      "mass_g": 6.3,
+      "compliance_10hz_cu": 11,
+      "compliance_10hz_estimated": false,
+      "tracking_force_g": {
+        "min": 1.5,
+        "max": 2,
+        "recommended": 1.75
+      },
+      "stylus": "",
+      "cantilever": "",
+      "output_mv": null
+    }
+  },
+  "cobraArchitecture": {
+    "schema": "tonearm-designer-cobra-architecture-v1",
+    "enabled": false,
+    "specRegime": "custom_237_05",
+    "n1p2Mm": 237.05,
+    "counterweight": {
+      "variant": "configurable_disc_stack",
+      "enabled": true,
+      "role": "rear_terminal_balance_mass",
+      "mountSource": "unifiedRearTerminal",
+      "useRearDiscStack": true,
+      "useRearDiscProxy": false,
+      "discStack": {
+        "diameterMm": 14,
+        "thicknessMm": 4,
+        "count": 4,
+        "massEachG": 18,
+        "xMm": null,
+        "yMm": 0,
+        "zMm": null
+      },
+      "fineTrim": {
+        "enabled": true,
+        "lengthMm": 18,
+        "massEquivalentG": 0
+      },
+      "targetCOMZMaxMm": 0,
+      "targetCOMZPreferredMm": -2.9
+    },
+    "armwand": {
+      "variant": "station_based_eggshell",
+      "enabled": true,
+      "lengthMm": 237.05,
+      "stationCount": 9,
+      "profile": {
+        "pivotWidthMm": 24,
+        "midWidthMm": 13,
+        "headWidthMm": 7,
+        "pivotHeightMm": 18,
+        "midHeightMm": 8,
+        "headHeightMm": 3.2,
+        "topCrownMm": 2.5,
+        "undersideBellyMm": 4.5,
+        "asymmetryMm": 1.5,
+        "wallThicknessMm": 1.2
+      },
+      "constraints": {
+        "minStationWidthMm": 3,
+        "minStationHeightMm": 2,
+        "minWallThicknessMm": 0.8,
+        "forbidCircularTube": true,
+        "forbidConstantSection": true,
+        "requireMonotonicForwardTaper": true,
+        "requirePositiveSectionArea": true,
+        "requirePositiveEIProxy": true
+      }
+    },
+    "mechanical": {
+      "schema": "tonearm-designer-cobra-mechanical-assembly-v1",
+      "enabled": true,
+      "variant": "cobra_pivot_tower_vta",
+      "pivot": {
+        "xMm": 237,
+        "yMm": 0,
+        "zMm": 0,
+        "type": "hardened_pivot"
+      },
+      "tower": {
+        "enabled": true,
+        "shape": "cylindrical_tungsten_tower",
+        "diameterMm": 30,
+        "heightMm": 42,
+        "xMm": 237,
+        "yMm": 0,
+        "zBaseMm": -18,
+        "massG": 120,
+        "material": "tungsten_or_equivalent"
+      },
+      "bearing": {
+        "enabled": true,
+        "type": "sapphire_vee_jewel",
+        "pivotMaterial": "hardened_stainless_steel",
+        "veeJewelMaterial": "sapphire",
+        "zMm": 0,
+        "clearanceMm": 0.05,
+        "massG": 2
+      },
+      "vta": {
+        "enabled": true,
+        "type": "threaded_ring_on_the_fly",
+        "ringOuterDiameterMm": 34,
+        "ringHeightMm": 6,
+        "zMm": -3,
+        "massG": 18
+      },
+      "clearance": {
+        "towerToArmwandMinMm": 1.5,
+        "counterweightToTowerMinMm": 1,
+        "forbidIntersection": true
+      },
+      "integration": {
+        "contributesToTotalCOM": false,
+        "totalCOMIntegrationStatus": "reported_separately_todo"
+      }
+    },
+    "headshellSlots": {
+      "enabled": true,
+      "variant": "integrated_obround_cartridge_slots",
+      "screwStandard": "M2.5",
+      "throughHole": true,
+      "slotCount": 2,
+      "plate": {
+        "enabled": true,
+        "lengthMm": 24,
+        "widthMm": 18,
+        "thicknessMm": 2.6,
+        "xMm": 10.2,
+        "yMm": 0,
+        "zMm": 0
+      },
+      "slots": [
+        {
+          "id": "slot_left",
+          "lengthMm": 8,
+          "widthMm": 2.6,
+          "centerXMm": 10.2,
+          "centerYMm": -5.4,
+          "angleDeg": 0
+        },
+        {
+          "id": "slot_right",
+          "lengthMm": 8,
+          "widthMm": 2.6,
+          "centerXMm": 10.2,
+          "centerYMm": 5.4,
+          "angleDeg": 0
+        }
+      ],
+      "screwMarkers": {
+        "enabled": true,
+        "diameterMm": 2.5,
+        "headDiameterMm": 5
+      },
+      "integration": {
+        "renderMode": "slotted_reference_plate_or_voids",
+        "exportMode": "slot_void_descriptors_and_geometry",
+        "booleanCutStatus": "not_full_csg"
+      }
+    },
+    "constraints": {
+      "pivotAtRecordHeight": true,
+      "totalCOMZMaxMm": 0,
+      "counterweightCOMZMaxMm": 0,
+      "neutralBalanceResidualMaxMm": 0.5,
+      "eiMinMustBePositive": true,
+      "firstBendingHzMustBePositive": true,
+      "exportMustPass": true
+    },
+    "capabilitiesRequired": [
+      "cobraControls",
+      "cobraDiscCounterweightAssembly",
+      "cobraMechanicalAssembly",
+      "headshellSlots",
+      "stationBasedEggshellWand",
+      "structuralStationFilter"
+    ]
+  }
+}

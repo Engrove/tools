@@ -1,0 +1,2649 @@
+<!DOCTYPE html>
+<!--
+AI-CODING NOTE:
+Responsibility: Desktop application shell for the TD053F runtime, empty-session lifecycle, and Engrove Manual Trace import.
+Inputs: Operator controls, validated local files, and browser pointer/keyboard actions.
+Outputs: Browser-local rendering, analysis, session state, and explicit downloads.
+Safe edits: Preserve stable IDs, classic-script order, embedded schemas, modal boundaries, and PC layout.
+Do not: Auto-create startup geometry, load remote executable scripts, or remove TD053F controls without matching regressions.
+Verification: npm test, repository build gates, and desktop browser smoke tests.
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Engrove Tonearm Profile Designer 29.0.0</title>
+    <meta name="robots" content="noindex,nofollow">
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/engrove-integration.css">
+    <script src="vendor/three.min.js"></script>
+    <script src="vendor/OrbitControls.js"></script>
+</head>
+<body>
+
+<div class="sidebar">
+    <div class="sidebar-header">
+        <div class="sidebar-header-row">
+            <h1 style="border-bottom: none; margin-bottom: 0; padding-bottom: 0;">Tonearm Profile Designer 29.0.0</h1>
+            <a href="help.html" target="_blank" rel="noopener" class="help-icon" title="Open help (new tab)" aria-label="Open help in a new tab">
+                <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true" focusable="false">
+                    <circle cx="10" cy="10" r="9" fill="none" stroke="currentColor" stroke-width="1.6"></circle>
+                    <path d="M7.2 7.6 a2.8 2.8 0 0 1 5.6 0 c0 1.5 -1.6 1.9 -2.4 2.6 c-0.5 0.5 -0.6 1 -0.6 1.6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path>
+                    <circle cx="10" cy="14.6" r="0.95" fill="currentColor"></circle>
+                </svg>
+            </a>
+        </div>
+        <div class="info-text">Retained runtime: V28.8.0 FAS20 AI Response Apply Runtime</div>
+
+        <div class="mass-box">
+            <div class="value" id="calcMass">0.0 g</div>
+            <div class="label" id="massLabel">System Mass</div>
+        </div>
+
+        <div class="resonance-box">
+            <div class="label" id="resLabel">System Resonance (10 Hz)</div>
+            <div class="value" id="calcResonance">0.0 Hz</div>
+            <div class="eff-mass-label" id="calcEffMass">Effective Mass: 0.0 g</div>
+            <div class="gauge-container">
+                <div class="gauge-bar">
+                    <div class="gauge-zone red-zone-low"></div>
+                    <div class="gauge-zone yellow-zone-low"></div>
+                    <div class="gauge-zone green-zone"></div>
+                    <div class="gauge-zone yellow-zone-high"></div>
+                    <div class="gauge-zone red-zone-high"></div>
+                    <div class="gauge-marker" id="resMarker" style="left: 0%;"></div>
+                </div>
+                <div class="gauge-labels" style="position: relative; height: 12px; margin-top: 2px;">
+                    <span style="position: absolute; left: 0%; transform: translateX(0%);">5</span>
+                    <span style="position: absolute; left: 20%; transform: translateX(-50%);">7</span>
+                    <span style="position: absolute; left: 50%; transform: translateX(-50%);">10</span>
+                    <span style="position: absolute; left: 70%; transform: translateX(-50%);">12</span>
+                    <span style="position: absolute; left: 90%; transform: translateX(-50%);">14</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="sidebar-scroll">
+        <a class="designer-home-link" href="../" aria-label="Open Tonearm Profile Designer information page">← Engrove Tools / Tonearm Designer</a>
+        <section class="design-session-panel" aria-labelledby="designSessionHeading">
+            <div class="design-session-heading">
+                <strong id="designSessionHeading">Design session</strong>
+                <span id="designSessionState" data-state="empty">EMPTY · no active geometry</span>
+            </div>
+            <div class="design-session-actions">
+                <button id="newEmptySessionBtn" type="button">New empty</button>
+                <button id="createParametricBtn" type="button">Create parametric</button>
+            </div>
+            <div class="manual-trace-import">
+                <strong>Engrove Manual Trace → 3D</strong>
+                <div class="info-text">Add calibrated top and side JSON, project or paired SVG exports. Plane is read from engineering axes and can be corrected below.</div>
+                <input id="manualTraceFiles" type="file" multiple accept=".json,.engrove-trace,.engrove-project,.svg,application/json,image/svg+xml" hidden>
+                <div class="manual-trace-actions">
+                    <button id="manualTraceAddBtn" type="button">Add trace files…</button>
+                    <button id="manualTraceClearBtn" type="button">Clear inputs</button>
+                </div>
+                <div id="manualTraceImportList" aria-live="polite"></div>
+                <label class="station-count-row" for="manualTraceStationCount">
+                    <span>Fallback station count</span>
+                    <input id="manualTraceStationCount" type="number" min="6" max="24" step="1" value="14">
+                </label>
+                <button id="manualTraceBuildBtn" type="button" disabled>Build accepted-active loft</button>
+                <div id="manualTraceImportStatus" class="manual-trace-status info" aria-live="polite">Add calibrated Manual Trace top and side files.</div>
+            </div>
+        </section>
+        <div class="section-title" style="color: #e1b12c; margin-top: 0;">Cartridge &amp; Physics</div>
+        <div class="control-group">
+            <select id="cartMode">
+                <option value="g1042" selected>Goldring 1042 (Reference)</option>
+                <option value="selected">Selected Cartridge</option>
+                <option value="custom">Manual Cartridge</option>
+                <option value="none">None (Arm Only)</option>
+            </select>
+        </div>
+        <button id="cartridgePickerOpenBtn" class="cartridge-picker-open-btn" type="button">Select Cartridge</button>
+        <div id="selectedCartridgeSummary" class="cartridge-selected-summary">Selected cartridge: Goldring 1042</div>
+        <div id="selectedCartridgeMeta" class="cartridge-selected-meta">Type MM · mass 6.3 g · C10 11 cu · tracking 1.75 g</div>
+        <span id="cartridgeEstimatedIndicator" class="cartridge-estimated-indicator" hidden>estimated compliance</span>
+        <div id="cartridgeDataStatus" class="info-text cartridge-data-status" aria-live="polite">Cartridge data loading…</div>
+
+        <div id="cartProps" class="goldring-box">
+            <div class="control-group">
+                <label>Setback (Stylus Tip X) [mm] <span id="val_cartX">10</span></label>
+                <input type="range" id="cartX" min="-10" max="26" value="10" step="0.01">
+            </div>
+            <div id="customCartProps" style="display: none;">
+                <div class="control-group">
+                    <label>Cartridge Mass [g] <span id="val_customMass">7.6</span></label>
+                    <input type="range" id="customMass" min="0" max="30" value="7.6" step="0.1">
+                </div>
+                <div class="control-group">
+                    <label>Stylus Tip-to-Top [mm] <span id="val_customZ">17.3</span></label>
+                    <input type="range" id="customZ" min="10" max="25" value="17.3" step="0.1">
+                </div>
+            </div>
+            <div class="control-group">
+                <label>Dyn. Compliance (10 Hz) <span id="val_comp10">13</span></label>
+                <input type="range" id="comp10" min="5" max="40" value="13" step="0.5">
+                <span class="info-text" id="comp10_label" style="color:#2ecc71;">[Explicit measurement]</span>
+            </div>
+            <div class="control-group">
+                <label>Dyn. Compliance (100 Hz) <span id="val_comp100">7.6</span></label>
+                <input type="range" id="comp100" min="2" max="30" value="7.6" step="0.1">
+            </div>
+            <div class="control-group">
+                <label>Conversion Factor (k) <span id="val_compK">1.7</span></label>
+                <input type="range" id="compK" min="1.2" max="2.5" value="1.7" step="0.05">
+            </div>
+        </div>
+
+        <div id="armOnlyProps" style="display: none; border-left: 3px solid #9b59b6; padding-left: 8px; margin-top: 10px;">
+            <div class="control-group">
+                <label>Nominal Stylus X [mm] <span id="val_nomStylusX">10</span></label>
+                <input type="range" id="nomStylusX" min="-10" max="26" value="10" step="0.5">
+            </div>
+        </div>
+
+        <!-- TD052B: real top-level application tabs. This is outside #aiModalBackdrop and is visible without opening AI Modal. -->
+        <div id="mainGeometryTabs" class="td052b-main-tabs" role="tablist" aria-label="Tonearm geometry workspace tabs" data-td052b-top-level-tabs="true" style="display:flex; gap:6px; flex-wrap:wrap; margin:10px 0;">
+            <button id="tabParametricCobra" class="td052b-main-tab active" type="button" role="tab" aria-selected="true" data-geometry-tab="parametric" data-geometry-mode="parametric">Parametric / Cobra</button>
+            <button id="tabFreeformLoft" class="td052b-main-tab" type="button" role="tab" aria-selected="false" data-geometry-tab="freeform" data-geometry-mode="freeform">AI Vibe 3D Freeform Loft</button>
+            <button id="tabAnalysisExport" class="td052b-main-tab" type="button" role="tab" aria-selected="false" data-geometry-tab="analysis">Analysis / Export</button>
+        </div>
+
+        <section id="freeformLoftMainPanel" class="td052b-main-tab-panel freeform-loft-main-panel" role="tabpanel" aria-labelledby="tabFreeformLoft" data-top-level-freeform-tab="true" data-freeform-runtime-panel="main" hidden style="border:1px solid #375a7f; border-left:4px solid #16a085; border-radius:6px; padding:10px; margin:10px 0; background:rgba(22,160,133,0.08);">
+            <div class="section-title" style="margin-top:0;">AI Vibe 3D Freeform Loft</div>
+            <div id="freeformGeometryModeIndicator" class="info-text" data-geometry-mode-indicator="true">geometryMode: parametric</div>
+            <div class="control-group">
+                <label for="freeformGeometryModeSelect">Geometry mode</label>
+                <select id="freeformGeometryModeSelect" data-geometry-mode-select="true">
+                    <option value="parametric">parametric — existing Cobra / Classic path</option>
+                    <option value="freeform">freeform — centerline/ring loft path</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="freeformPresetSelect">Freeform preset</label>
+                <select id="freeformPresetSelect" data-freeform-preset-selector="true">
+                    <option value="long_low_cobra_monocoque">Long low Cobra monocoque</option>
+                    <option value="straight_low_mass_lt_arm">Straight low-mass LT arm</option>
+                    <option value="integrated_side_bent_headshell">Integrated side-bent headshell</option>
+                </select>
+            </div>
+            <div class="control-row freeform-left-compact-controls" style="display:flex; gap:6px; flex-wrap:wrap;" data-freeform-left-compact="true">
+                <button id="freeformApplyPresetBtn" type="button" data-freeform-action="apply-preset">Apply preset</button>
+                <button id="freeformPreviewBtn" type="button" data-freeform-action="preview">Rebuild / Preview freeform</button>
+                <button id="freeformOpenWorkbenchBtn" type="button" data-freeform-action="open-workbench" data-opens-freeform-workbench="true">Open Freeform AI Workbench</button>
+            </div>
+            <div id="freeformStatusPanel" class="info-text freeform-compact-status" aria-live="polite" data-freeform-status-panel="true">STATUS: Freeform runtime wiring not initialized yet.</div>
+
+            <div class="info-text" data-freeform-modal-delegation="true">Freeform editors, validation, Cobra fidelity, deterministic analysis and export/report audit are in the wide Freeform AI Workbench modal.</div>
+
+        </section>
+
+        <div class="section-title">Design Goals</div>
+        <div class="analysis-box" style="border-left-color:#16a085;">
+            <div class="control-group">
+                <label>Target effective mass [g] <span id="val_targetEffectiveMass">12</span></label>
+                <input type="number" id="targetEffectiveMass" min="2" max="40" value="12" step="0.1">
+            </div>
+            <div class="control-group">
+                <label>Target LF resonance [Hz] <span id="val_targetLFResonance">10</span></label>
+                <input type="number" id="targetLFResonance" min="6" max="14" value="10" step="0.1">
+            </div>
+            <div class="control-group">
+                <label>Target VTF [g] <span id="val_targetVTF">2</span></label>
+                <input type="number" id="targetVTF" min="0.5" max="5" value="2" step="0.1">
+            </div>
+            <div class="control-group">
+                <label>Min first bending mode [Hz] <span id="val_targetFirstBendingMode">600</span></label>
+                <input type="number" id="targetFirstBendingMode" min="200" max="2000" value="600" step="10">
+            </div>
+            <div class="control-group">
+                <label>Slenderness range <span id="val_targetSlendernessMin">8</span>–<span id="val_targetSlendernessMax">25</span></label>
+                <input type="number" id="targetSlendernessMin" min="4" max="20" value="8" step="0.1" aria-label="Minimum target slenderness">
+                <input type="number" id="targetSlendernessMax" min="10" max="40" value="25" step="0.1" aria-label="Maximum target slenderness">
+            </div>
+            <div class="info-text">Used by the AI prompt as engineering targets. These targets do not directly change geometry.</div>
+        </div>
+
+        <div class="section-title">Tonearm Kinematics</div>
+        <div class="control-group">
+            <label>Pivot-to-Spindle [mm] <span id="val_pivotSpindle">214</span></label>
+            <input type="range" id="pivotSpindle" min="150" max="300" value="214" step="0.5">
+        </div>
+        <div class="control-group">
+            <label>Full Physical Length [mm] <span id="val_fullLength">281</span></label>
+            <input type="range" id="fullLength" min="180" max="380" value="281" step="0.1">
+            <span class="info-text">Envelope length from N1/stylus reference to rearEnd along main X extent. Not effective length, pivot-to-spindle, P2-N1 arm-tube length, P1-P2 link length, cartridge setback or apex position.</span>
+        </div>
+        <div class="control-group">
+            <select id="alignmentPreset">
+                <option value="baerwald_iec" selected>Löfgren A (Baerwald) - IEC</option>
+                <option value="lofgrenB_iec">Löfgren B - IEC</option>
+                <option value="stevenson_iec">Stevenson - IEC</option>
+            </select>
+        </div>
+        <div style="background:#1e1e1e; padding:8px; border-radius:4px; font-size:11px; color:#aaa; margin-top:5px; border-left:3px solid #3498db;">
+            <div>Target L_eff: <span id="kinTargetLeff" style="color:#fff">0.0</span> mm</div>
+            <div>Target Overhang: <span id="kinTargetOverhang" style="color:#fff">0.0</span> mm</div>
+            <div>Target Offset Angle: <span id="kinTargetOffset" style="color:#fff">0.0</span>°</div>
+            <div style="margin-top:4px; padding-top:4px; border-top:1px solid #333;">
+                Current L_eff (Apex - Stylus): <span id="kinActualLeff" style="color:#e1b12c">0.0</span> mm<br>
+                <span id="kinDelta" style="font-weight:bold;">Δ 0.0 mm</span>
+            </div>
+            <button id="syncAlignment" style="margin-top:8px; width:100%; background:#2980b9;">Sync to target L_eff</button>
+        </div>
+
+        <div class="section-title">Tail / Neutral Balance</div>
+        <div class="rear-box">
+            <div class="control-group">
+                <select id="rearMode">
+                    <option value="classic_tail" selected>Classic Tail</option>
+                    <option value="cobra_integrated_tail">Hollow Elbow (Cobra)</option>
+                </select>
+            </div>
+
+            <div id="rearCobraProps" style="display:none; margin-top:10px;">
+                <div class="control-group"><label>Blend Zone Length [mm] <span id="val_rearBlendLength">28</span></label><input type="range" id="rearBlendLength" min="0" max="60" value="28" step="1"></div>
+                <div class="control-group"><label>Bend Start X [mm] <span id="val_rearBendStartX">236</span></label><input type="range" id="rearBendStartX" min="180" max="278" value="236" step="1"></div>
+                <div class="control-group"><label>Bend Drop Z [mm] <span id="val_rearBendDropZ">25</span></label><input type="range" id="rearBendDropZ" min="5" max="50" value="25" step="1"></div>
+                <div class="control-group"><label>Bend Radius/Length [mm] <span id="val_rearBendLength">30</span></label><input type="range" id="rearBendLength" min="5" max="80" value="30" step="1"></div>
+                <div class="control-group"><label>Mouth Outer Width (Y) [mm] <span id="val_rearMouthWidth">11</span></label><input type="range" id="rearMouthWidth" min="5" max="40" value="11" step="1"></div>
+                <div class="control-group"><label>Mouth Outer Length (X) [mm] <span id="val_rearMouthLength">12</span></label><input type="range" id="rearMouthLength" min="5" max="40" value="12" step="1"></div>
+
+                <div class="control-group" style="margin-top: 10px; border-top: 1px dotted #444; padding-top: 5px;"><label>Disc diameter [mm] <span id="val_rearWeightDiscDiameter">14</span></label><input type="range" id="rearWeightDiscDiameter" min="10" max="40" value="14" step="1"></div>
+                <div class="control-group"><label>Disc thickness [mm] <span id="val_rearWeightDiscThickness">4</span></label><input type="range" id="rearWeightDiscThickness" min="1" max="15" value="4" step="1"></div>
+                <div class="control-group"><label>Disc count <span id="val_rearWeightDiscCount">0</span></label><input type="range" id="rearWeightDiscCount" min="0" max="10" value="0" step="1"></div>
+                <div class="control-group"><label>Disc mass (g/ea) <span id="val_rearWeightDiscMass">18</span></label><input type="range" id="rearWeightDiscMass" min="0" max="50" value="0" step="1"></div>
+                <div class="control-group"><label>Fine trim eq. mass (g) <span id="val_rearFineTrimScrewMassEquivalent">0</span></label><input type="range" id="rearFineTrimScrewMassEquivalent" min="0" max="10" value="0" step="0.5"></div>
+                <div class="control-group"><label>Counterweight Z offset [mm] <span id="val_counterweightZOffset">0</span></label><input type="range" id="counterweightZOffset" min="-15" max="15" value="0" step="0.5"></div>
+                <div class="control-group"><label>Fine trim length [mm] <span id="val_rearFineTrimScrewLength">18</span></label><input type="range" id="rearFineTrimScrewLength" min="5" max="30" value="18" step="1"></div>
+                <div class="control-group"><label>Support bridge length [mm] <span id="val_rearSupportBridgeLength">2</span></label><input type="range" id="rearSupportBridgeLength" min="0.5" max="8" value="2" step="0.1"></div>
+                <div class="control-group"><label>Support bridge radius [mm] <span id="val_rearSupportBridgeRadius">1.25</span></label><input type="range" id="rearSupportBridgeRadius" min="0.5" max="4" value="1.25" step="0.05"></div>
+                <div class="control-group"><label>Support bridge overlap [mm] <span id="val_rearSupportBridgeOverlap">0.25</span></label><input type="range" id="rearSupportBridgeOverlap" min="0.05" max="1.5" value="0.25" step="0.05"></div>
+
+                <div class="analysis-box">
+                    <div>Rear CG: <span id="calcRearCG" style="color:#fff">0,0,0</span></div>
+                    <div>Neutral balance: <span id="calcNeutralBalance" style="color:#fff">0.0 mm</span></div>
+                    <div>Score: <span id="calcNeutralScore">N/A</span></div>
+                </div>
+
+                <div class="toggle-row"><label for="showRearWeights">Show counterweights (3D)</label><input type="checkbox" id="showRearWeights" checked></div>
+                <div class="toggle-row"><label for="showFineTrimScrew">Show fine-trim screw (3D)</label><input type="checkbox" id="showFineTrimScrew"></div>
+                <div class="toggle-row"><label for="showRearCG">Show Rear CG</label><input type="checkbox" id="showRearCG" checked></div>
+                <div class="toggle-row"><label for="showNeutralLine">Show neutral balance line</label><input type="checkbox" id="showNeutralLine" checked></div>
+                <div class="toggle-row"><label for="showTowerClearance">Show tower clearance</label><input type="checkbox" id="showTowerClearance"></div>
+                <div class="toggle-row"><label for="includeRearWeightDiscsInExport">Include weights in export</label><input type="checkbox" id="includeRearWeightDiscsInExport"></div>
+            </div>
+        </div>
+
+        <div class="section-title">Organic Headshell &amp; Neck</div>
+        <div class="control-group highlight-box">
+            <label>Pad Offset (Z-axis) [mm] <span id="val_padOffset">0</span></label>
+            <input type="range" id="padOffset" min="-10" max="10" value="0" step="0.5">
+        </div>
+        <div class="control-group highlight-box">
+            <label>AI sculpt: planar headshell underside <span id="val_sculptHeadFlatEnabled">0</span></label>
+            <input type="range" id="sculptHeadFlatEnabled" min="0" max="1" value="0" step="1">
+            <span class="info-text">0=off, 1=force a true lower plane in the headshell pad zone.</span>
+        </div>
+        <div class="control-group">
+            <label>Flat underside start X [mm] <span id="val_sculptHeadFlatStartX">0</span></label>
+            <input type="range" id="sculptHeadFlatStartX" min="0" max="60" value="0" step="0.5">
+        </div>
+        <div class="control-group">
+            <label>Flat underside end X [mm] <span id="val_sculptHeadFlatEndX">34</span></label>
+            <input type="range" id="sculptHeadFlatEndX" min="5" max="80" value="34" step="0.5">
+        </div>
+        <div class="control-group">
+            <label>Flat underside local Z [mm] <span id="val_sculptHeadBottomZ">-3</span></label>
+            <input type="range" id="sculptHeadBottomZ" min="-12" max="8" value="-3" step="0.1">
+        </div>
+        <div class="control-group">
+            <label>Flat-to-neck blend length [mm] <span id="val_sculptHeadBlendLength">14</span></label>
+            <input type="range" id="sculptHeadBlendLength" min="0" max="40" value="14" step="0.5">
+        </div>
+        <div class="control-group">
+            <label>Flat underside width fraction <span id="val_sculptHeadFlatWidthFraction">0.70</span></label>
+            <input type="range" id="sculptHeadFlatWidthFraction" min="0" max="0.95" value="0.70" step="0.01">
+        </div>
+        <div class="control-group">
+            <label>Step suppressor <span id="val_sculptStepSuppressor">1</span></label>
+            <input type="range" id="sculptStepSuppressor" min="0" max="1" value="1" step="0.05">
+            <span class="info-text">Smooths hard local stiffness/height steps at the headshell-to-neck transition.</span>
+        </div>
+        <div class="control-group highlight-box">
+            <label>AI sculpt: front stiffness ramp <span id="val_sculptFrontStiffnessRampEnabled">0</span></label>
+            <input type="range" id="sculptFrontStiffnessRampEnabled" min="0" max="1" value="0" step="1">
+            <span class="info-text">0=off, 1=enforce minimum section height from headshell into the early armwand to remove thin ribbon zones.</span>
+        </div>
+        <div class="control-group">
+            <label>Front minimum section height [mm] <span id="val_sculptFrontMinHeight">5.8</span></label>
+            <input type="range" id="sculptFrontMinHeight" min="3" max="12" value="5.8" step="0.1">
+        </div>
+        <div class="control-group">
+            <label>Front ramp start X [mm] <span id="val_sculptFrontRampStartX">0</span></label>
+            <input type="range" id="sculptFrontRampStartX" min="0" max="80" value="0" step="0.5">
+        </div>
+        <div class="control-group">
+            <label>Front ramp end X [mm] <span id="val_sculptFrontRampEndX">78</span></label>
+            <input type="range" id="sculptFrontRampEndX" min="20" max="140" value="78" step="0.5">
+        </div>
+        <div class="control-group">
+            <label>Front ramp target height [mm] <span id="val_sculptFrontRampTargetHeight">10.0</span></label>
+            <input type="range" id="sculptFrontRampTargetHeight" min="5" max="18" value="10.0" step="0.1">
+        </div>
+        <div class="control-group">
+            <label>Front top-growth bias <span id="val_sculptFrontTopBias">0.95</span></label>
+            <input type="range" id="sculptFrontTopBias" min="0.5" max="1" value="0.95" step="0.01">
+            <span class="info-text">1.0 grows height upward from the flat underside; lower values split height growth about the neutral profile.</span>
+        </div>
+        <div class="control-group">
+            <label>Nose Rounding [mm] <span id="val_noseL">16</span></label>
+            <input type="range" id="noseL" min="1" max="30" value="16" step="1">
+        </div>
+        <div class="control-group">
+            <label>Pad Max Width [mm] <span id="val_headW">22</span></label>
+            <input type="range" id="headW" min="10" max="35" value="22" step="1">
+        </div>
+        <div class="control-group">
+            <label>Pad Total Length [mm] <span id="val_padL">26</span></label>
+            <input type="range" id="padL" min="10" max="50" value="26" step="1">
+        </div>
+        <div class="control-group">
+            <label>Nose Height (Base) [mm] <span id="val_headH">6</span></label>
+            <input type="range" id="headH" min="2" max="20" value="0" step="1">
+        </div>
+        <div class="control-group">
+            <label>Neck Width (Waist) [mm] <span id="val_neckW">11</span></label>
+            <input type="range" id="neckW" min="5" max="30" value="11" step="1">
+        </div>
+        <div class="control-group">
+            <label>Neck Length [mm] <span id="val_neckL">45</span></label>
+            <input type="range" id="neckL" min="10" max="80" value="45" step="1">
+        </div>
+
+        <div class="section-title">Beam Geometry &amp; Asymmetry</div>
+        <div class="control-group">
+            <label>Asymmetry Belly/Crown <span id="val_asym">0.9</span></label>
+            <input type="range" id="asym" min="0.0" max="1.0" value="0.9" step="0.05">
+        </div>
+        <div class="control-group">
+            <label>Apex Pos (Pivot) [mm] <span id="val_apex">231</span></label>
+            <input type="range" id="apex" min="200" max="260" value="231" step="0.01">
+        </div>
+        <div class="control-group">
+            <label>Max Height (Side) [mm] <span id="val_maxH">24</span></label>
+            <input type="range" id="maxH" min="15" max="50" value="24" step="1">
+        </div>
+        <div class="control-group">
+            <label>Max Width (Top) [mm] <span id="val_maxW">34</span></label>
+            <input type="range" id="maxW" min="15" max="60" value="34" step="1">
+        </div>
+        <div class="control-group">
+            <label>Vertical Arch (Lift) [mm] <span id="val_bow">5</span></label>
+            <input type="range" id="bow" min="0" max="30" value="5" step="1">
+        </div>
+
+        <div class="section-title">Tail Section (Classic Only)</div>
+        <div class="control-group">
+            <label>Rear Radius (Bluntness) <span id="val_bulge">2.0</span></label>
+            <input type="range" id="bulge" min="1.0" max="4.0" value="2.0" step="0.1">
+        </div>
+        <div class="control-group">
+            <label>End Diameter [mm] <span id="val_tailD">6</span></label>
+            <input type="range" id="tailD" min="0" max="25" value="6" step="1">
+        </div>
+
+        <div class="section-title">Material (Effective Constants)</div>
+        <div class="control-group">
+            <select id="material">
+                <option value="carbon" selected>Carbon Fiber/Epoxy (Standard)</option>
+                <option value="glass">Glass Fiber/Epoxy</option>
+                <option value="kevlar">Kevlar/Epoxy</option>
+                <option value="flax">Flax Fiber/Epoxy</option>
+            </select>
+            <span class="info-text">Values are effective 1D approximations.</span>
+        </div>
+        <div class="control-group">
+            <label>Wall Thickness [mm] <span id="val_thick">1.5</span></label>
+            <input type="range" id="thick" min="0.2" max="3.0" value="1.5" step="0.1">
+        </div>
+        <div class="control-group">
+            <label>Canopy ridge height [mm] <span id="val_canopyRidgeHeight">1.4</span></label>
+            <input type="range" id="canopyRidgeHeight" min="0" max="4" value="1.4" step="0.05">
+        </div>
+        <div class="control-group">
+            <label>Canopy ridge width fraction <span id="val_canopyRidgeWidthFraction">0.22</span></label>
+            <input type="range" id="canopyRidgeWidthFraction" min="0.05" max="0.8" value="0.22" step="0.01">
+        </div>
+        <div class="control-group">
+            <label>Canopy ridge sharpness <span id="val_canopyRidgeSharpness">3</span></label>
+            <input type="range" id="canopyRidgeSharpness" min="0.5" max="12" value="3" step="0.1">
+        </div>
+        <div class="toggle-row"><label for="showInternalWireRoute">Show internal wire route</label><input type="checkbox" id="showInternalWireRoute"></div>
+        <div class="control-group">
+            <label>Wire route radius [mm] <span id="val_wireRouteRadius">0.65</span></label>
+            <input type="range" id="wireRouteRadius" min="0.2" max="2" value="0.65" step="0.05">
+        </div>
+        <div class="control-group">
+            <label>Wire route Y offset [mm] <span id="val_wireRouteYOffset">0</span></label>
+            <input type="range" id="wireRouteYOffset" min="-5" max="5" value="0" step="0.1">
+        </div>
+        <div class="control-group">
+            <label>Wire route Z offset [mm] <span id="val_wireRouteZOffset">-2</span></label>
+            <input type="range" id="wireRouteZOffset" min="-8" max="4" value="-2" step="0.1">
+        </div>
+        <div class="toggle-row"><label for="cobraArchitectureEnabled">Enable Cobra architecture gate</label><input type="checkbox" id="cobraArchitectureEnabled"></div>
+        <div class="toggle-row"><label for="enableCobraArchitecture">Alias: enable Cobra architecture</label><input type="checkbox" id="enableCobraArchitecture"></div>
+        <div class="toggle-row"><label for="titaniumPlateEnabled">Enable structural titanium interface plate</label><input type="checkbox" id="titaniumPlateEnabled"></div>
+        <div class="control-group">
+            <label>Titanium plate length [mm] <span id="val_titaniumPlateLength">24</span></label>
+            <input type="range" id="titaniumPlateLength" min="10" max="36" value="24" step="0.1">
+        </div>
+        <div class="control-group">
+            <label>Titanium plate width [mm] <span id="val_titaniumPlateWidth">18</span></label>
+            <input type="range" id="titaniumPlateWidth" min="10" max="24" value="18" step="0.1">
+        </div>
+        <div class="control-group">
+            <label>Titanium plate thickness [mm] <span id="val_titaniumPlateThickness">1.5</span></label>
+            <input type="range" id="titaniumPlateThickness" min="0.5" max="3" value="1.5" step="0.05">
+        </div>
+        <div class="control-group">
+            <label>Titanium plate mass [g] <span id="val_titaniumPlateMass">2.85</span></label>
+            <input type="range" id="titaniumPlateMass" min="0" max="8" value="2.85" step="0.05">
+        </div>
+        <div class="control-group">
+            <label>Titanium interface plate X center [mm] <span id="val_titaniumPlateX">32</span></label>
+            <input type="range" id="titaniumPlateX" min="20" max="64" value="32" step="0.1">
+        </div>
+        <div class="control-group">
+            <label>Titanium plate Y offset [mm] <span id="val_titaniumPlateYOffset">0</span></label>
+            <input type="range" id="titaniumPlateYOffset" min="-4" max="4" value="0" step="0.1">
+        </div>
+        <div class="control-group">
+            <label>Titanium plate Z offset [mm] <span id="val_titaniumPlateZOffset">0</span></label>
+            <input type="range" id="titaniumPlateZOffset" min="-2" max="4" value="0" step="0.05">
+        </div>
+        <div class="control-group">
+            <label>Titanium adhesive layer [mm] <span id="val_titaniumAdhesiveThickness">0.08</span></label>
+            <input type="range" id="titaniumAdhesiveThickness" min="0" max="0.5" value="0.08" step="0.01">
+        </div>
+        <div class="control-group">
+            <label>Titanium adhesive loss factor <span id="val_titaniumAdhesiveDampingLossFactor">0.18</span></label>
+            <input type="range" id="titaniumAdhesiveDampingLossFactor" min="0" max="1" value="0.18" step="0.01">
+        </div>
+
+        <div class="control-group" style="margin-top: 10px;">
+            <label style="font-size: 11px;">Render Mode (3D)</label>
+            <select id="renderMode">
+                <option value="cad" selected>Light CAD (Surface Analysis)</option>
+                <option value="wireframe">Wireframe (Mesh)</option>
+                <option value="carbon">Dark Carbon Fiber</option>
+                <option value="xray">X-Ray (Transparency)</option>
+            </select>
+        </div>
+
+
+        <div class="section-title">Export (Parametric CAD)</div>
+        <div class="export-box">
+            <div class="control-group">
+                <select id="exportType">
+                    <option value="hollow" selected>Thin-walled arm</option>
+                    <option value="onshape_1to1">Onshape 1:1 exact model</option>
+                    <option value="solid">Solid reference body</option>
+                    <option value="split_vertical">Vertical split (Y=0)</option>
+                    <option value="split_horizontal">Horizontal split (zCenter)</option>
+                </select>
+            </div>
+
+            <div id="splitOptions" class="sub-options" style="display:none; margin-top:8px; border-left:3px solid #e74c3c; padding-left:8px;">
+                <div class="control-group">
+                    <label>Gap Width (Clearance) [mm] <span id="val_splitClearance">0.00</span></label>
+                    <input type="range" id="splitClearance" min="0" max="0.4" value="0.0" step="0.01">
+                </div>
+            </div>
+
+            <div class="sub-options" style="margin-top:8px; border-left:3px solid #16a085; padding-left:8px;">
+                <div class="control-group">
+                    <label>Mesh segments / ring <span id="val_meshSegments">60</span></label>
+                    <input type="number" id="meshSegments" min="12" max="160" value="60" step="4">
+                </div>
+                <div class="control-group">
+                    <label>Ring step X [mm] <span id="val_meshStepX">1</span></label>
+                    <input type="number" id="meshStepX" min="0.25" max="5" value="1" step="0.25">
+                </div>
+                <div class="control-group">
+                    <label>Draft warning [deg] <span id="val_draftMinDeg">1</span></label>
+                    <input type="number" id="draftMinDeg" min="0" max="10" value="1" step="0.5">
+                </div>
+                <div class="info-text">Onshape 1:1 export uses millimetres, no mould offset, no sanding allowance, no shrinkage compensation and no draft modification. Tiny manifold cap slivers can be soft-passed only when topology is closed and non-degenerate.</div>
+            </div>
+
+            <div class="sub-options" style="margin-top:8px; border-left:3px solid #8e44ad; padding-left:8px;">
+                <div class="section-title" style="font-size:11px;margin-top:0;">AI Vibe 3D / Onshape 1:1 Model World</div>
+                <div class="control-group">
+                    <label style="font-size:11px;">Output intent</label>
+                    <select id="manufacturingMode">
+                        <option value="onshape_1to1" selected>Onshape 1:1 exact reference model</option>
+                        <option value="functional_arm">Functional arm mesh</option>
+                        <option value="solid_reference">Solid 1:1 reference body</option>
+                        <option value="legacy_positive_plug">Legacy positive plug intent</option>
+                    </select>
+                </div>
+                <div class="toggle-row"><label for="aiVibeSoftSliverPass">Soft-pass tiny manifold slivers</label><input type="checkbox" id="aiVibeSoftSliverPass" checked></div>
+                <div class="control-group"><label>Hard-fail area [mm²] <span id="val_aiVibeMinTriangleHardFailArea">0.00001</span></label><input type="number" id="aiVibeMinTriangleHardFailArea" min="0" max="0.001" value="0.00001" step="0.00001"></div>
+                <div class="control-group"><label>Surface offset [mm] <span id="val_aiVibePlugSurfaceOffset">0</span></label><input type="number" id="aiVibePlugSurfaceOffset" min="-1" max="3" value="0" step="0.05"></div>
+                <div class="control-group"><label>Post-processing allowance [mm] <span id="val_aiVibeSandingAllowance">0.2</span></label><input type="number" id="aiVibeSandingAllowance" min="0" max="2" value="0" step="0.05"></div>
+                <div class="control-group"><label>Draft analysis only [deg] <span id="val_aiVibeDraftDeg">3</span></label><input type="number" id="aiVibeDraftDeg" min="0" max="12" value="0" step="0.5"></div>
+                <div class="control-group"><label>Legacy flange width [mm] <span id="val_aiVibeMouldFlangeWidth">18</span></label><input type="number" id="aiVibeMouldFlangeWidth" min="0" max="50" value="18" step="1"></div>
+                <div class="control-group"><label>Legacy registration pins <span id="val_aiVibeRegistrationPins">6</span></label><input type="number" id="aiVibeRegistrationPins" min="0" max="16" value="6" step="1"></div>
+                <div class="control-group"><label>Legacy bolt holes <span id="val_aiVibeBoltHoles">8</span></label><input type="number" id="aiVibeBoltHoles" min="0" max="24" value="0" step="1"></div>
+                <div class="control-group"><label>Legacy vent channels <span id="val_aiVibeVentChannels">3</span></label><input type="number" id="aiVibeVentChannels" min="0" max="12" value="0" step="1"></div>
+                <div class="control-group"><label>Shrinkage compensation [%] <span id="val_aiVibeShrinkagePercent">0</span></label><input type="number" id="aiVibeShrinkagePercent" min="0" max="5" value="0" step="0.05"></div>
+                <div class="control-group"><label>Onshape unit scale <span id="val_onshapeUnitScale">1</span></label><input type="number" id="onshapeUnitScale" min="1" max="1" value="1" step="1"></div>
+                <div class="control-group"><label>Onshape chord tolerance [mm] <span id="val_onshapeChordToleranceMm">0.01</span></label><input type="number" id="onshapeChordToleranceMm" min="0.001" max="0.2" value="0.01" step="0.001"></div>
+                <div class="toggle-row"><label for="onshapeStrictOneToOne">Enforce 1:1 mm / no offsets</label><input type="checkbox" id="onshapeStrictOneToOne" checked></div>
+                <div class="toggle-row"><label for="onshapeMetadataSidecar">Download Onshape sidecar JSON</label><input type="checkbox" id="onshapeMetadataSidecar" checked></div>
+                <button id="aiVibeAuditBtn" style="background:#6c3483; margin-top:6px;" type="button">Run AI Vibe Audit</button>
+                <button id="aiVibeSafePlugBtn" style="background:#7d3c98; margin-top:6px;" type="button">Apply Onshape 1:1 Defaults</button>
+                <button id="aiVibeJsonBtn" style="background:#512e5f; margin-top:6px;" type="button">Download AI Vibe JSON</button>
+                <div id="aiVibeStatus" class="info-text">FAS19 AI Modal Onshape handoff: semantic feature graph, response contract, 1:1 scale audit and Onshape-safe action primitives are exposed as window.AIVibe3D. This is a mesh reference model for Onshape, not a parametric STEP/BREP export.</div>
+            </div>
+
+            <div class="control-group" style="margin-top:8px;">
+                <select id="exportFormat">
+                    <option value="stl_binary" selected>Binary STL (Onshape mesh reference)</option>
+                    <option value="stl_ascii">ASCII STL</option>
+                </select>
+            </div>
+
+            <button id="exportModelBtn" style="background:#27ae60; margin-top: 10px;">Download Export Model</button>
+            <button id="export3dPngBtn" style="background:#2980b9; margin-top: 8px;" type="button">Export 3D PNG (800x600)</button>
+            <button id="openSolverBtn" class="solver-open-btn" type="button">Open Solver / Optimize</button>
+        </div>
+
+        <div class="section-title">Sessions</div>
+        <div class="session-box">
+            <div class="control-group">
+                <input type="text" id="sessionName" class="session-text-input" placeholder="Session name (optional)" maxlength="80">
+            </div>
+            <div class="session-btn-row">
+                <button id="sessionSaveBtn" class="session-btn session-btn-save" type="button">Save session</button>
+                <button id="sessionOpenBtn" class="session-btn session-btn-open" type="button">Open session…</button>
+            </div>
+            <button id="saveReportBtn" class="session-btn session-btn-report" type="button">Save technical report (.md)</button>
+            <input type="file" id="sessionFileInput" accept=".json,application/json" style="display:none;">
+            <div id="sessionStatus" class="session-status" aria-live="polite"></div>
+            <div class="info-text">Saved sessions capture every slider, checkbox, selector and the compliance-estimate flag. Technical reports are Markdown files with all physical, calculated and Physics Panel readouts.</div>
+        </div>
+
+        <div class="section-title">AI Assistant</div>
+        <div class="ai-launch-box">
+            <button id="aiModalOpenBtn" class="ai-modal-open-btn" type="button">AI Modal Onshape Handoff</button>
+            <div class="info-text">FAS19: AI Modal is the AI Vibe 3D orchestrator for exact 1:1 Onshape reference-model handoff. It validates semantic actions plus optional legacy full-state deltas.</div>
+        </div>
+
+        <div class="section-title">Engrove LT</div>
+        <div class="lt-mechanism-launch-box">
+            <button id="ltMechanismOpenBtn" class="lt-mechanism-open-btn" type="button">LT Mechanism</button>
+            <div id="ltMechanismLaunchHint" class="info-text">Separate Engrove LT mechanism prototype preview. Option C/hybrid top-view model; P3 is local (-L23,0) inside the tonearm group. Preview only; core mesh unaffected.</div>
+        </div>
+
+        <div class="toggle-row">
+            <label for="showForce">Show Bending Stiffness (EI_y, EI_z) [N*m²]</label>
+            <input type="checkbox" id="showForce" checked>
+        </div>
+        <div class="toggle-row">
+            <label for="showMass">Show Mass Distribution</label>
+            <input type="checkbox" id="showMass" checked>
+        </div>
+    </div>
+</div>
+
+<div class="main-view">
+    <div id="validationWarning" class="validation-warning" style="display:none;">
+        <div class="validation-warning-header">
+            <span id="validationSummary">⚠ GEOMETRY / ANALYSIS WARNING</span>
+            <button id="validationToggle" class="validation-toggle" type="button" aria-expanded="true">Collapse</button>
+        </div>
+        <div id="validationMsg" class="validation-warning-body"></div>
+    </div>
+
+    <div class="canvas-container" style="padding-bottom: 5px;">
+        <h2>
+            Interactive 3D Rendering
+            <span style="font-size: 11px; color:#e1b12c; font-weight:normal;" id="stylusInfo"></span>
+        </h2>
+        <div class="cam-btn-group">
+            <button onclick="setCam('iso')">Isometric</button>
+            <button onclick="setCam('side')">Side</button>
+            <button onclick="setCam('top')">Top</button>
+            <button onclick="setCam('front')">Front</button>
+            <button onclick="setCam('cart')" style="color:#e1b12c;">Focus Cartridge</button>
+            <button onclick="setCam('rear')" style="color:#8e44ad;">Focus Tail</button>
+        </div>
+        <div id="container3D">
+            <div id="emptyDesignOverlay">
+                <div class="empty-design-card">
+                    <h3>Empty design session</h3>
+                    <p>No standard 3D object is loaded. Import calibrated Manual Trace files, open a saved session, or explicitly create a parametric design.</p>
+                    <div class="empty-design-actions">
+                        <button id="emptyOverlayNewBtn" type="button">Keep empty</button>
+                        <button id="emptyOverlayOpenBtn" type="button">Open session…</button>
+                        <button id="emptyOverlayParametricBtn" type="button">Create parametric</button>
+                    </div>
+                </div>
+            </div>
+            <div id="axesInset"></div>
+            <div id="axesLegend">
+                <span class="r">X</span> = Length<br>
+                <span class="g">Y</span> = Width<br>
+                <span class="b">Z</span> = Height
+            </div>
+        </div>
+    </div>
+
+    <div class="canvas-container">
+        <h2>
+            Side Profile (Z-X)
+            <span>
+                <span class="legend" id="legSide">■ Vertical Bending Stiffness (EI_y)</span>
+                <span class="legend legend-mass" id="legMass" style="margin-left:10px;">■ Mass/mm (g)</span>
+            </span>
+        </h2>
+        <div class="side-view-layout">
+            <canvas id="canvasSide" class="canvas2D-side"></canvas>
+        </div>
+    </div>
+    <div class="canvas-container">
+        <h2>Top View (Y-X) <span class="legend" id="legTop">■ Horizontal Bending Stiffness (EI_z)</span></h2>
+        <canvas id="canvasTop" class="canvas2D-top"></canvas>
+    </div>
+</div>
+
+<div class="physical-panel-fab-wrap">
+    <button id="physicalPanelFab" class="physical-panel-fab" type="button">Physics Panel</button>
+</div>
+
+<aside id="physicalPanel" class="floating-analysis-panel open">
+    <div id="physicalPanelHeader" class="floating-panel-header">
+        <span>Physical Analysis &amp; COM</span>
+        <button id="physicalPanelClose" class="floating-panel-close" type="button" aria-label="Hide panel">×</button>
+    </div>
+    <div class="floating-panel-body">
+<div class="section-title">Physical Analysis &amp; COM</div>
+        <div class="rear-box" style="margin-top: 5px;">
+            <div class="toggle-row"><label for="showVerticalPivot">Show Vertical Pivot</label><input type="checkbox" id="showVerticalPivot" checked></div>
+            <div class="toggle-row"><label for="showTotalCOM">Show Total COM (Green)</label><input type="checkbox" id="showTotalCOM" checked></div>
+            <div class="toggle-row"><label for="showRearCOM">Show Rear Assembly COM (Purple)</label><input type="checkbox" id="showRearCOM" checked></div>
+            <div class="toggle-row"><label for="showCounterweightCOM">Show Counterweight COM (Orange)</label><input type="checkbox" id="showCounterweightCOM" checked></div>
+            <div class="toggle-row"><label for="showCartridgeCOM">Show Cartridge COM (Yellow)</label><input type="checkbox" id="showCartridgeCOM" checked></div>
+            <div class="toggle-row"><label for="showInertiaAxes">Show Inertia Axes (3D)</label><input type="checkbox" id="showInertiaAxes" checked></div>
+            <div class="toggle-row"><label for="showMeasureLines">Show Measurement Lines (2D)</label><input type="checkbox" id="showMeasureLines" checked></div>
+            <div class="toggle-row"><label for="showLpTopPlane">Show LP Top Plane (2D)</label><input type="checkbox" id="showLpTopPlane" checked></div>
+
+            <div class="analysis-box" style="margin-top: 10px; border-left-color: #3498db;">
+                <div style="font-weight:bold; color:#3498db; margin-bottom:6px;">Vertical pivot datum (XYZ)</div>
+                <div class="control-group"><label>X-offset [mm] <span id="val_pivotOffsetX">0</span></label><input type="range" id="pivotOffsetX" min="-60" max="60" value="0" step="0.5"></div>
+                <div class="control-group"><label>Y-offset [mm] <span id="val_pivotOffsetY">0</span></label><input type="range" id="pivotOffsetY" min="-30" max="30" value="0" step="0.5"></div>
+                <div class="control-group"><label>Pivot above LP [mm] <span id="val_verticalPivotHeightAboveLP">0</span></label><input type="range" id="verticalPivotHeightAboveLP" min="-40" max="40" value="0" step="0.5"></div>
+                <div class="control-group">
+                    <label><input type="checkbox" id="stylusLockedToLP" checked> Lock stylus to LP plane (auto-solve body datum)</label>
+                    <div class="caption-small">
+                        When ON: armBodyDatumOffsetZ is computed automatically so stylus tip sits at lpTopZ.
+                        When OFF: you control armBodyDatumOffsetZ manually (e.g. to simulate VTA misalignment).
+                    </div>
+                </div>
+                <div class="control-group"><label>Body datum Z [mm] <span id="val_armBodyDatumOffsetZ">0</span></label><input type="range" id="armBodyDatumOffsetZ" min="-40" max="40" value="0" step="0.5"></div>
+                <div class="control-group" style="display:none;"><label>Legacy Z-offset [mm] <span id="val_pivotOffsetZ">0</span></label><input type="range" id="pivotOffsetZ" min="-40" max="40" value="0" step="0.5"></div>
+                <div class="info-text">Side-view pivot drag changes pivot X and LP-referenced pivot height. Body datum Z moves the arm envelope without moving the pivot.</div>
+            </div>
+
+            <div class="analysis-box" style="margin-top: 10px; border-left-color: #9b59b6;">
+                <div style="font-weight:bold; color:#9b59b6; margin-bottom:6px;">Reference frame (read-only)</div>
+                <div>LP top plane: <span id="readLpTopZ">0.0</span> mm</div>
+                <div>Pivot above LP: <span id="readPivotAboveLP">0.0</span> mm</div>
+                <div>Stylus tip Z: <span id="readStylusZ">0.0</span> mm</div>
+                <div>Stylus → LP ΔZ: <span id="readStylusToLpDz">0.00</span> mm <span id="stylusLpStatus" class="status-badge">OK</span></div>
+                <div>Pivot–stylus ΔZ: <span id="readPivotStylusDz">0.0</span> mm</div>
+                <div class="caption-small">Equals verticalPivotHeightAboveLP when stylusLockedToLP is on. Cobra rule: ≈ 0 mm for neutral VTA.</div>
+                <div>Body envelope datum: <span id="readBodyEnvelopeZ">0.0</span> mm</div>
+                <div class="info-text">
+                    Stylus tip is the playback Z origin. Cobra rule: pivot height above LP should be ≈ 0 mm at neutral VTA.
+                    4 mm pivot lift ≈ 1° SRA/VTA (Schroder Cobra manual).
+                </div>
+            </div>
+
+            <div class="analysis-box physics-meter-box" style="margin-top: 10px; border-left-color: #16a085;">
+                <div class="physics-meter-box-title">Vertical Relations</div>
+                <div id="physicsMeters" class="physics-meter-grid"></div>
+                <div id="physicsMetersScale" class="physics-meter-scale">Relative to the stylus tip.</div>
+            </div>
+
+            <div class="analysis-box" style="margin-top: 10px; border-left-color: #e67e22;">
+                <div style="font-weight:bold; color:#e67e22; margin-bottom:4px;">Coordinates (X, Y, Z)</div>
+                <div>Pivot: <span id="dataPivot" style="color:#fff">0, 0, 0</span></div>
+                <div>Stylus: <span id="dataStylus" style="color:#fff">0, 0, 0</span></div>
+                <div>Total COM: <span id="dataTotalCOM" style="color:#fff">0, 0, 0</span></div>
+                <div>Rear COM: <span id="dataRearCOM" style="color:#fff">0, 0, 0</span></div>
+                <div>Counterweight COM: <span id="dataCounterCOM" style="color:#fff">0, 0, 0</span></div>
+
+                <div style="font-weight:bold; color:#e67e22; margin-top:8px; margin-bottom:4px;">Distances (3D / Δx, Δy, Δz)</div>
+                <div>Stylus → Pivot: <span id="dataDistSP" style="color:#fff">0</span></div>
+                <div>Pivot → Total COM: <span id="dataDistPT" style="color:#fff">0</span></div>
+                <div>Pivot → Rear COM: <span id="dataDistPR" style="color:#fff">0</span></div>
+                <div>Pivot → Counterweight COM: <span id="dataDistPCW" style="color:#fff">0</span></div>
+                <div>Total COM → Counterweight COM: <span id="dataDistTCW" style="color:#fff">0</span></div>
+                <div>Stylus → Total COM: <span id="dataDistST" style="color:#fff">0</span></div>
+
+                <div style="font-weight:bold; color:#e67e22; margin-top:8px; margin-bottom:4px;">Calculated Static Imbalance</div>
+                <div>Static imbalance at stylus tip: <span id="dataTrackingForce" style="color:#fff">0</span></div>
+                <div>Moment about pivot: <span id="dataTrackingMoment" style="color:#fff">0</span></div>
+
+                <div class="analysis-box tracking-force-box" style="margin-top: 10px; border-left-color: #f39c12;">
+                    <div class="tracking-force-title">Static Imbalance Gauge</div>
+                    <div class="tracking-force-gauge">
+                        <div class="tracking-force-scale">
+                            <span>0</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
+                        </div>
+                        <div class="tracking-force-bar">
+                            <div id="trackingForcePointer" class="tracking-force-pointer"></div>
+                        </div>
+                        <div id="trackingForceGaugeText" class="tracking-force-value">0.00 g</div>
+                        <div id="trackingForceGaugeHint" class="tracking-force-hint">Green zone ≈ 1.5–2.5 g equivalent. Static imbalance indicator, not set VTF.</div>
+                    </div>
+                </div>
+
+                <div style="font-weight:bold; color:#e67e22; margin-top:8px; margin-bottom:4px;">Inertia (about Pivot)</div>
+                <div>I_vertical (vertical bearing axis): <span id="dataIzz" style="color:#fff">0</span> g·mm²</div>
+                <div>I_horizontal (lateral axis): <span id="dataIyy" style="color:#fff">0</span> g·mm²</div>
+                <div>Radius of Gyration (vertical): <span id="dataKzz" style="color:#fff">0</span> mm</div>
+
+                <div style="font-weight:bold; color:#16a085; margin-top:8px; margin-bottom:4px;">Structural stiffness</div>
+                <div>EI_min: <span id="dataEIMin" style="color:#fff">0</span></div>
+                <div>EI@apex: <span id="dataEIApex" style="color:#fff">0</span></div>
+                <div>GJ_min: <span id="dataGJMin" style="color:#fff">0</span></div>
+                <div>First bending mode: <span id="dataFirstBending" style="color:#fff">0</span></div>
+                <div>First torsion mode: <span id="dataFirstTorsion" style="color:#fff">0</span></div>
+                <div>Status: <span id="dataStructuralStatus" style="color:#fff">N/A</span></div>
+            </div>
+        </div>
+    </div>
+</aside>
+
+
+<!-- TD053C: wide Freeform AI Workbench modal. This is outside the narrow sidebar/left panel. -->
+<div id="freeformAiWorkbenchBackdrop" class="freeform-ai-workbench-backdrop" hidden aria-hidden="true" data-freeform-workbench-modal="true" data-td053c-wide-modal="true">
+    <section id="freeformAiWorkbenchModal" class="freeform-ai-workbench-modal freeform-workbench-modal-wide" role="dialog" aria-modal="true" aria-labelledby="freeformAiWorkbenchTitle" data-freeform-workbench-modal-dialog="wide">
+        <header class="freeform-ai-workbench-header">
+            <div>
+                <h2 id="freeformAiWorkbenchTitle">Freeform AI Workbench Modal</h2>
+                <div class="freeform-ai-workbench-subtitle">Wide workspace for prompt, AI response JSON, schema validation, apply/preview and deterministic physical-analysis review.</div>
+            </div>
+            <button id="freeformWorkbenchCloseBtn" type="button" class="ai-modal-close" aria-label="Close Freeform AI Workbench">×</button>
+        </header>
+
+        <div id="freeformWorkbenchStatus" class="freeform-workbench-status" aria-live="polite" data-freeform-workbench-status="true">STATUS: idle</div>
+        <div id="freeformApplyStatePanel" class="freeform-apply-state-panel" data-freeform-apply-state-panel="true">
+            <strong>Freeform state:</strong>
+            <span data-freeform-active-revision="true">Active design revision: active-initial</span>
+            <span data-freeform-preview-revision="true">Preview design revision: none</span>
+            <span data-freeform-rejected-payload="true">Last rejected payload: none</span>
+            <span data-freeform-validation-state="true">Validation state: EMPTY</span>
+            <span data-freeform-apply-state="true">Apply state: EMPTY</span>
+            <span data-freeform-target-state="true">Target compliance: NOT_RUN</span>
+            <span data-freeform-cobra-state="true">Cobra fidelity: NOT_RUN</span>
+            <span data-freeform-infeasibility-state="true">Infeasibility: NOT_RUN</span>
+            <span id="freeformActiveSourceIndicator" data-freeform-active-source="true">Active source: parametricRuntime</span>
+            <span data-freeform-preview-warning="true">Active design is exported by default; failed previews are not accepted.</span>
+        </div>
+
+        <div class="freeform-ai-workbench-tabs" role="tablist" aria-label="Freeform AI Workbench sections" data-freeform-workbench-tabs="true">
+            <a href="#freeformWorkbenchPromptSection">Prompt</a>
+            <a href="#freeformWorkbenchResponseSection">AI Response JSON</a>
+            <a href="#freeformWorkbenchValidateApplySection">Validate / Apply</a>
+            <a href="#freeformWorkbenchCenterlineSection">Centerline Editor</a>
+            <a href="#freeformWorkbenchRingSection">Ring Editor</a>
+            <a href="#freeformWorkbenchFeatureSection">Feature Editor</a>
+            <a href="#freeformWorkbenchCobraFidelitySection">Cobra Fidelity</a>
+            <a href="#freeformWorkbenchAnalysisSection">Deterministic Analysis</a>
+            <a href="#freeformWorkbenchExportAuditSection">Export / Report Audit</a>
+        </div>
+
+        <div class="freeform-ai-workbench-body">
+
+<section id="freeformWorkbenchPromptSection" class="freeform-workbench-section" data-freeform-workbench-section="prompt">
+    <h3>Prompt</h3>
+    <textarea id="freeformWorkbenchPromptText" class="freeform-workbench-editor" data-freeform-prompt-editor="true" spellcheck="false">TD053D Freeform AI Prompt auto-populates here when the workbench opens. It must include current geometryMode, preset, material/cartridge/compliance context, strict Freeform JSON contract and schema summary. AI may propose designIntent, targets, aiEstimates, assumptions and sparse geometry patches only; app/kernel owns deterministic physical analysis, target compliance, Cobra fidelity and export/report audit.</textarea>
+</section>
+
+<section id="freeformWorkbenchResponseSection" class="freeform-workbench-section" data-freeform-workbench-section="response-json">
+    <h3>AI Response JSON</h3>
+    <textarea id="freeformWorkbenchResponseText" class="freeform-workbench-editor freeform-response-editor" data-freeform-response-editor="true" spellcheck="false" placeholder="Paste tonearm-designer-ai-freeform-loft-response JSON here. Long designIntent, assumptions, unsupportedAttributes and aiEstimates.reasoningSummary are allowed; physical min/max constraints remain strict."></textarea>
+    <textarea id="freeformResponseText" class="freeform-workbench-editor" data-legacy-freeform-response-editor="true" hidden aria-hidden="true"></textarea>
+</section>
+
+<section id="freeformWorkbenchValidateApplySection" class="freeform-workbench-section" data-freeform-workbench-section="validate-apply">
+    <h3>Validate / Apply</h3>
+    <div class="freeform-workbench-actions">
+        <button id="freeformCopyPromptBtn" type="button" data-freeform-action="copy-prompt">Copy Freeform AI Prompt</button>
+        <button id="freeformValidateResponseBtn" type="button" data-freeform-action="validate-response">Validate only</button>
+        <button id="freeformApplyResponseBtn" type="button" data-freeform-action="apply-preview">Apply to preview</button>
+        <button id="freeformAcceptPreviewBtn" type="button" data-freeform-action="accept-preview" disabled>Accept preview as active</button>
+        <button id="freeformRejectPreviewBtn" type="button" data-freeform-action="reject-preview">Reject preview</button>
+        <button id="freeformCopyRepairPromptBtn" type="button" data-freeform-action="copy-repair-prompt">Copy repair prompt</button>
+        <button id="freeformClearResponseBtn" type="button" data-freeform-action="clear-response">Clear</button>
+    </div>
+    <div class="info-text">Status path: EMPTY, PARSING, PARSE_ERROR, VALIDATING_SCHEMA, VALIDATION_REJECTED, SCHEMA_VALID, APPLYING_PREVIEW, PREVIEW_READY, TARGET_CHECKING, TARGET_FAIL_PREVIEW_ONLY, FORM_INTENT_MISMATCH_PREVIEW_ONLY, ACCEPTED_ACTIVE, APPLY_BLOCKED, APPLY_FAILED and INFEASIBLE. Rejected payloads are not applied; target/form-failed payloads are preview/quarantine only. Legacy Apply / Preview workflow is handled in this Validate / Apply tab.</div>
+    <div id="freeformWorkbenchValidationPanel" class="freeform-validation-panel" data-freeform-validation-panel="true" data-freeform-error-panel="true">No validation run yet.</div>
+</section>
+
+<section id="freeformWorkbenchCenterlineSection" class="freeform-workbench-section" data-freeform-workbench-section="centerline-editor" data-freeform-editor="centerline">
+    <h3>Centerline Editor</h3>
+    <div class="info-text">Locked datums are displayed read-only; AI/runtime validation rejects protected datum movement.</div>
+    <div id="freeformCenterlineEditor" data-freeform-centerline-editor="true"></div>
+</section>
+
+<section id="freeformWorkbenchRingSection" class="freeform-workbench-section" data-freeform-workbench-section="ring-editor" data-freeform-editor="rings">
+    <h3>Ring Editor</h3>
+    <div class="info-text">Editable fields include s, shapeFamily, width, height, wall thickness, rotation, tilt, asymmetry, ridge/crescent controls and bottom flatness.</div>
+    <div id="freeformRingEditor" data-freeform-ring-editor="true"></div>
+</section>
+
+<section id="freeformWorkbenchFeatureSection" class="freeform-workbench-section" data-freeform-workbench-section="feature-editor" data-freeform-editor="features">
+    <h3>Feature Editor</h3>
+    <div class="info-text">Titanium mount plate remains a structural laminated interface plate, never a loose underside plate.</div>
+    <div id="freeformFeatureEditor" data-freeform-feature-editor="true"></div>
+</section>
+
+<section id="freeformWorkbenchCobraFidelitySection" class="freeform-workbench-section" data-freeform-workbench-section="cobra-fidelity">
+    <h3>Cobra Fidelity</h3>
+    <pre id="freeformWorkbenchCobraFidelityPreview" class="freeform-analysis-preview" data-freeform-cobra-fidelity-preview="true">No Cobra fidelity analysis yet.</pre>
+</section>
+
+<section id="freeformWorkbenchAnalysisSection" class="freeform-workbench-section" data-freeform-workbench-section="deterministic-analysis">
+    <h3>Deterministic Analysis</h3>
+    <div id="freeformAnalysisStatusPanel" class="analysis-box" data-freeform-analysis-status-panel="true" data-td053d-modal-analysis-status="true">Analysis status: no freeform geometry built yet. Detailed deterministic values are shown below.</div>
+    <pre id="freeformWorkbenchAnalysisPreview" class="freeform-analysis-preview" data-freeform-analysis-preview="true">No deterministic analysis preview yet.</pre>
+</section>
+
+<section id="freeformWorkbenchExportAuditSection" class="freeform-workbench-section" data-freeform-workbench-section="export-report-audit">
+    <h3>Export / Report Audit</h3>
+    <pre id="freeformWorkbenchExportAuditPreview" class="freeform-analysis-preview" data-freeform-export-audit-preview="true">No export/report audit yet.</pre>
+</section>
+
+        </div>
+    </section>
+</div>
+
+<div id="aiModalBackdrop" class="ai-modal-backdrop" hidden aria-hidden="true">
+    <section class="ai-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="aiModalTitle">
+        <div class="ai-modal-header">
+            <div>
+                <h2 id="aiModalTitle">AI Modal Onshape Handoff</h2>
+                <div class="ai-modal-subtitle">FAS19: self-contained AI Vibe 3D prompt builder for exact 1:1 positive Onshape reference models. Supports semantic actions, printability audit, protected datums and optional legacy full-state delta.</div>
+            </div>
+            <button id="aiModalCloseBtn" class="ai-modal-close" type="button" aria-label="Close AI Modal">×</button>
+        </div>
+
+        <div class="ai-modal-body">
+            <div class="ai-modal-layout">
+                <div class="ai-modal-column ai-modal-left">
+                    <div class="ai-modal-panel ai-request-panel">
+                        <label for="aiModelFamily" class="ai-modal-label">AI model family</label>
+                        <select id="aiModelFamily">
+                            <option value="shape_designer" selected>Shape Designer</option>
+                            <option value="tonearm_3d_form">Tonearm 3D Form</option>
+                            <option value="cobra_tonearm">Cobra / Hollow Elbow tonearm</option>
+                            <option value="ai_vibe_3d_onshape">AI Vibe 3D / Onshape handoff</option>
+                            <option value="freeform_centerline_ring_loft">AI Vibe 3D Freeform Loft</option>
+                            <option value="custom">Custom shape delta</option>
+                        </select>
+
+                        <div id="aiFamilySummary" class="ai-family-summary" aria-live="polite">
+                            Family summary not built yet.
+                        </div>
+                        <div id="aiFamilyModeHint" class="ai-family-hint">
+                            shape_designer mode: 3D body-shape sliders are primary.
+                        </div>
+                        <div id="aiCobraModeStatus" class="ai-cobra-mode-status" aria-live="polite">
+                            Cobra status not checked yet.
+                        </div>
+                        <button id="aiActivateCobraRearModeBtn" class="ai-modal-inline-btn ai-cobra-activate-btn" type="button" hidden>
+                            Activate Cobra rear mode
+                        </button>
+                        <div id="aiLtOnlyZones" class="ai-lt-zone-list" aria-live="polite" hidden></div>
+
+                        <label for="aiUserIntent" class="ai-modal-label">Request</label>
+                        <textarea id="aiUserIntent" class="ai-modal-textarea ai-modal-textarea-small" placeholder="Describe the 1:1 Onshape target or 3D optimization. Example: optimize exact positive Cobra model for Onshape, preserve stylus/pivot/LP datums, eliminate export blockers."></textarea>
+                    </div>
+
+                    <div class="ai-modal-panel ai-zone-panel">
+                        <div class="ai-modal-label">Shape Profile Map</div>
+                        <div class="ai-profile-map-caption">Rendered from current profile data, same source as main Side Profile / Top View. Zone overlays are annotations only.</div>
+                        <div id="aiZoneMapHost" class="ai-zone-map-host"></div>
+                        <div id="aiZoneTooltip" class="ai-zone-tooltip" hidden></div>
+                        <div id="aiSelectedZoneInfo" class="ai-selected-zone-info" aria-live="polite">
+                            Selected zone: none. Hover/focus a profile overlay for details, or click to insert its tag into Request.
+                        </div>
+                    </div>
+
+                    <div class="ai-modal-panel ai-shape-context-panel">
+                        <div class="ai-modal-row ai-modal-row-wrap">
+                            <div class="ai-modal-label">Shape context</div>
+                            <button id="aiRefreshShape3DBtn" class="ai-modal-inline-btn" type="button">Refresh shape context</button>
+                            <button id="aiCopyShape3DBtn" class="ai-modal-secondary-btn" type="button">Copy shape context JSON</button>
+                        </div>
+                        <pre id="aiShape3DSummary" class="ai-modal-status ai-shape3d-summary" aria-live="polite">shape context summary not built yet.</pre>
+                    </div>
+                </div>
+
+                <div class="ai-modal-column ai-modal-right">
+                    <div class="ai-modal-panel ai-prompt-panel">
+                        <div class="ai-modal-row ai-modal-row-wrap">
+                            <label for="aiPromptText" class="ai-modal-label">Prompt</label>
+                            <div class="ai-modal-row ai-modal-row-tight">
+                                <span id="aiPromptCharCount" class="ai-prompt-char-count">0 characters</span>
+                                <button id="aiCopyPromptBtn" class="ai-modal-secondary-btn" type="button">Copy full AI prompt</button>
+                                <button id="aiBuildPromptBtn" class="ai-modal-inline-btn" type="button">Build / rebuild prompt</button>
+                            </div>
+                        </div>
+                        <div id="aiPromptStaleWarning" class="ai-prompt-stale-warning" hidden>
+                            Prompt needs rebuild.
+                        </div>
+                        <pre id="aiPromptBuildMeta" class="ai-prompt-build-meta" aria-live="polite">Prompt built at: not built</pre>
+                        <div class="ai-smoke-assistant-note">
+                            Prompt preview includes a self-contained shape context package, full left-panel inventory, current values, Cobra diagnosis, AI Vibe 3D feature graph, Onshape 1:1 handoff target, printability audit and strict response contract.
+                        </div>
+                        <textarea id="aiPromptText" class="ai-modal-textarea ai-prompt-textarea" spellcheck="false"></textarea>
+                    </div>
+
+                    <div class="ai-modal-panel ai-freeform-loft-panel" data-td052-freeform-loft-tab="true">
+                        <div class="ai-modal-row ai-modal-row-wrap">
+                            <div>
+                                <div class="ai-modal-label">AI Vibe 3D Freeform Loft</div>
+                                <div class="ai-smoke-assistant-note">
+                                    TD052 centerline/ring loft tab: bendable centerline, abstract form rings, separate feature objects and existing physical-analysis bridge. Complements Parametric Cobra / Classic.
+                                </div>
+                            </div>
+                            <select id="aiFreeformPreset" aria-label="Freeform loft preset">
+                                <option value="long_low_cobra_monocoque">Cobra Freeform Standard</option>
+                                <option value="straight_low_mass_lt_arm">Straight LT Standard</option>
+                                <option value="integrated_side_bent_headshell">Integrated Side-Bent Headshell Standard</option>
+                            </select>
+                        </div>
+                        <div class="ai-modal-button-row">
+                            <button id="aiCopyFreeformPromptBtn" class="ai-modal-secondary-btn" type="button">Copy Freeform AI Prompt</button>
+                            <button id="aiApplyFreeformResponseBtn" class="ai-modal-apply-btn" type="button">Apply Freeform AI Response</button>
+                        </div>
+                        <pre id="aiFreeformStatus" class="ai-modal-status" aria-live="polite">TD052 Freeform Loft: local kernel scaffold loaded when scripts are available.</pre>
+                    </div>
+
+                    <div class="ai-modal-panel ai-response-panel">
+                        <label for="aiResponseText" class="ai-modal-label">Response / Apply AI Vibe 3D response or legacy strict JSON delta</label>
+                        <textarea id="aiResponseText" class="ai-modal-textarea ai-response-textarea" spellcheck="false" placeholder='{"schema":"tonearm-designer-ai-vibe-3d-response","version":1,"app":"V28.8.0-Fas20-AIResponseApplyRuntime","intent":"onshape_ready_exact_positive_model","actions":[{"op":"set_onshape_1to1"},{"op":"fix_export_slivers"}],"delta":null,"validationTargets":{"scale":1,"units":"mm"}}'></textarea>
+
+                        <div class="ai-modal-button-row ai-apply-row">
+                            <button id="aiValidateDeltaBtn" class="ai-modal-secondary-btn" type="button">Validate response</button>
+                            <button id="aiApplyDeltaBtn" class="ai-modal-apply-btn" type="button">Apply AI response</button>
+                        </div>
+                        <pre id="aiValidationResult" class="ai-modal-status" aria-live="polite"></pre>
+
+                        <details class="ai-smoke-assistant ai-developer-diagnostics">
+                            <summary>Developer diagnostics</summary>
+                            <div class="ai-smoke-assistant-note">
+                                Optional validation helpers for development. Collapsed by default and not included in the AI prompt.
+                            </div>
+                            <div class="ai-modal-button-row">
+                                <button id="aiGenerateValidDeltaBtn" class="ai-modal-secondary-btn" type="button">Generate valid diagnostic delta</button>
+                                <button id="aiGenerateInvalidDeltaBtn" class="ai-modal-secondary-btn" type="button">Generate invalid diagnostic delta</button>
+                                <button id="aiRunSelfTestBtn" class="ai-modal-inline-btn" type="button">Run validation self-test</button>
+                                <button id="aiCopySmokeReportBtn" class="ai-modal-secondary-btn" type="button">Copy diagnostic report</button>
+                            </div>
+                            <pre id="aiSmokeReportSummary" class="ai-modal-status ai-smoke-report-summary" aria-live="polite">Diagnostics ready.</pre>
+                        </details>
+
+                        <div class="ai-session-clean-note">
+                            AI context is not saved into normal sessions. Exported sessions should contain only
+                            <code>schema</code>, <code>version</code>, <code>app</code>, <code>timestamp</code>,
+                            <code>name</code>, <code>inputs</code>, <code>selects</code>, <code>checkboxes</code>
+                            and <code>flags</code>; AI prompt/runtime diagnostic keys are excluded.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<div id="ltMechanismModalBackdrop" class="lt-mechanism-modal-backdrop" hidden aria-hidden="true">
+    <section class="lt-mechanism-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="ltMechanismModalTitle">
+        <div class="lt-mechanism-modal-header">
+            <div>
+                <h2 id="ltMechanismModalTitle">Engrove LT Mechanism</h2>
+                <div class="lt-mechanism-modal-subtitle">Working prototype mechanism preview · Option C/hybrid · P3 local (-L23,0) inside tonearm group · no AI-modal visualizer.</div>
+            </div>
+            <button id="ltMechanismCloseBtn" class="lt-mechanism-close" type="button" aria-label="Close LT Mechanism Modal">×</button>
+        </div>
+
+        <div class="lt-mechanism-modal-body">
+            <div class="lt-mechanism-layout">
+                <div class="lt-mechanism-visual-panel">
+                    <div id="ltMechanismSvgHost" class="lt-mechanism-svg-host" aria-live="polite"></div>
+                    <details class="lt-mechanism-note" open>
+                        <summary>Mechanism prototype preview</summary>
+                        <div>TD028 uses Jan-Eric's working HTML prototype as the modal-local source of truth. The preview is live-computed from the displayed SVG geometry. It does not write core mesh, render2d, render3d, exporters, AI delta schema or the session schema.</div>
+                    </details>
+                </div>
+
+                <aside class="lt-mechanism-side-panel lt-mechanism-side-panel-prototype">
+                    <div class="lt-mechanism-panel-section lt-mechanism-controls-section">
+                        <div class="lt-mechanism-panel-title">Animation</div>
+                        <div class="lt-mechanism-proto-button-row">
+                            <button id="ltMechPlayBtn" class="lt-mechanism-btn lt-mechanism-primary" type="button" aria-pressed="false">Play</button>
+                            <button id="ltMechPauseBtn" class="lt-mechanism-btn" type="button">Pause</button>
+                            <button id="ltMechBackBtn" class="lt-mechanism-btn" type="button">−1%</button>
+                            <button id="ltMechFwdBtn" class="lt-mechanism-btn" type="button">+1%</button>
+                            <button id="ltMechResetBtn" class="lt-mechanism-btn lt-mechanism-warn" type="button">Reset</button>
+                        </div>
+
+                        <div class="lt-mechanism-proto-control">
+                            <div class="lt-mechanism-proto-row-label"><span>frame</span><span id="ltMechFrameLabel">0.000</span></div>
+                            <input id="ltMechFrameSlider" type="range" min="0" max="1" step="0.001" value="0">
+                        </div>
+
+                        <div class="lt-mechanism-proto-control">
+                            <div class="lt-mechanism-proto-row-label"><span>speed</span><span id="ltMechSpeedLabel">1.00×</span></div>
+                            <input id="ltMechSpeedSlider" type="range" min="0.25" max="4" step="0.25" value="1">
+                        </div>
+                    </div>
+
+                    <div class="lt-mechanism-panel-section">
+                        <div class="lt-mechanism-panel-title">Display</div>
+                        <label class="lt-mechanism-proto-check"><input id="ltMechShowHelpers" type="checkbox" checked> Show helpers</label>
+                        <label class="lt-mechanism-proto-check"><input id="ltMechShowLabels" type="checkbox" checked> Show labels</label>
+                        <label class="lt-mechanism-proto-check"><input id="ltMechShowGhost" type="checkbox" checked> Show source-SVG STATOR_TRACK ghost</label>
+                        <label class="lt-mechanism-proto-check"><input id="ltMechShowSpin" type="checkbox" checked> Spin record (cosmetic only)</label>
+                        <label class="lt-mechanism-proto-check"><input id="ltMechShowLocus" type="checkbox" checked> Show N1 sweep locus</label>
+                    </div>
+
+                    <div class="lt-mechanism-panel-section">
+                        <div class="lt-mechanism-panel-title">Mechanism parameter</div>
+                        <div class="lt-mechanism-proto-control">
+                            <div class="lt-mechanism-proto-row-label"><span>L23 — P2 → P3 backwards along tonearm axis</span><span id="ltMechL23Label">50.0 mm</span></div>
+                            <input id="ltMechL23Range" type="range" min="10" max="200" step="0.1" value="50.0">
+                            <input id="ltMechL23Input" class="lt-mechanism-number" type="number" min="10" max="200" step="0.1" value="50.0">
+                        </div>
+                        <div class="lt-mechanism-param-note preview-only">Preview-only active parameter. Changing L23 moves P3 locally in g-tonearm, recomputes P3 locus/readouts and keeps the current frame.</div>
+                        <div class="lt-mechanism-param-note">Auto Fix is not part of this prototype integration.</div>
+                    </div>
+
+                    <div class="lt-mechanism-panel-section lt-mechanism-data-section">
+                        <div class="lt-mechanism-panel-title">Data panel</div>
+                        <div id="ltMechanismDataPanel" class="lt-mechanism-data-panel"></div>
+                    </div>
+
+                    <div class="lt-mechanism-panel-section lt-mechanism-validation-section">
+                        <div class="lt-mechanism-panel-title">Validation @ keyframes</div>
+                        <div id="ltMechValidationSummary" class="lt-mechanism-validation-summary"></div>
+                        <table class="lt-mechanism-validation-table">
+                            <thead>
+                                <tr>
+                                    <th>f</th><th>θ</th><th>φ</th><th>r N1</th><th>tang</th><th>P3 x</th><th>P3 y</th><th>src gap</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ltMechValidationTbody"></tbody>
+                        </table>
+                    </div>
+                </aside>
+            </div>
+        </div>
+    </section>
+</div>
+
+
+<div id="solverModal" class="solver-modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="solverModalTitle">
+    <div class="solver-shell">
+        <header class="solver-header">
+            <div>
+                <div class="solver-kicker">Fas 15.3f · Persistent Preview, Smart Solver &amp; Guided Mode</div>
+                <h2 id="solverModalTitle">Solver Sandbox</h2>
+                <p>Solver runs in sandbox mode. Live design changes only after Apply.</p>
+            </div>
+            <button id="solverCloseBtn" class="solver-close-btn" type="button" aria-label="Close solver">×</button>
+        </header>
+
+        <div class="solver-toolbar">
+            <button id="solverRunBtn" class="solver-action solver-run" type="button">Run Solver</button>
+            <button id="solverCancelBtn" class="solver-action solver-cancel" type="button" disabled>Cancel</button>
+            <button id="solverResetBtn" class="solver-action" type="button">Reset Search</button>
+            <button id="solverDiscardBtn" class="solver-action solver-discard" type="button">Discard</button>
+            <button id="solverApplyBtn" class="solver-action solver-apply" type="button" disabled>Apply</button>
+            <label class="solver-evaluation-control" for="solverEvaluationLimit">
+                <span>Solver evaluations</span>
+                <input id="solverEvaluationLimit" type="range" min="2500" max="15000" step="500" value="2500">
+                <output id="solverEvaluationLimitValue" for="solverEvaluationLimit">2,500 candidates</output>
+            </label>
+            <label class="solver-strategy-control" for="solverSearchStrategy">
+                <span>Search strategy</span>
+                <select id="solverSearchStrategy">
+                    <option value="smart_prioritized" selected>Smart prioritized</option>
+                    <option value="exhaustive_order">Exhaustive order</option>
+                    <option value="local_refinement">Local refinement</option>
+                    <option value="counterweight_first">Counterweight first</option>
+                    <option value="geometry_first">Geometry first</option>
+                    <option value="resonance_first">Resonance first</option>
+                </select>
+            </label>
+            <div id="solverPlanSummary" class="solver-plan-summary" aria-live="polite">Strategy: Smart prioritized — prioritized. Passes: baseline → target priority → coarse → refine → fallback → exhaustive.</div>
+            <div id="solverProgress" class="solver-progress" aria-live="polite"><span id="solverSpinner" class="solver-spinner" hidden></span><span id="solverProgressText">Idle.</span></div>
+            <div id="solverSearchSummary" class="solver-search-summary"></div>
+        </div>
+
+        <div class="solver-body solver-responsive-layout">
+            <nav class="solver-layout-tabs" aria-label="Solver panels" role="tablist">
+                <button id="solverGuideTab" class="solver-tab-btn active" type="button" role="tab" data-solver-panel="guide" data-solver-tab="guide" aria-selected="true" aria-controls="solverGuidePanel">Guide</button>
+                <button id="solverExpertTab" class="solver-tab-btn" type="button" role="tab" data-solver-panel="expert" data-solver-tab="expert" aria-selected="false" aria-controls="solverExpertPanel">Expert</button>
+                <button id="solverResultsTab" class="solver-tab-btn" type="button" role="tab" data-solver-panel="results" data-solver-tab="results" aria-selected="false" aria-controls="solverResultsPanel">Results</button>
+                <button id="solverPreviewTab" class="solver-tab-btn solver-focus-preview-btn" type="button" role="tab" data-solver-panel="preview" data-solver-tab="preview" aria-selected="false" aria-controls="solverPreviewPanel">Focus Preview</button>
+            </nav>
+
+            <section id="solverGuidePanel" class="solver-panel solver-guide-panel solver-tab-panel active" data-solver-panel-name="guide" role="tabpanel" aria-labelledby="solverGuideTab">
+                <div class="solver-panel-title">Guided setup</div>
+                <div class="solver-panel-note">Answer simple setup questions or pick a preset. Guide changes only the solver sandbox settings; live design still changes only after Apply.</div>
+                <div class="solver-guide-content">
+                    <label for="solverGuidePreset">Preset</label>
+                    <select id="solverGuidePreset">
+                        <option value="balanced">Balanced Optimization</option>
+                        <option value="tracking_force">Tracking Force Fine Tune</option>
+                        <option value="resonance">Resonance Window Tune</option>
+                        <option value="counterweight">Counterweight Balance Tune</option>
+                        <option value="manufacturing">Manufacturing Diameter Safe Tune</option>
+                    </select>
+
+                    <fieldset class="solver-guide-fieldset">
+                        <legend>1. What do you want to optimize?</legend>
+                        <label><input type="checkbox" class="solver-guide-goal" value="tracking_force"> Tracking force / needle pressure</label>
+                        <label><input type="checkbox" class="solver-guide-goal" value="resonance_window"> LF resonance window</label>
+                        <label><input type="checkbox" class="solver-guide-goal" value="total_com_z"> Total tonearm COM</label>
+                        <label><input type="checkbox" class="solver-guide-goal" value="counterweight_com_z"> Counterweight COM</label>
+                        <label><input type="checkbox" class="solver-guide-goal" value="effective_mass_range"> Total mass / effective mass</label>
+                        <label><input type="checkbox" class="solver-guide-goal" value="diameter_range"> Manufacturing diameter / build envelope</label>
+                    </fieldset>
+
+                    <label for="solverGuideChangeScope">2. What may the solver change?</label>
+                    <select id="solverGuideChangeScope">
+                        <option value="counterweight">Counterweight only</option>
+                        <option value="geometry">Geometry only</option>
+                        <option value="mass_resonance">Mass/resonance only</option>
+                        <option value="tail">Tail/rear parameters only</option>
+                        <option value="fine_trim">Fine trim only</option>
+                        <option value="full">Full optimization</option>
+                        <option value="custom">Custom / keep current expert choices</option>
+                    </select>
+
+                    <fieldset class="solver-guide-fieldset">
+                        <legend>3. What is fixed?</legend>
+                        <label><input type="checkbox" class="solver-guide-fixed" value="cartridge"> Cartridge is fixed</label>
+                        <label><input type="checkbox" class="solver-guide-fixed" value="effective_length"> Effective length is fixed</label>
+                        <label><input type="checkbox" class="solver-guide-fixed" value="diameter"> Manufacturing diameter is fixed</label>
+                        <label><input type="checkbox" class="solver-guide-fixed" value="disc_count"> Counterweight disc count is fixed</label>
+                        <label><input type="checkbox" class="solver-guide-fixed" value="visual_shape"> Keep visual shape mostly unchanged</label>
+                        <label><input type="checkbox" class="solver-guide-fixed" value="larger_changes"> Allow larger changes</label>
+                    </fieldset>
+
+                    <fieldset class="solver-guide-fieldset solver-guide-manufacturing">
+                        <legend>4. Manufacturing constraints</legend>
+                        <label>Min diameter <input id="solverGuideMinDiameter" type="number" step="0.1" placeholder="mm"></label>
+                        <label>Max diameter <input id="solverGuideMaxDiameter" type="number" step="0.1" placeholder="mm"></label>
+                        <label><input id="solverGuideCarbonSleeve" type="checkbox"> Carbon fiber sleeve/sock compatibility</label>
+                        <label><input id="solverGuideBodyEnvelope" type="checkbox"> Keep within current body envelope</label>
+                    </fieldset>
+
+                    <label for="solverGuideDepth">5. Search depth</label>
+                    <select id="solverGuideDepth">
+                        <option value="2500">Quick: 2,500</option>
+                        <option value="5000">Balanced: 5,000</option>
+                        <option value="7500">Balanced+: 7,500</option>
+                        <option value="15000">Deep: 15,000</option>
+                    </select>
+
+                    <button id="solverGuideApplyBtn" class="solver-action solver-guide-apply" type="button">Apply guide settings</button>
+                    <div id="solverGuideSummary" class="solver-guide-summary" aria-live="polite">Guide not applied yet.</div>
+                </div>
+            </section>
+
+            <section id="solverExpertPanel" class="solver-tab-panel solver-expert-panel" data-solver-panel-name="expert" role="tabpanel" aria-labelledby="solverExpertTab" hidden>
+                <aside class="solver-panel solver-variable-panel">
+                    <div class="solver-panel-title">Variables</div>
+                    <div class="solver-panel-note">Unlock only variables the solver may adjust. Each unlocked variable requires min, max and step.</div>
+                    <div id="solverVariables" class="solver-variables"></div>
+                </aside>
+
+                <aside class="solver-panel solver-target-panel">
+                    <div class="solver-panel-title">Optimization Goals</div>
+                    <div class="solver-panel-note">Enable active targets for scoring. Disabled targets are displayed but do not affect score.</div>
+                    <div id="solverTargets" class="solver-targets"></div>
+                </aside>
+            </section>
+
+            <section id="solverResultsPanel" class="solver-panel solver-result-panel solver-tab-panel" data-solver-panel-name="results" role="tabpanel" aria-labelledby="solverResultsTab" hidden>
+                <div class="solver-panel-title">Results</div>
+                <div id="solverResults" class="solver-results">
+                    <div class="solver-empty">No solver results yet. Unlock variables and run solver.</div>
+                </div>
+            </section>
+
+            <aside id="solverPreviewPanel" class="solver-panel solver-preview-panel solver-persistent-preview-panel" data-solver-panel-name="preview" aria-labelledby="solverPreviewTitle">
+                <div id="solverPreviewTitle" class="solver-panel-title">3D Preview</div>
+                <div id="solverPreviewStatus" class="solver-preview-status" aria-live="polite">Preview initializes when the solver opens.</div>
+                <div id="solverPreview3D" class="solver-preview-3d" data-persistent-preview="true"></div>
+                <div id="solverCandidateMetrics" class="solver-candidate-metrics">No candidate selected.</div>
+            </aside>
+        </div>
+
+        <footer class="solver-footer">
+            <div id="solverStatus" class="solver-status" aria-live="polite">Solver not started.</div>
+            <div class="solver-close-contract">Close contract: Discard, Apply, or X only. Backdrop and Escape are disabled.</div>
+        </footer>
+    </div>
+</div>
+
+
+<div id="cartridgePickerModal" class="cartridge-picker-modal" hidden>
+    <div class="cartridge-picker-shell" role="dialog" aria-modal="true" aria-labelledby="cartridgePickerTitle">
+        <header class="cartridge-picker-header">
+            <div>
+                <div class="cartridge-picker-kicker">Fas 15.3a compact cartridge data</div>
+                <h2 id="cartridgePickerTitle">Cartridge Picker</h2>
+                <p>Search and filter the compact dataset. Apply updates the live TonearmDesigner cartridge mass, 10 Hz compliance and tracking-force target once.</p>
+            </div>
+            <button id="cartridgePickerCloseBtn" class="cartridge-picker-close" type="button" aria-label="Close cartridge picker">×</button>
+        </header>
+
+        <div class="cartridge-picker-body">
+            <section class="cartridge-picker-panel cartridge-picker-filters">
+                <h3>Search &amp; filters</h3>
+                <label for="cartridgeSearchInput">Manufacturer / model</label>
+                <input id="cartridgeSearchInput" type="search" placeholder="Search e.g. Goldring, Ortofon, AT-VM…" autocomplete="off">
+
+                <label for="cartridgeTypeFilter">Type</label>
+                <select id="cartridgeTypeFilter">
+                    <option value="">All types</option>
+                </select>
+
+                <div class="cartridge-filter-grid">
+                    <label>Mass min [g]<input id="cartridgeMassMin" type="number" min="0" max="40" step="0.1" placeholder="min"></label>
+                    <label>Mass max [g]<input id="cartridgeMassMax" type="number" min="0" max="40" step="0.1" placeholder="max"></label>
+                    <label>Compliance min [cu]<input id="cartridgeComplianceMin" type="number" min="0" max="80" step="0.5" placeholder="min"></label>
+                    <label>Compliance max [cu]<input id="cartridgeComplianceMax" type="number" min="0" max="80" step="0.5" placeholder="max"></label>
+                    <label>Tracking force min [g]<input id="cartridgeTrackingForceMin" type="number" min="0" max="8" step="0.05" placeholder="min"></label>
+                    <label>Tracking force max [g]<input id="cartridgeTrackingForceMax" type="number" min="0" max="8" step="0.05" placeholder="max"></label>
+                    <label>Output min [mV]<input id="cartridgeOutputMin" type="number" min="0" max="20" step="0.01" placeholder="optional"></label>
+                    <label>Output max [mV]<input id="cartridgeOutputMax" type="number" min="0" max="20" step="0.01" placeholder="optional"></label>
+                </div>
+
+                <label for="cartridgeStylusFilter">Stylus contains</label>
+                <input id="cartridgeStylusFilter" type="search" placeholder="optional: elliptical, shibata…">
+
+                <button id="cartridgePickerResetBtn" class="cartridge-picker-secondary" type="button">Clear filters</button>
+                <div id="cartridgePickerStatus" class="cartridge-picker-status" aria-live="polite"></div>
+            </section>
+
+            <section class="cartridge-picker-panel cartridge-picker-results-panel">
+                <div class="cartridge-picker-result-header">
+                    <h3>Results</h3>
+                    <div id="cartridgeResultCount" class="cartridge-result-count">0 results</div>
+                </div>
+                <div id="cartridgeResults" class="cartridge-results" role="listbox" aria-label="Cartridge results"></div>
+            </section>
+
+            <section class="cartridge-picker-panel cartridge-picker-preview-panel">
+                <h3>Selected cartridge preview</h3>
+                <div id="cartridgePickerPreview" class="cartridge-picker-preview">
+                    <div class="cartridge-picker-empty">Select a cartridge row to preview details.</div>
+                </div>
+                <div class="cartridge-picker-apply-note">Apply changes live mass, compliance and tracking-force target. Cancel, X and backdrop clicks leave the current design unchanged.</div>
+            </section>
+        </div>
+
+        <footer class="cartridge-picker-footer">
+            <button id="cartridgePickerCancelBtn" class="cartridge-picker-secondary" type="button">Cancel</button>
+            <button id="cartridgePickerApplyBtn" class="cartridge-picker-apply" type="button" disabled>Apply</button>
+        </footer>
+    </div>
+</div>
+
+<div id="canvasTooltip" class="canvas-tooltip"></div>
+
+    <script type="application/json" id="aiVibeSculptRuntimeSchema">
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://engrove.local/schemas/tonearm-designer-ai-response-apply.schema.json",
+  "title": "TonearmDesigner TD051B Titanium Interface Plate Sparse Runtime Sculpt Contract",
+  "description": "Normative TD051B strict JSON contract for AI Modal Response / Apply AI Vibe 3D response. TD051 keeps TD049/TD050 sparse Cobra continuity rules and adds the titaniumMountPlate contract: titanium plate is a structural laminated interface plate between carbon armwand/integrated headshell and cartridge mounting surface, not a loose underside plate and not headshellSlots.plate. External AI responses are sparse shape patches only; protected alignment/cart/physics/mass/export/global state and full-state passthrough are forbidden. TD051B repairs dangling legacy schema references: PreferredAIVibe3DResponse.delta resolves only to null, SparseShapePatchDelta or SparseEmptyDeltaWhenUninterpretable.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/PreferredAIVibe3DResponse"
+    },
+    {
+      "$ref": "#/$defs/SparseShapePatchDelta"
+    },
+    {
+      "$ref": "#/$defs/SparseEmptyDeltaWhenUninterpretable"
+    },
+    {
+      "$ref": "#/$defs/SparseArchitectureGateOkEnvelope"
+    }
+  ],
+  "$defs": {
+    "PreferredAIVibe3DResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "version",
+        "app",
+        "intent",
+        "actions",
+        "delta",
+        "validationTargets"
+      ],
+      "properties": {
+        "schema": {
+          "const": "tonearm-designer-ai-vibe-3d-response"
+        },
+        "version": {
+          "const": 1
+        },
+        "app": {
+          "const": "V28.8.0-Fas20-AIResponseApplyRuntime",
+          "description": "Current application version. Runtime does not currently reject other app strings for this wrapper, but strict AI output must use the live app version."
+        },
+        "intent": {
+          "type": "string",
+          "const": "onshape_ready_exact_positive_model",
+          "description": "Preferred exact-positive-model Onshape handoff intent."
+        },
+        "actions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AIVibeSemanticAction"
+          },
+          "description": "Semantic action primitives. Runtime applies these before optional embedded legacy delta."
+        },
+        "delta": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/SparseShapePatchDelta"
+            },
+            {
+              "$ref": "#/$defs/SparseEmptyDeltaWhenUninterpretable"
+            }
+          ],
+          "description": "Null or a TD051B sparse delta only. Full-state passthrough, protected fields and legacy full-session maps are forbidden."
+        },
+        "validationTargets": {
+          "$ref": "#/$defs/OnshapeValidationTargets"
+        }
+      }
+    },
+    "OnshapeValidationTargets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "units",
+        "scale",
+        "geometryKind",
+        "exportType",
+        "exactOneToOne",
+        "boundaryEdgesMax",
+        "nonManifoldEdgesMax",
+        "degenerateTrianglesMax",
+        "sliverTrianglesPreferredMax",
+        "minTriangleAreaPreferredMm2",
+        "preserveScale1To1",
+        "preserveCurrentCoordinateFrame",
+        "requiredDatums",
+        "forbiddenTransformations"
+      ],
+      "properties": {
+        "units": {
+          "const": "mm"
+        },
+        "scale": {
+          "const": 1
+        },
+        "geometryKind": {
+          "const": "positive_reference_mesh"
+        },
+        "exportType": {
+          "const": "onshape_1to1"
+        },
+        "exactOneToOne": {
+          "const": true
+        },
+        "boundaryEdgesMax": {
+          "type": "integer",
+          "const": 0
+        },
+        "nonManifoldEdgesMax": {
+          "type": "integer",
+          "const": 0
+        },
+        "degenerateTrianglesMax": {
+          "type": "integer",
+          "const": 0
+        },
+        "sliverTrianglesPreferredMax": {
+          "type": "integer",
+          "const": 0
+        },
+        "minTriangleAreaPreferredMm2": {
+          "type": "number",
+          "minimum": 1e-05
+        },
+        "preserveScale1To1": {
+          "const": true
+        },
+        "preserveCurrentCoordinateFrame": {
+          "const": true
+        },
+        "requiredDatums": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "stylus_point",
+              "pivot_point",
+              "lp_top_plane",
+              "x_length_axis",
+              "y_mirror_axis",
+              "z_vertical_axis"
+            ]
+          },
+          "uniqueItems": true,
+          "minItems": 6
+        },
+        "forbiddenTransformations": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "mould_offset",
+              "draft_modification",
+              "shrinkage_compensation",
+              "split_mould_flange",
+              "registration_pins",
+              "pour_gates",
+              "vent_channels"
+            ]
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "AIVibeSemanticAction": {
+      "oneOf": [
+        {
+          "type": "object",
+          "description": "Set manufacturingMode and exportType to onshape_1to1, zero mould/plug compensation controls, set onshapeUnitScale=1, onshapeStrictOneToOne=true, onshapeMetadataSidecar=true.",
+          "required": [
+            "op"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "set_onshape_1to1"
+            },
+            "reason": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "description": "Same runtime effect as set_onshape_1to1; use when neutralising legacy mould/plug parameters is the main intent.",
+          "required": [
+            "op"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "enforce_exact_1to1"
+            },
+            "reason": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "description": "Enable aiVibeSoftSliverPass and set aiVibeMinTriangleHardFailArea to 0.00001.",
+          "required": [
+            "op"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "fix_export_slivers"
+            },
+            "strategy": {
+              "type": "string",
+              "enum": [
+                "soft_pass_sub_001_mm2_when_manifold"
+              ]
+            },
+            "reason": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "description": "Normalizes Onshape handoff and declares protected reference datums for AI intent; runtime applies the same scale/metadata controls as normalize_onshape_handoff.",
+          "required": [
+            "op"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "preserve_reference_datums"
+            },
+            "datums": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "stylus_point",
+                  "pivot_point",
+                  "lp_top_plane",
+                  "x_length_axis",
+                  "y_mirror_axis",
+                  "z_vertical_axis"
+                ]
+              },
+              "uniqueItems": true
+            },
+            "reason": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "description": "Raise existing wall/ridge/bridge support values inside a named writable zone; does not invent new geometry.",
+          "required": [
+            "op"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "stiffen_zone"
+            },
+            "zone": {
+              "type": "string",
+              "enum": [
+                "armwand",
+                "neck",
+                "rear",
+                "main_body",
+                "counterweight_bridge"
+              ]
+            },
+            "wallMin": {
+              "type": "number",
+              "minimum": 0.2,
+              "maximum": 3,
+              "description": "Minimum wall thickness request in mm; runtime applies max(current, value)."
+            },
+            "neckWMin": {
+              "type": "number",
+              "minimum": 5,
+              "maximum": 30,
+              "description": "Minimum neck width request in mm for neck zone."
+            },
+            "ridgeHeightMin": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 4,
+              "description": "Minimum canopy ridge height request in mm."
+            },
+            "bridgeRadiusMin": {
+              "type": "number",
+              "minimum": 0.5,
+              "maximum": 4,
+              "description": "Minimum rear support bridge radius request in mm for rear zone."
+            },
+            "tailDMin": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 25,
+              "description": "Minimum tail diameter request in mm for rear zone."
+            },
+            "reason": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "description": "Enable rear disc-stack export and enforce at least one rounded rearWeightDiscCount.",
+          "required": [
+            "op"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "balance_about_pivot"
+            },
+            "reason": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "description": "Increase rear-terminal support bridge continuity toward counterweight stack.",
+          "required": [
+            "op"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "extend_support_bridge"
+            },
+            "lengthMm": {
+              "type": "number",
+              "minimum": 0.5,
+              "maximum": 8,
+              "description": "Minimum rearSupportBridgeLength in mm."
+            },
+            "overlapMm": {
+              "type": "number",
+              "minimum": 0.05,
+              "maximum": 1.5,
+              "description": "Minimum rearSupportBridgeOverlap in mm."
+            },
+            "target": {
+              "type": "string"
+            },
+            "reason": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "description": "Normalize manufacturingMode/exportType to onshape_1to1, unit scale 1, strict 1:1 and metadata sidecar.",
+          "required": [
+            "op"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "normalize_onshape_handoff"
+            },
+            "reason": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "description": "Set cobraArchitectureEnabled and enableCobraArchitecture true and synchronize state.cobraArchitecture.enabled.",
+          "required": [
+            "op"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "activate_cobra_architecture_gate"
+            },
+            "reason": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "description": "Lock effective length/N1-P2 target by writing the apex control. Runtime fallback is 237.05 mm.",
+          "required": [
+            "op"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "lock_n1p2"
+            },
+            "targetMm": {
+              "type": "number",
+              "minimum": 200,
+              "maximum": 260,
+              "description": "N1-P2/effective target in mm; runtime writes apex to this value."
+            },
+            "n1p2Mm": {
+              "type": "number",
+              "minimum": 200,
+              "maximum": 260,
+              "description": "Alias for targetMm."
+            },
+            "valueMm": {
+              "type": "number",
+              "minimum": 200,
+              "maximum": 260,
+              "description": "Alias for targetMm."
+            },
+            "reason": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "description": "Force the headshell lower surface onto a real planar local-Z underside over a specified X range, with optional TD049 front stiffness-ramp parameters.",
+          "required": [
+            "op"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "flatten_headshell_underside"
+            },
+            "startX": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 60
+            },
+            "endX": {
+              "type": "number",
+              "minimum": 5,
+              "maximum": 80
+            },
+            "zMm": {
+              "type": "number",
+              "minimum": -12,
+              "maximum": 8
+            },
+            "bottomZMm": {
+              "type": "number",
+              "minimum": -12,
+              "maximum": 8
+            },
+            "blendLengthMm": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 40
+            },
+            "widthFraction": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 0.95
+            },
+            "reason": {
+              "type": "string"
+            },
+            "minHeightMm": {
+              "type": "number",
+              "minimum": 3,
+              "maximum": 12
+            },
+            "rampEndX": {
+              "type": "number",
+              "minimum": 20,
+              "maximum": 140
+            },
+            "targetHeightMm": {
+              "type": "number",
+              "minimum": 5,
+              "maximum": 18
+            },
+            "topBias": {
+              "type": "number",
+              "minimum": 0.5,
+              "maximum": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "description": "Suppress a visible/local side-profile step by extending the flat-to-neck blend and enabling TD049 front stiffness-ramp defaults.",
+          "required": [
+            "op"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "smooth_profile_step"
+            },
+            "strength": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "blendLengthMinMm": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 40
+            },
+            "neckLengthMinMm": {
+              "type": "number",
+              "minimum": 10,
+              "maximum": 80
+            },
+            "ridgeHeightMaxMm": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 4
+            },
+            "reason": {
+              "type": "string"
+            },
+            "rampEndXMinMm": {
+              "type": "number",
+              "minimum": 20,
+              "maximum": 140
+            },
+            "minHeightMm": {
+              "type": "number",
+              "minimum": 3,
+              "maximum": 12
+            },
+            "targetHeightMm": {
+              "type": "number",
+              "minimum": 5,
+              "maximum": 18
+            }
+          }
+        },
+        {
+          "type": "object",
+          "description": "Generic surface-sculpt operation. Runtime currently accepts only headshell_underside as the zone/surface target.",
+          "required": [
+            "op"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "sculpt_surface_zone"
+            },
+            "zone": {
+              "type": "string",
+              "enum": [
+                "headshell_underside"
+              ]
+            },
+            "surface": {
+              "type": "string",
+              "enum": [
+                "headshell_underside"
+              ]
+            },
+            "startX": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 60
+            },
+            "endX": {
+              "type": "number",
+              "minimum": 5,
+              "maximum": 80
+            },
+            "zMm": {
+              "type": "number",
+              "minimum": -12,
+              "maximum": 8
+            },
+            "bottomZMm": {
+              "type": "number",
+              "minimum": -12,
+              "maximum": 8
+            },
+            "blendLengthMm": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 40
+            },
+            "widthFraction": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 0.95
+            },
+            "reason": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "description": "Enable front section-height ramp controls so the headshell-to-puckel span cannot remain a blade-like thin beam. This writes only existing numeric UI controls.",
+          "required": [
+            "op"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "stiffen_front_ramp"
+            },
+            "startX": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 80
+            },
+            "endX": {
+              "type": "number",
+              "minimum": 20,
+              "maximum": 140
+            },
+            "minHeightMm": {
+              "type": "number",
+              "minimum": 3,
+              "maximum": 12
+            },
+            "targetHeightMm": {
+              "type": "number",
+              "minimum": 5,
+              "maximum": 18
+            },
+            "topBias": {
+              "type": "number",
+              "minimum": 0.5,
+              "maximum": 1
+            },
+            "reason": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    },
+    "SparseShapeInputMap": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "TD051 sparse sculpt input map. Omitted fields are unchanged. Protected alignment/cart/physics/export/global state is not externally writable.",
+      "properties": {
+        "padOffset": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 10,
+          "description": "Pad Offset (Z-axis). Vertical Z offset for the headshell pad relative to the base reference. Unit: mm. Category: front_geometry.",
+          "multipleOf": 0.1
+        },
+        "noseL": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 30,
+          "description": "Nose Rounding. Front/nose rounding length between stylus/cartridge region and headshell/body transition. Unit: mm. Category: front_geometry.",
+          "multipleOf": 0.1
+        },
+        "headW": {
+          "type": "number",
+          "minimum": 10,
+          "maximum": 35,
+          "description": "Pad Max Width. Maximum width of the headshell pad area. Unit: mm. Category: front_geometry.",
+          "multipleOf": 0.1
+        },
+        "padL": {
+          "type": "number",
+          "minimum": 10,
+          "maximum": 50,
+          "description": "Pad Total Length. Total X length of the headshell pad. Existing state constraints keep this at least as long as nose rounding. Unit: mm. Category: front_geometry.",
+          "multipleOf": 0.1
+        },
+        "headH": {
+          "type": "number",
+          "minimum": 2,
+          "maximum": 20,
+          "description": "Nose Height (Base). Base/front height parameter for the nose section. Unit: mm. Category: front_geometry.",
+          "multipleOf": 0.1
+        },
+        "sculptHeadFlatEnabled": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "multipleOf": 1,
+          "description": "AI sculpt planar headshell underside enable flag. 0=disabled, 1=force a true lower plane over the configured headshell X zone. Numeric 0/1 keeps legacy full-passthrough deltas numeric. Unit: 0/1. Category: front_geometry."
+        },
+        "sculptHeadFlatStartX": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 60,
+          "multipleOf": 0.5,
+          "description": "X start of the forced planar headshell underside zone. Unit: mm. Category: front_geometry."
+        },
+        "sculptHeadFlatEndX": {
+          "type": "number",
+          "minimum": 5,
+          "maximum": 80,
+          "multipleOf": 0.5,
+          "description": "X end of the forced planar headshell underside zone before the smooth transition into the neck begins. Unit: mm. Category: front_geometry."
+        },
+        "sculptHeadBottomZ": {
+          "type": "number",
+          "minimum": -12,
+          "maximum": 8,
+          "multipleOf": 0.1,
+          "description": "Local Z coordinate of the forced lower headshell plane before body datum is added. For a 6 mm headshell, -3 mm gives a centered lower plane. Unit: mm. Category: front_geometry."
+        },
+        "sculptHeadBlendLength": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 40,
+          "multipleOf": 0.5,
+          "description": "C2-style blend length from the flat headshell underside zone into the natural neck/armwand profile. Use this to remove visible steps and local stiffness discontinuities. Unit: mm. Category: front_geometry."
+        },
+        "sculptHeadFlatWidthFraction": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 0.95,
+          "multipleOf": 0.01,
+          "description": "Fraction of section half-width forced into a real flat lower chord. 0 keeps a rounded underside; 0.65-0.80 creates a practical flat surface without sharp layup traps. Unit: ratio. Category: front_geometry."
+        },
+        "sculptStepSuppressor": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "multipleOf": 0.05,
+          "description": "Strength of AI sculpt transition smoothing. Use 1 to suppress visible side-profile steps that can become stiffness discontinuities. Unit: ratio. Category: front_geometry."
+        },
+        "sculptFrontStiffnessRampEnabled": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Enable deterministic front section-height ramping. 0 off, 1 on. Use to prevent ribbon-thin front/neck spans. Unit: 0/1. Category: front_geometry.",
+          "multipleOf": 1
+        },
+        "sculptFrontMinHeight": {
+          "type": "number",
+          "minimum": 3,
+          "maximum": 12,
+          "description": "Minimum section height at the headshell/front of the stiffness ramp. Recommended 5.8 to 6.5 mm for the current Cobra form. Unit: mm. Category: front_geometry.",
+          "multipleOf": 0.1
+        },
+        "sculptFrontRampStartX": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 80,
+          "description": "X start of the front stiffness ramp. Normally 0 mm at stylus/front datum. Unit: mm. Category: front_geometry.",
+          "multipleOf": 0.5
+        },
+        "sculptFrontRampEndX": {
+          "type": "number",
+          "minimum": 20,
+          "maximum": 140,
+          "description": "X end of the front stiffness ramp before normal monocoque expansion dominates. Recommended 70 to 90 mm for the current headshell-to-puckel transition. Unit: mm. Category: front_geometry.",
+          "multipleOf": 0.5
+        },
+        "sculptFrontRampTargetHeight": {
+          "type": "number",
+          "minimum": 5,
+          "maximum": 18,
+          "description": "Minimum section height reached at sculptFrontRampEndX. Recommended 9.5 to 11 mm. Unit: mm. Category: front_geometry.",
+          "multipleOf": 0.1
+        },
+        "sculptFrontTopBias": {
+          "type": "number",
+          "minimum": 0.5,
+          "maximum": 1,
+          "description": "Distribution of added ramp height. 1 grows upward from flat underside; 0.5 splits around existing profile. Unit: ratio. Category: front_geometry.",
+          "multipleOf": 0.01
+        },
+        "neckW": {
+          "type": "number",
+          "minimum": 5,
+          "maximum": 30,
+          "description": "Neck Width (Waist). Narrow waist width for the neck transition from headshell to main body. Unit: mm. Category: body_geometry.",
+          "multipleOf": 0.1
+        },
+        "neckL": {
+          "type": "number",
+          "minimum": 10,
+          "maximum": 80,
+          "description": "Neck Length. Length of the neck transition before the main body expands. Unit: mm. Category: body_geometry.",
+          "multipleOf": 0.1
+        },
+        "asym": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Asymmetry Belly/Crown. Dimensionless control balancing belly/crown asymmetry in the existing beam shape. Unit: ratio. Category: body_geometry.",
+          "multipleOf": 0.05
+        },
+        "maxH": {
+          "type": "number",
+          "minimum": 15,
+          "maximum": 50,
+          "description": "Max Height (Side). Maximum side-profile height of the main body. Unit: mm. Category: body_geometry.",
+          "multipleOf": 0.1
+        },
+        "maxW": {
+          "type": "number",
+          "minimum": 15,
+          "maximum": 60,
+          "description": "Max Width (Top). Maximum top-view width of the main body. Unit: mm. Category: body_geometry.",
+          "multipleOf": 0.1
+        },
+        "bow": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 30,
+          "description": "Vertical Arch (Lift). Vertical arch/lift control for the existing body profile. Unit: mm. Category: body_geometry.",
+          "multipleOf": 0.1
+        },
+        "thick": {
+          "type": "number",
+          "minimum": 0.2,
+          "maximum": 3,
+          "description": "Wall Thickness. Wall thickness used by the existing shell/export and structural approximations. Unit: mm. Category: material_structure.",
+          "multipleOf": 0.1
+        },
+        "canopyRidgeHeight": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 4,
+          "description": "Canopy Ridge Height. AI-visible upper ridge control for Cobra-like monocoque stiffness grammar. Unit: mm. Category: body_geometry.",
+          "multipleOf": 0.05
+        },
+        "canopyRidgeWidthFraction": {
+          "type": "number",
+          "minimum": 0.05,
+          "maximum": 0.8,
+          "description": "Canopy Ridge Width Fraction. Fractional width of the station-based canopy ridge. Unit: dimensionless. Category: body_geometry.",
+          "multipleOf": 0.01
+        },
+        "canopyRidgeSharpness": {
+          "type": "number",
+          "minimum": 0.5,
+          "maximum": 12,
+          "description": "Canopy Ridge Sharpness. Sharpness exponent for station-based canopy ridge shaping. Unit: dimensionless. Category: body_geometry.",
+          "multipleOf": 0.1
+        },
+        "rearBlendLength": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 60,
+          "description": "Blend Zone Length. Length over which the classic body blends toward the rear/tail section. Unit: mm. Category: rear_geometry.",
+          "multipleOf": 0.1
+        },
+        "rearBendStartX": {
+          "type": "number",
+          "minimum": 180,
+          "maximum": 278,
+          "description": "Bend Start X. Start X location for the existing Cobra/Hollow Elbow rear transition control; this is armwand-to-pivot transition, not heart-counterweight geometry. Notes: Existing TD012 rear geometry only; no Engrove LT geometry is introduced. Unit: mm. Category: rear_geometry.",
+          "multipleOf": 0.1
+        },
+        "rearBendDropZ": {
+          "type": "number",
+          "minimum": 5,
+          "maximum": 50,
+          "description": "Bend Drop Z. Vertical drop magnitude for the existing rear bend. Unit: mm. Category: rear_geometry.",
+          "multipleOf": 0.1
+        },
+        "rearBendLength": {
+          "type": "number",
+          "minimum": 5,
+          "maximum": 80,
+          "description": "Bend Radius/Length. Length/radius-like control for the existing rear bend transition. Unit: mm. Category: rear_geometry.",
+          "multipleOf": 0.1
+        },
+        "rearMouthWidth": {
+          "type": "number",
+          "minimum": 5,
+          "maximum": 40,
+          "description": "Mouth Outer Width (Y). Outer Y width of the existing rear mouth/transition geometry; in Cobra mode this is protected core geometry, not a disc-stack counterweight proxy. Unit: mm. Category: rear_geometry.",
+          "multipleOf": 0.1
+        },
+        "rearMouthLength": {
+          "type": "number",
+          "minimum": 5,
+          "maximum": 40,
+          "description": "Mouth Outer Length (X). Outer X length of the rear mouth in the existing rear accessory geometry. Unit: mm. Category: rear_geometry.",
+          "multipleOf": 0.1
+        },
+        "bulge": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 4,
+          "description": "Rear Radius (Bluntness). Dimensionless bluntness/radius shaping control for the classic tail end. Unit: ratio. Category: rear_geometry.",
+          "multipleOf": 0.1
+        },
+        "tailD": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 25,
+          "description": "End Diameter. End diameter of the existing tail section. Notes: This is not a full-length or envelope-length control. Unit: mm. Category: rear_geometry.",
+          "multipleOf": 0.1
+        },
+        "rearWeightDiscDiameter": {
+          "type": "number",
+          "minimum": 10,
+          "maximum": 40,
+          "description": "Disc Diameter. Diameter of each canonical rear-terminal Cobra disc-stack counterweight plate. Unit: mm. Category: counterweight.",
+          "multipleOf": 0.1
+        },
+        "rearWeightDiscThickness": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 15,
+          "description": "Disc Thickness. Axial thickness of each rear counterweight disc. Unit: mm. Category: counterweight.",
+          "multipleOf": 0.1
+        },
+        "rearWeightDiscCount": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 10,
+          "description": "Disc Count. Integer number of existing rear disc accessories/proxies included in the model/analysis. In Cobra target mode, rear disc stack is not the canonical counterweight. Unit: pcs. Category: counterweight.",
+          "multipleOf": 1
+        },
+        "rearWeightDiscMass": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 50,
+          "description": "Disc Mass. Mass of each rear counterweight disc. Unit: g/ea. Category: counterweight.",
+          "multipleOf": 0.1
+        },
+        "rearFineTrimScrewLength": {
+          "type": "number",
+          "minimum": 5,
+          "maximum": 30,
+          "description": "Fine Trim Length. Length of the existing rear fine-trim screw visual/physics proxy; Cobra reference has an 8 gram fine stylus-load trim screw at the rear. Unit: mm. Category: counterweight.",
+          "multipleOf": 0.1
+        },
+        "rearFineTrimScrewMassEquivalent": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 10,
+          "description": "Fine Trim Equivalent Mass. Non-negative equivalent mass for the rear fine-trim screw. Z balance is adjusted with counterweightZOffset, not negative mass. Notes: Negative mass is prohibited; use counterweightZOffset for vertical balance tuning. Unit: g. Category: counterweight.",
+          "multipleOf": 0.1
+        },
+        "counterweightZOffset": {
+          "type": "number",
+          "minimum": -15,
+          "maximum": 15,
+          "description": "Counterweight Z Offset. Vertical position offset for the physical counterweight stack. This replaces negative-mass balancing hacks. Notes: Physical masses remain non-negative; move the counterweight stack vertically to tune COM Z. Unit: mm. Category: counterweight.",
+          "multipleOf": 0.5
+        },
+        "rearSupportBridgeLength": {
+          "type": "number",
+          "minimum": 0.5,
+          "maximum": 8,
+          "description": "Support Bridge Length. Explicit rear-terminal to disc-stack support bridge length for non-tangent printable counterweight connection. Unit: mm. Category: counterweight.",
+          "multipleOf": 0.1
+        },
+        "rearSupportBridgeRadius": {
+          "type": "number",
+          "minimum": 0.5,
+          "maximum": 4,
+          "description": "Support Bridge Radius. Radius of the printable support bridge between rear terminal and disc stack. Unit: mm. Category: counterweight.",
+          "multipleOf": 0.05
+        },
+        "rearSupportBridgeOverlap": {
+          "type": "number",
+          "minimum": 0.05,
+          "maximum": 1.5,
+          "description": "Support Bridge Overlap. Boolean-safe overlap at both support bridge ends to avoid tangent-only contact. Unit: mm. Category: counterweight.",
+          "multipleOf": 0.05
+        },
+        "titaniumPlateLength": {
+          "type": "number",
+          "minimum": 10,
+          "maximum": 36,
+          "description": "TD051 writable: structural titanium interface plate length in the headshell-to-neck laminated interface zone; not headshellSlots.plate.",
+          "multipleOf": 0.1
+        },
+        "titaniumPlateWidth": {
+          "type": "number",
+          "minimum": 10,
+          "maximum": 24,
+          "description": "TD051 writable: structural titanium interface plate width; not slot-carrier/reference geometry.",
+          "multipleOf": 0.1
+        },
+        "titaniumPlateThickness": {
+          "type": "number",
+          "minimum": 0.5,
+          "maximum": 3,
+          "description": "TD051 writable: structural titanium interface plate thickness.",
+          "multipleOf": 0.05
+        },
+        "titaniumPlateMass": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 8,
+          "description": "TD051 writable: structural titanium interface plate mass, separate from cartridge mass.",
+          "multipleOf": 0.05
+        },
+        "titaniumPlateX": {
+          "type": "number",
+          "minimum": 20,
+          "maximum": 80,
+          "description": "TD051B writable: actual titaniumMountPlate X center consumed by TitaniumMountPlate.resolveTitaniumMountPlatePose and clamped to the headshell-to-neck interface zone; expected interface default around x=32 mm, not the x≈10.2 slot/cartridge underside zone.",
+          "multipleOf": 0.1
+        },
+        "titaniumPlateYOffset": {
+          "type": "number",
+          "minimum": -4,
+          "maximum": 4,
+          "description": "TD051 writable: actual titaniumMountPlate lateral Y offset consumed by TitaniumMountPlate.resolveTitaniumMountPlatePose.",
+          "multipleOf": 0.1
+        },
+        "titaniumPlateZOffset": {
+          "type": "number",
+          "minimum": -2,
+          "maximum": 4,
+          "description": "TD051 writable: actual titaniumMountPlate vertical interface offset consumed by TitaniumMountPlate.resolveTitaniumMountPlatePose; not a loose underside-plate control.",
+          "multipleOf": 0.05
+        },
+        "titaniumAdhesiveThickness": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 0.5,
+          "description": "TD051 writable: adhesive layer in the carbon-to-titanium laminated interface.",
+          "multipleOf": 0.01
+        },
+        "titaniumAdhesiveDampingLossFactor": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "TD051 writable: damping-loss estimate for the interface adhesive layer.",
+          "multipleOf": 0.01
+        }
+      }
+    },
+    "SparseEmptyObjectMap": {
+      "type": "object",
+      "additionalProperties": false,
+      "maxProperties": 0,
+      "description": "External TD051 sparse shape patches must not write selects, checkboxes or flags unless a future schema-specific semantic action explicitly allows a field."
+    },
+    "SparseShapePatchDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "version",
+        "app",
+        "modelFamily",
+        "name"
+      ],
+      "properties": {
+        "schema": {
+          "const": "tonearm-designer-ai-delta"
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "app": {
+          "type": "string"
+        },
+        "modelFamily": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string",
+          "not": {
+            "pattern": "full[\\s_-]?passthrough|full[\\s_-]?state|complete[\\s_-]?session|legacy[\\s_-]?full[\\s_-]?delta|^no_interpretable_request$"
+          },
+          "description": "Sparse patch names must be meaningful and must not use full-state/legacy/no-op names."
+        },
+        "inputs": {
+          "$ref": "#/$defs/SparseShapeInputMap"
+        },
+        "selects": {
+          "$ref": "#/$defs/SparseEmptyObjectMap"
+        },
+        "checkboxes": {
+          "$ref": "#/$defs/SparseEmptyObjectMap"
+        },
+        "flags": {
+          "$ref": "#/$defs/SparseEmptyObjectMap"
+        },
+        "unsupportedAttributes": {
+          "$ref": "#/$defs/SparseUnsupportedAttributes"
+        }
+      },
+      "description": "TD051 external AI sparse shape patch. This replaces the TD048/legacy full-state passthrough pattern. Do not return full session inputs/selects/checkboxes/flags."
+    },
+    "SparseEmptyDeltaWhenUninterpretable": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "version",
+        "app",
+        "modelFamily",
+        "name",
+        "inputs",
+        "selects",
+        "checkboxes",
+        "flags",
+        "unsupportedAttributes"
+      ],
+      "properties": {
+        "schema": {
+          "const": "tonearm-designer-ai-delta"
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "app": {
+          "type": "string"
+        },
+        "modelFamily": {
+          "type": "string"
+        },
+        "name": {
+          "const": "no_interpretable_request"
+        },
+        "inputs": {
+          "$ref": "#/$defs/SparseShapeInputMap",
+          "maxProperties": 0
+        },
+        "selects": {
+          "$ref": "#/$defs/SparseEmptyObjectMap"
+        },
+        "checkboxes": {
+          "$ref": "#/$defs/SparseEmptyObjectMap"
+        },
+        "flags": {
+          "$ref": "#/$defs/SparseEmptyObjectMap"
+        },
+        "unsupportedAttributes": {
+          "$ref": "#/$defs/SparseUnsupportedAttributes"
+        }
+      },
+      "description": "Explicit no-op sparse delta for uninterpretable user intent."
+    },
+    "SparseArchitectureGateOkEnvelope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "delta"
+      ],
+      "properties": {
+        "status": {
+          "const": "ok"
+        },
+        "selectedSpecRegime": {
+          "type": "string"
+        },
+        "mustDevelopModules": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "hardConstraints": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "delta": {
+          "$ref": "#/$defs/SparseShapePatchDelta"
+        },
+        "unmetRequirements": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "validationPlan": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Sparse architecture-gate envelope. Delta remains sparse; no full-state passthrough is allowed."
+    },
+    "SparseUnsupportedAttributes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9]+(?:_[a-z0-9]+)*$"
+      },
+      "description": "Names missing requested geometric/mechanical attributes. Sparse unsupported attribute list. This does not excuse an empty delta except genuine no_interpretable_request."
+    }
+  },
+  "$comment": "TD051 primary contract. External AI emits sparse deltas only. Runtime ignores protected fields, enforces Cobra invariants, separates headshellSlots slot-carrier geometry from titaniumMountPlate and forbids false-writable titanium controls. TD051B: no dangling LegacyFullPassthroughDelta or LegacyEmptyDeltaWhenUninterpretable refs are permitted."
+}
+</script>
+    <script type="text/plain" id="aiVibeSculptFormSpec">
+# TD051 AI Vibe 3D Titanium Interface Plate Sparse Contract
+
+Runtime target: `V28.8.0-Fas20-AIResponseApplyRuntime` plus TD051 titanium head interface plate placement remediation.
+
+TD051 is the current normative contract for external AI handoff in this package. TD049/TD050 sparse Cobra continuity rules remain active. TD047 and TD048 are legacy/history only.
+
+## Core sparse-patch rule
+
+External AI must emit a strict JSON sparse shape patch, not a copied session or full-state delta.
+
+- Do not return full `inputs`, `selects`, `checkboxes` or `flags`.
+- `selects`, `checkboxes` and `flags` must be empty unless a future schema-specific semantic action explicitly allows a field.
+- Protected alignment, cartridge, physics, mass, export and global state must not be directly AI-written.
+- Cobra invariants are enforced after sanitize/apply.
+
+## TD051 titanium interface plate rule
+
+Titanium mounting plate is a structural laminated interface between the carbon armwand / integrated headshell structure and the cartridge / tonehead mounting surface. It must not be placed as a loose underside plate below the cartridge or headshell.
+
+Internal Swedish control rule:
+
+> Titanplattan är en strukturell laminerad gränssnittsplatta mellan armkropp/integrerat headshell och tonhuvudets monteringsyta. Den får inte placeras som en lös underplatta under tonhuvudet.
+
+## Semantic separation
+
+`headshellSlots.plate` / `headshellSlots.slotCarrierPlate` is slot-carrier/reference geometry for half-inch / M2.5 cartridge slots.
+
+`titaniumMountPlate` is the separate structural laminated titanium interface plate.
+
+They are not the same object and must not be silently mixed.
+
+## Writable titanium controls
+
+The following fields are writable in the sparse shape-patch contract because runtime geometry now consumes them through `TitaniumMountPlate.resolveTitaniumMountPlatePose()`:
+
+- `titaniumPlateEnabled`
+- `titaniumPlateLength`
+- `titaniumPlateWidth`
+- `titaniumPlateThickness`
+- `titaniumPlateMass`
+- `titaniumPlateX`
+- `titaniumPlateYOffset`
+- `titaniumPlateZOffset`
+- `titaniumAdhesiveThickness`
+- `titaniumAdhesiveDampingLossFactor`
+
+`TitaniumMountPlate.resolveTitaniumMountPlatePose()` uses `titaniumPlateX`, `titaniumPlateYOffset` and `titaniumPlateZOffset` to place actual titaniumMountPlate render/export geometry. X is clamped into the headshell-to-neck interface zone so the plate cannot become a loose underside plate in the pickup/slot area.
+
+If `titaniumPlateEnabled=false`, render/export must not emit titaniumMountPlate. Headshell slot carrier/reference geometry may still exist, but it is not titaniumMountPlate and must be labeled as slot-carrier/reference geometry.
+
+## Cobra continuity rules preserved
+
+TD051 retains the TD049/TD050 rules:
+
+- sparse AI delta;
+- protected state filtering;
+- no full-state passthrough;
+- Cobra invariants after sanitize/apply;
+- front ramp release after rampEnd;
+- form-continuity audit;
+- no AI writes to protected alignment/cart/physics/mass/export/global state.
+
+## Prompt embedding
+
+Every Copy full AI prompt must embed:
+
+```text
+aiVibe3DSculptReferenceDocuments.schemaJson
+aiVibe3DSculptReferenceDocuments.markdownSpec
+```
+
+Both embedded documents must identify TD051 as the primary version. TD049/TD050 may be mentioned only as retained sparse-Cobra continuity history.
+
+## Boundary
+
+TD051 is a package-level runtime/schema/spec/test contract. It does not prove browser/WebGL rendering, Onshape CAD import, FEA, manufacturing readiness, STL geometry beyond local package tests, or audio performance unless those are separately executed and logged.
+
+</script>
+<script src="js/config.js"></script>
+<script src="js/manual-trace-3d-adapter.js"></script>
+<script src="js/kinematics.js"></script>
+<script src="js/physics.js"></script>
+<script src="js/math.js"></script>
+<script src="js/geometry.js"></script>
+<script src="js/cobra-eggshell-wand.js"></script>
+<script src="js/cobra-disc-counterweight.js"></script>
+<script src="js/cobra-mechanical-assembly.js"></script>
+<script src="js/headshell-slots.js"></script>
+<script src="js/titanium-mount-plate.js"></script>
+<script src="js/freeform-centerline.js"></script>
+<script src="js/freeform-rings.js"></script>
+<script src="js/freeform-features.js"></script>
+<script src="js/freeform-schema.js"></script>
+<script src="js/freeform-loft-kernel.js"></script>
+<script src="js/freeform-analysis-adapter.js"></script>
+<script src="js/freeform-section-properties.js"></script>
+<script src="js/freeform-resonance-analysis.js"></script>
+<script src="js/freeform-geometry-audit.js"></script>
+<script src="js/freeform-form-fidelity.js"></script>
+<script src="js/freeform-target-compliance.js"></script>
+<script src="js/freeform-mode-audit.js"></script>
+<script src="js/freeform-feasibility-solver.js"></script>
+<script src="js/freeform-acceptance-gates.js"></script>
+<script src="js/freeform-apply-state-machine.js"></script>
+<script src="js/freeform-live-state-binding.js"></script>
+<script src="js/freeform-physical-analysis.js"></script>
+<script src="js/freeform-runtime-integration.js"></script>
+<script src="js/cobra-controls.js"></script>
+<script src="js/cobra-architecture.js"></script>
+<script src="js/cobra-acceptance.js"></script>
+<script src="js/cobra-manual-verification.js"></script>
+<script src="js/render3d.js"></script>
+<script src="js/render2d.js"></script>
+<script src="js/exporters.js"></script>
+<script src="js/session.js"></script>
+<script src="js/design-session.js"></script>
+<script src="js/zone-map.js"></script>
+<script src="js/parameter-metadata.js"></script>
+<script src="js/solver-modal.js"></script>
+<script src="js/lt-geometry.js"></script>
+<script src="js/lt-mechanism-modal.js"></script>
+<script src="js/ai-modal.js"></script>
+<script src="js/exact-control.js"></script>
+<script src="data/tonearmdesigner-cartridges.min.js"></script>
+<script src="js/cartridge-picker.js"></script>
+<script src="js/report-exporter.js"></script>
+<script src="js/ai-vibe-3d.js"></script>
+<script src="js/ui.js"></script>
+
+</body>
+</html>

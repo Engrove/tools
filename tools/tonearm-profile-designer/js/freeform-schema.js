@@ -1,0 +1,951 @@
+/**
+ * AI-CODING NOTE:
+ * Responsibility: Preserve the imported TD053F freeform-schema.js behavior as a cohesive legacy module.
+ * Inputs/Outputs: Defined by the module's public globals and the retained upstream acceptance harnesses.
+ * Safe edits: Targeted fixes with direct consumer and regression verification.
+ * Do not: Mechanically split this legacy module during the behavior-preserving port or weaken its source/audit boundaries.
+ * Verification: npm test and repository release gates.
+ */
+// SPDX-License-Identifier: 0BSD
+// TD053C embedded copy of tonearm_designer_ai_freeform_loft.schema.json.
+// Generated from the JSON schema so runtime prompt/validation can share the same source object.
+
+(function(root) {
+    'use strict';
+    root.TONEARM_DESIGNER_AI_FREEFORM_LOFT_SCHEMA = Object.freeze({
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "tonearm_designer_ai_freeform_loft.schema.json",
+    "title": "TD053 tonearm designer AI freeform centerline/ring loft response",
+    "description": "Sparse-patch AI response schema for TD053 AI Vibe 3D Freeform Centerline/Ring Loft. AI may provide design intent, targets, assumptions, analysisRequests and aiEstimates, but app/kernel owns deterministic physical analysis. No direct mesh/STL/OBJ triangles and no final analysis claims from AI.",
+    "oneOf": [
+        {
+            "$ref": "#/$defs/FreeformLoftResponse"
+        }
+    ],
+    "$defs": {
+        "Number": {
+            "type": "number"
+        },
+        "UnsupportedAttributes": {
+            "type": "array",
+            "items": {
+                "type": "string",
+                "minLength": 1
+            },
+            "maxItems": 32
+        },
+        "CenterlinePointPatch": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "id"
+            ],
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                },
+                "s": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                },
+                "x": {
+                    "type": "number",
+                    "minimum": -20,
+                    "maximum": 280
+                },
+                "y": {
+                    "type": "number",
+                    "minimum": -40,
+                    "maximum": 40
+                },
+                "z": {
+                    "type": "number",
+                    "minimum": -40,
+                    "maximum": 40
+                }
+            },
+            "allOf": [
+                {
+                    "if": {
+                        "properties": {
+                            "id": {
+                                "enum": [
+                                    "stylus_front",
+                                    "stylus_point",
+                                    "pivot_reference",
+                                    "pivot_point",
+                                    "lp_plane",
+                                    "lp_top_plane",
+                                    "n1_p2_effective_length",
+                                    "effective_length",
+                                    "cartridge_datum",
+                                    "headshell_plane"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "id"
+                        ]
+                    },
+                    "then": {
+                        "not": {
+                            "anyOf": [
+                                {
+                                    "required": [
+                                        "s"
+                                    ]
+                                },
+                                {
+                                    "required": [
+                                        "x"
+                                    ]
+                                },
+                                {
+                                    "required": [
+                                        "y"
+                                    ]
+                                },
+                                {
+                                    "required": [
+                                        "z"
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        "CenterlinePatch": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "curveType": {
+                    "const": "catmull_rom"
+                },
+                "points": {
+                    "type": "array",
+                    "minItems": 0,
+                    "maxItems": 32,
+                    "items": {
+                        "$ref": "#/$defs/CenterlinePointPatch"
+                    }
+                }
+            }
+        },
+        "RingControlPoint": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "y": {
+                    "type": "number",
+                    "minimum": -1.5,
+                    "maximum": 1.5
+                },
+                "z": {
+                    "type": "number",
+                    "minimum": -1.5,
+                    "maximum": 1.5
+                },
+                "r": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 2
+                }
+            }
+        },
+        "RingPatchItem": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "id"
+            ],
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                },
+                "s": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                },
+                "shapeFamily": {
+                    "enum": [
+                        "circle",
+                        "ellipse",
+                        "superellipse",
+                        "rounded_rectangle",
+                        "sharp_polygon",
+                        "triangle",
+                        "trapezoid",
+                        "asymmetric_egg",
+                        "flat_bottom_headshell",
+                        "crescent",
+                        "custom_bezier_loop",
+                        "custom_polar_profile"
+                    ]
+                },
+                "widthMm": {
+                    "type": "number",
+                    "minimum": 3,
+                    "maximum": 45
+                },
+                "heightMm": {
+                    "type": "number",
+                    "minimum": 2,
+                    "maximum": 35
+                },
+                "wallThicknessMm": {
+                    "type": "number",
+                    "minimum": 0.6,
+                    "maximum": 3.0
+                },
+                "rotationDeg": {
+                    "type": "number",
+                    "minimum": -180,
+                    "maximum": 180
+                },
+                "tiltDeg": {
+                    "type": "number",
+                    "minimum": -45,
+                    "maximum": 45
+                },
+                "cornerSharpness": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                },
+                "superellipseExponent": {
+                    "type": "number",
+                    "minimum": 0.35,
+                    "maximum": 8
+                },
+                "asymmetryY": {
+                    "type": "number",
+                    "minimum": -1,
+                    "maximum": 1
+                },
+                "asymmetryZ": {
+                    "type": "number",
+                    "minimum": -1,
+                    "maximum": 1
+                },
+                "topRidgeHeightMm": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 5
+                },
+                "bottomFlatness": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                },
+                "crescentCutDepth": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 0.85
+                },
+                "controlPoints": {
+                    "type": "array",
+                    "minItems": 4,
+                    "maxItems": 32,
+                    "items": {
+                        "$ref": "#/$defs/RingControlPoint"
+                    }
+                }
+            }
+        },
+        "RingPatch": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "rings": {
+                    "type": "array",
+                    "minItems": 0,
+                    "maxItems": 64,
+                    "items": {
+                        "$ref": "#/$defs/RingPatchItem"
+                    }
+                },
+                "removeRingIds": {
+                    "type": "array",
+                    "maxItems": 64,
+                    "items": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 64
+                    }
+                }
+            }
+        },
+        "IntegratedHeadshellFeature": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "integrated": {
+                    "const": true
+                },
+                "detachable": {
+                    "const": false
+                },
+                "lengthMm": {
+                    "type": "number",
+                    "minimum": 12,
+                    "maximum": 55
+                },
+                "widthMm": {
+                    "type": "number",
+                    "minimum": 8,
+                    "maximum": 35
+                },
+                "planeZMm": {
+                    "type": "number",
+                    "minimum": -10,
+                    "maximum": 10
+                },
+                "mountStyle": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 80
+                },
+                "cartridgeDatumValid": {
+                    "const": true
+                },
+                "headshellPlaneValid": {
+                    "const": true
+                }
+            }
+        },
+        "SideBentHeadshellMountFeature": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "integrated": {
+                    "const": true
+                },
+                "bendYMm": {
+                    "type": "number",
+                    "minimum": -30,
+                    "maximum": 30
+                },
+                "bendStartS": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 0.25
+                },
+                "bendEndS": {
+                    "type": "number",
+                    "minimum": 0.05,
+                    "maximum": 0.35
+                },
+                "cartridgeDatumValid": {
+                    "const": true
+                },
+                "slotGeometryValid": {
+                    "const": true
+                },
+                "integratedWithArm": {
+                    "const": true
+                }
+            }
+        },
+        "TitaniumMountPlateFeature": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "type": {
+                    "const": "structural_laminated_interface_plate"
+                },
+                "looseUndersidePlate": {
+                    "const": false
+                },
+                "followsTD051Rule": {
+                    "const": true
+                },
+                "xMm": {
+                    "type": "number",
+                    "minimum": 20,
+                    "maximum": 80
+                },
+                "yMm": {
+                    "type": "number",
+                    "minimum": -15,
+                    "maximum": 15
+                },
+                "zMm": {
+                    "type": "number",
+                    "minimum": -5,
+                    "maximum": 10
+                },
+                "lengthMm": {
+                    "type": "number",
+                    "minimum": 10,
+                    "maximum": 45
+                },
+                "widthMm": {
+                    "type": "number",
+                    "minimum": 8,
+                    "maximum": 30
+                },
+                "thicknessMm": {
+                    "type": "number",
+                    "minimum": 0.4,
+                    "maximum": 3
+                },
+                "adhesiveThicknessMm": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 0.5
+                }
+            }
+        },
+        "CartridgeSlotsFeature": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "separateFeature": {
+                    "const": true
+                },
+                "slotCount": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 4
+                },
+                "slotLengthMm": {
+                    "type": "number",
+                    "minimum": 4,
+                    "maximum": 25
+                },
+                "slotWidthMm": {
+                    "type": "number",
+                    "minimum": 1.5,
+                    "maximum": 5
+                },
+                "spacingMm": {
+                    "type": "number",
+                    "minimum": 6,
+                    "maximum": 18
+                },
+                "slotGeometryValid": {
+                    "const": true
+                }
+            }
+        },
+        "WireDuctFeature": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "separateFeature": {
+                    "const": true
+                },
+                "diameterMm": {
+                    "type": "number",
+                    "minimum": 0.8,
+                    "maximum": 5
+                },
+                "clearanceMm": {
+                    "type": "number",
+                    "minimum": 0.2,
+                    "maximum": 3
+                },
+                "path": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 80
+                }
+            }
+        },
+        "RearTerminalFeature": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "separateFeature": {
+                    "const": true
+                },
+                "s": {
+                    "type": "number",
+                    "minimum": 0.75,
+                    "maximum": 1
+                },
+                "terminalDiameterMm": {
+                    "type": "number",
+                    "minimum": 5,
+                    "maximum": 25
+                },
+                "terminalLengthMm": {
+                    "type": "number",
+                    "minimum": 3,
+                    "maximum": 35
+                }
+            }
+        },
+        "CounterweightStackFeature": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "separateFeature": {
+                    "const": true
+                },
+                "fakeWithRingOrTail": {
+                    "const": false
+                },
+                "mount": {
+                    "const": "rear_terminal_disc_stack"
+                },
+                "discCount": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 12
+                },
+                "discDiameterMm": {
+                    "type": "number",
+                    "minimum": 8,
+                    "maximum": 45
+                },
+                "discThicknessMm": {
+                    "type": "number",
+                    "minimum": 1,
+                    "maximum": 12
+                },
+                "discMassG": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 120
+                },
+                "fineTrimMassG": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 40
+                },
+                "separateRearTerminalAssembly": {
+                    "const": true
+                }
+            }
+        },
+        "FeaturePatch": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "integratedHeadshell": {
+                    "$ref": "#/$defs/IntegratedHeadshellFeature"
+                },
+                "sideBentHeadshellMount": {
+                    "$ref": "#/$defs/SideBentHeadshellMountFeature"
+                },
+                "titaniumMountPlate": {
+                    "$ref": "#/$defs/TitaniumMountPlateFeature"
+                },
+                "cartridgeSlots": {
+                    "$ref": "#/$defs/CartridgeSlotsFeature"
+                },
+                "wireDuct": {
+                    "$ref": "#/$defs/WireDuctFeature"
+                },
+                "rearTerminal": {
+                    "$ref": "#/$defs/RearTerminalFeature"
+                },
+                "counterweightStack": {
+                    "$ref": "#/$defs/CounterweightStackFeature"
+                }
+            }
+        },
+        "AnalysisTargets": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "targetBodyMassG": {
+                    "type": "number",
+                    "minimum": 1,
+                    "maximum": 80
+                },
+                "targetTotalMovingMassG": {
+                    "type": "number",
+                    "minimum": 1,
+                    "maximum": 180
+                },
+                "targetVerticalResonanceHz": {
+                    "type": "number",
+                    "minimum": 4,
+                    "maximum": 20
+                },
+                "targetHorizontalResonanceHz": {
+                    "type": "number",
+                    "minimum": 4,
+                    "maximum": 20
+                },
+                "targetFirstBendingModeHz": {
+                    "type": "number",
+                    "minimum": 20,
+                    "maximum": 600
+                },
+                "targetEIProxy": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1000000
+                },
+                "materialDensityGPerCm3": {
+                    "type": "number",
+                    "minimum": 0.2,
+                    "maximum": 8
+                },
+                "compliance10Hz": {
+                    "type": "number",
+                    "minimum": 1,
+                    "maximum": 50
+                },
+                "wireDuctMinClearanceMm": {
+                    "type": "number",
+                    "minimum": 0.2,
+                    "maximum": 3
+                }
+            }
+        },
+        "FreeformLoftResponse": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "schema",
+                "version",
+                "app",
+                "mode",
+                "name",
+                "centerlinePatch",
+                "ringPatch",
+                "featurePatch",
+                "analysisTargets",
+                "unsupportedAttributes"
+            ],
+            "properties": {
+                "schema": {
+                    "const": "tonearm-designer-ai-freeform-loft-response"
+                },
+                "version": {
+                    "const": 1
+                },
+                "app": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 80
+                },
+                "mode": {
+                    "const": "freeform_centerline_ring_loft"
+                },
+                "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 80
+                },
+                "centerlinePatch": {
+                    "$ref": "#/$defs/CenterlinePatch"
+                },
+                "ringPatch": {
+                    "$ref": "#/$defs/RingPatch"
+                },
+                "featurePatch": {
+                    "$ref": "#/$defs/FeaturePatch"
+                },
+                "analysisTargets": {
+                    "$ref": "#/$defs/AnalysisTargets"
+                },
+                "unsupportedAttributes": {
+                    "$ref": "#/$defs/UnsupportedAttributes"
+                },
+                "designIntent": {
+                    "$ref": "#/$defs/DesignIntent"
+                },
+                "targets": {
+                    "$ref": "#/$defs/FreeformTargets"
+                },
+                "analysisRequests": {
+                    "$ref": "#/$defs/AnalysisRequests"
+                },
+                "aiEstimates": {
+                    "$ref": "#/$defs/AiEstimates"
+                },
+                "analysisPolicy": {
+                    "$ref": "#/$defs/AnalysisPolicy"
+                },
+                "assumptions": {
+                    "$ref": "#/$defs/Assumptions"
+                }
+            },
+            "not": {
+                "anyOf": [
+                    {
+                        "required": [
+                            "mesh"
+                        ]
+                    },
+                    {
+                        "required": [
+                            "triangles"
+                        ]
+                    },
+                    {
+                        "required": [
+                            "vertices"
+                        ]
+                    },
+                    {
+                        "required": [
+                            "faces"
+                        ]
+                    },
+                    {
+                        "required": [
+                            "stl"
+                        ]
+                    },
+                    {
+                        "required": [
+                            "obj"
+                        ]
+                    },
+                    {
+                        "required": [
+                            "analysis"
+                        ]
+                    },
+                    {
+                        "required": [
+                            "deterministicAnalysis"
+                        ]
+                    },
+                    {
+                        "required": [
+                            "massG"
+                        ]
+                    },
+                    {
+                        "required": [
+                            "COM"
+                        ]
+                    },
+                    {
+                        "required": [
+                            "COG"
+                        ]
+                    },
+                    {
+                        "required": [
+                            "effectiveMassVerticalG"
+                        ]
+                    },
+                    {
+                        "required": [
+                            "effectiveMassHorizontalG"
+                        ]
+                    },
+                    {
+                        "required": [
+                            "resonanceVerticalHz"
+                        ]
+                    },
+                    {
+                        "required": [
+                            "resonanceHorizontalHz"
+                        ]
+                    },
+                    {
+                        "required": [
+                            "status"
+                        ]
+                    }
+                ]
+            }
+        },
+        "DesignIntent": {
+            "type": "string",
+            "minLength": 1
+        },
+        "AnalysisRequest": {
+            "enum": [
+                "mass",
+                "COM",
+                "COG",
+                "inertia",
+                "effective_mass",
+                "LF_resonance",
+                "EI_distribution",
+                "torsion_proxy",
+                "bending_proxy",
+                "headshell_interface_mode",
+                "counterweight_mode",
+                "balance",
+                "clearance",
+                "export_audit",
+                "geometry_audit"
+            ]
+        },
+        "AnalysisRequests": {
+            "type": "array",
+            "items": {
+                "$ref": "#/$defs/AnalysisRequest"
+            },
+            "minItems": 0,
+            "maxItems": 24,
+            "uniqueItems": true
+        },
+        "FreeformTargets": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "effectiveMassVerticalG": {
+                    "type": "number",
+                    "minimum": 1,
+                    "maximum": 60
+                },
+                "effectiveMassHorizontalG": {
+                    "type": "number",
+                    "minimum": 1,
+                    "maximum": 60
+                },
+                "lfResonanceHz": {
+                    "type": "number",
+                    "minimum": 4,
+                    "maximum": 20
+                },
+                "firstBendingModeHzMin": {
+                    "type": "number",
+                    "minimum": 20,
+                    "maximum": 5000
+                },
+                "torsionModeHzMin": {
+                    "type": "number",
+                    "minimum": 20,
+                    "maximum": 5000
+                },
+                "comZMaxMm": {
+                    "type": "number",
+                    "minimum": -40,
+                    "maximum": 40
+                },
+                "counterweightBalanceResidualMaxGmm": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 5000
+                },
+                "massG": {
+                    "type": "number",
+                    "minimum": 1,
+                    "maximum": 500
+                },
+                "movingMassG": {
+                    "type": "number",
+                    "minimum": 1,
+                    "maximum": 500
+                }
+            }
+        },
+        "AiEstimates": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "massG": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 500
+                },
+                "movingMassG": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 500
+                },
+                "effectiveMassVerticalG": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 100
+                },
+                "effectiveMassHorizontalG": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 100
+                },
+                "lfResonanceHz": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 40
+                },
+                "firstBendingModeProxyHz": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 10000
+                },
+                "firstTorsionModeProxyHz": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 10000
+                },
+                "reasoningSummary": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "confidence": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                }
+            }
+        },
+        "AnalysisPolicy": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "deterministicAuthority": {
+                    "const": "app_kernel"
+                },
+                "aiRole": {
+                    "const": "design_intent_targets_and_estimates_only"
+                },
+                "forbiddenDeterministicResultFields": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 80
+                    },
+                    "maxItems": 64
+                },
+                "claimBoundary": {
+                    "const": "AI estimates are not final physical analysis; app/kernel calculates deterministic proxy analysis"
+                }
+            }
+        },
+        "Assumptions": {
+            "type": "array",
+            "items": {
+                "type": "string",
+                "minLength": 1
+            },
+            "maxItems": 24
+        }
+    }
+}
+);
+})(typeof globalThis !== 'undefined' ? globalThis : window);

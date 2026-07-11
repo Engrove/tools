@@ -1,0 +1,1196 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://engrove.local/schemas/tonearm-designer-ai-response-apply.schema.json",
+  "title": "TonearmDesigner TD051B Titanium Interface Plate Sparse Runtime Sculpt Contract",
+  "description": "Normative TD051B strict JSON contract for AI Modal Response / Apply AI Vibe 3D response. TD051 keeps TD049/TD050 sparse Cobra continuity rules and adds the titaniumMountPlate contract: titanium plate is a structural laminated interface plate between carbon armwand/integrated headshell and cartridge mounting surface, not a loose underside plate and not headshellSlots.plate. External AI responses are sparse shape patches only; protected alignment/cart/physics/mass/export/global state and full-state passthrough are forbidden. TD051B repairs dangling legacy schema references: PreferredAIVibe3DResponse.delta resolves only to null, SparseShapePatchDelta or SparseEmptyDeltaWhenUninterpretable.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/PreferredAIVibe3DResponse"
+    },
+    {
+      "$ref": "#/$defs/SparseShapePatchDelta"
+    },
+    {
+      "$ref": "#/$defs/SparseEmptyDeltaWhenUninterpretable"
+    },
+    {
+      "$ref": "#/$defs/SparseArchitectureGateOkEnvelope"
+    }
+  ],
+  "$defs": {
+    "PreferredAIVibe3DResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "version",
+        "app",
+        "intent",
+        "actions",
+        "delta",
+        "validationTargets"
+      ],
+      "properties": {
+        "schema": {
+          "const": "tonearm-designer-ai-vibe-3d-response"
+        },
+        "version": {
+          "const": 1
+        },
+        "app": {
+          "const": "V28.8.0-Fas20-AIResponseApplyRuntime",
+          "description": "Current application version. Runtime does not currently reject other app strings for this wrapper, but strict AI output must use the live app version."
+        },
+        "intent": {
+          "type": "string",
+          "const": "onshape_ready_exact_positive_model",
+          "description": "Preferred exact-positive-model Onshape handoff intent."
+        },
+        "actions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AIVibeSemanticAction"
+          },
+          "description": "Semantic action primitives. Runtime applies these before optional embedded legacy delta."
+        },
+        "delta": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/SparseShapePatchDelta"
+            },
+            {
+              "$ref": "#/$defs/SparseEmptyDeltaWhenUninterpretable"
+            }
+          ],
+          "description": "Null or a TD051B sparse delta only. Full-state passthrough, protected fields and legacy full-session maps are forbidden."
+        },
+        "validationTargets": {
+          "$ref": "#/$defs/OnshapeValidationTargets"
+        }
+      }
+    },
+    "OnshapeValidationTargets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "units",
+        "scale",
+        "geometryKind",
+        "exportType",
+        "exactOneToOne",
+        "boundaryEdgesMax",
+        "nonManifoldEdgesMax",
+        "degenerateTrianglesMax",
+        "sliverTrianglesPreferredMax",
+        "minTriangleAreaPreferredMm2",
+        "preserveScale1To1",
+        "preserveCurrentCoordinateFrame",
+        "requiredDatums",
+        "forbiddenTransformations"
+      ],
+      "properties": {
+        "units": {
+          "const": "mm"
+        },
+        "scale": {
+          "const": 1
+        },
+        "geometryKind": {
+          "const": "positive_reference_mesh"
+        },
+        "exportType": {
+          "const": "onshape_1to1"
+        },
+        "exactOneToOne": {
+          "const": true
+        },
+        "boundaryEdgesMax": {
+          "type": "integer",
+          "const": 0
+        },
+        "nonManifoldEdgesMax": {
+          "type": "integer",
+          "const": 0
+        },
+        "degenerateTrianglesMax": {
+          "type": "integer",
+          "const": 0
+        },
+        "sliverTrianglesPreferredMax": {
+          "type": "integer",
+          "const": 0
+        },
+        "minTriangleAreaPreferredMm2": {
+          "type": "number",
+          "minimum": 1e-05
+        },
+        "preserveScale1To1": {
+          "const": true
+        },
+        "preserveCurrentCoordinateFrame": {
+          "const": true
+        },
+        "requiredDatums": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "stylus_point",
+              "pivot_point",
+              "lp_top_plane",
+              "x_length_axis",
+              "y_mirror_axis",
+              "z_vertical_axis"
+            ]
+          },
+          "uniqueItems": true,
+          "minItems": 6
+        },
+        "forbiddenTransformations": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "mould_offset",
+              "draft_modification",
+              "shrinkage_compensation",
+              "split_mould_flange",
+              "registration_pins",
+              "pour_gates",
+              "vent_channels"
+            ]
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "AIVibeSemanticAction": {
+      "oneOf": [
+        {
+          "type": "object",
+          "description": "Set manufacturingMode and exportType to onshape_1to1, zero mould/plug compensation controls, set onshapeUnitScale=1, onshapeStrictOneToOne=true, onshapeMetadataSidecar=true.",
+          "required": [
+            "op"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "set_onshape_1to1"
+            },
+            "reason": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "description": "Same runtime effect as set_onshape_1to1; use when neutralising legacy mould/plug parameters is the main intent.",
+          "required": [
+            "op"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "enforce_exact_1to1"
+            },
+            "reason": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "description": "Enable aiVibeSoftSliverPass and set aiVibeMinTriangleHardFailArea to 0.00001.",
+          "required": [
+            "op"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "fix_export_slivers"
+            },
+            "strategy": {
+              "type": "string",
+              "enum": [
+                "soft_pass_sub_001_mm2_when_manifold"
+              ]
+            },
+            "reason": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "description": "Normalizes Onshape handoff and declares protected reference datums for AI intent; runtime applies the same scale/metadata controls as normalize_onshape_handoff.",
+          "required": [
+            "op"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "preserve_reference_datums"
+            },
+            "datums": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "stylus_point",
+                  "pivot_point",
+                  "lp_top_plane",
+                  "x_length_axis",
+                  "y_mirror_axis",
+                  "z_vertical_axis"
+                ]
+              },
+              "uniqueItems": true
+            },
+            "reason": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "description": "Raise existing wall/ridge/bridge support values inside a named writable zone; does not invent new geometry.",
+          "required": [
+            "op"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "stiffen_zone"
+            },
+            "zone": {
+              "type": "string",
+              "enum": [
+                "armwand",
+                "neck",
+                "rear",
+                "main_body",
+                "counterweight_bridge"
+              ]
+            },
+            "wallMin": {
+              "type": "number",
+              "minimum": 0.2,
+              "maximum": 3,
+              "description": "Minimum wall thickness request in mm; runtime applies max(current, value)."
+            },
+            "neckWMin": {
+              "type": "number",
+              "minimum": 5,
+              "maximum": 30,
+              "description": "Minimum neck width request in mm for neck zone."
+            },
+            "ridgeHeightMin": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 4,
+              "description": "Minimum canopy ridge height request in mm."
+            },
+            "bridgeRadiusMin": {
+              "type": "number",
+              "minimum": 0.5,
+              "maximum": 4,
+              "description": "Minimum rear support bridge radius request in mm for rear zone."
+            },
+            "tailDMin": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 25,
+              "description": "Minimum tail diameter request in mm for rear zone."
+            },
+            "reason": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "description": "Enable rear disc-stack export and enforce at least one rounded rearWeightDiscCount.",
+          "required": [
+            "op"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "balance_about_pivot"
+            },
+            "reason": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "description": "Increase rear-terminal support bridge continuity toward counterweight stack.",
+          "required": [
+            "op"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "extend_support_bridge"
+            },
+            "lengthMm": {
+              "type": "number",
+              "minimum": 0.5,
+              "maximum": 8,
+              "description": "Minimum rearSupportBridgeLength in mm."
+            },
+            "overlapMm": {
+              "type": "number",
+              "minimum": 0.05,
+              "maximum": 1.5,
+              "description": "Minimum rearSupportBridgeOverlap in mm."
+            },
+            "target": {
+              "type": "string"
+            },
+            "reason": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "description": "Normalize manufacturingMode/exportType to onshape_1to1, unit scale 1, strict 1:1 and metadata sidecar.",
+          "required": [
+            "op"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "normalize_onshape_handoff"
+            },
+            "reason": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "description": "Set cobraArchitectureEnabled and enableCobraArchitecture true and synchronize state.cobraArchitecture.enabled.",
+          "required": [
+            "op"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "activate_cobra_architecture_gate"
+            },
+            "reason": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "description": "Lock effective length/N1-P2 target by writing the apex control. Runtime fallback is 237.05 mm.",
+          "required": [
+            "op"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "lock_n1p2"
+            },
+            "targetMm": {
+              "type": "number",
+              "minimum": 200,
+              "maximum": 260,
+              "description": "N1-P2/effective target in mm; runtime writes apex to this value."
+            },
+            "n1p2Mm": {
+              "type": "number",
+              "minimum": 200,
+              "maximum": 260,
+              "description": "Alias for targetMm."
+            },
+            "valueMm": {
+              "type": "number",
+              "minimum": 200,
+              "maximum": 260,
+              "description": "Alias for targetMm."
+            },
+            "reason": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "description": "Force the headshell lower surface onto a real planar local-Z underside over a specified X range, with optional TD049 front stiffness-ramp parameters.",
+          "required": [
+            "op"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "flatten_headshell_underside"
+            },
+            "startX": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 60
+            },
+            "endX": {
+              "type": "number",
+              "minimum": 5,
+              "maximum": 80
+            },
+            "zMm": {
+              "type": "number",
+              "minimum": -12,
+              "maximum": 8
+            },
+            "bottomZMm": {
+              "type": "number",
+              "minimum": -12,
+              "maximum": 8
+            },
+            "blendLengthMm": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 40
+            },
+            "widthFraction": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 0.95
+            },
+            "reason": {
+              "type": "string"
+            },
+            "minHeightMm": {
+              "type": "number",
+              "minimum": 3,
+              "maximum": 12
+            },
+            "rampEndX": {
+              "type": "number",
+              "minimum": 20,
+              "maximum": 140
+            },
+            "targetHeightMm": {
+              "type": "number",
+              "minimum": 5,
+              "maximum": 18
+            },
+            "topBias": {
+              "type": "number",
+              "minimum": 0.5,
+              "maximum": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "description": "Suppress a visible/local side-profile step by extending the flat-to-neck blend and enabling TD049 front stiffness-ramp defaults.",
+          "required": [
+            "op"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "smooth_profile_step"
+            },
+            "strength": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "blendLengthMinMm": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 40
+            },
+            "neckLengthMinMm": {
+              "type": "number",
+              "minimum": 10,
+              "maximum": 80
+            },
+            "ridgeHeightMaxMm": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 4
+            },
+            "reason": {
+              "type": "string"
+            },
+            "rampEndXMinMm": {
+              "type": "number",
+              "minimum": 20,
+              "maximum": 140
+            },
+            "minHeightMm": {
+              "type": "number",
+              "minimum": 3,
+              "maximum": 12
+            },
+            "targetHeightMm": {
+              "type": "number",
+              "minimum": 5,
+              "maximum": 18
+            }
+          }
+        },
+        {
+          "type": "object",
+          "description": "Generic surface-sculpt operation. Runtime currently accepts only headshell_underside as the zone/surface target.",
+          "required": [
+            "op"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "sculpt_surface_zone"
+            },
+            "zone": {
+              "type": "string",
+              "enum": [
+                "headshell_underside"
+              ]
+            },
+            "surface": {
+              "type": "string",
+              "enum": [
+                "headshell_underside"
+              ]
+            },
+            "startX": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 60
+            },
+            "endX": {
+              "type": "number",
+              "minimum": 5,
+              "maximum": 80
+            },
+            "zMm": {
+              "type": "number",
+              "minimum": -12,
+              "maximum": 8
+            },
+            "bottomZMm": {
+              "type": "number",
+              "minimum": -12,
+              "maximum": 8
+            },
+            "blendLengthMm": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 40
+            },
+            "widthFraction": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 0.95
+            },
+            "reason": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "description": "Enable front section-height ramp controls so the headshell-to-puckel span cannot remain a blade-like thin beam. This writes only existing numeric UI controls.",
+          "required": [
+            "op"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "stiffen_front_ramp"
+            },
+            "startX": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 80
+            },
+            "endX": {
+              "type": "number",
+              "minimum": 20,
+              "maximum": 140
+            },
+            "minHeightMm": {
+              "type": "number",
+              "minimum": 3,
+              "maximum": 12
+            },
+            "targetHeightMm": {
+              "type": "number",
+              "minimum": 5,
+              "maximum": 18
+            },
+            "topBias": {
+              "type": "number",
+              "minimum": 0.5,
+              "maximum": 1
+            },
+            "reason": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    },
+    "SparseShapeInputMap": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "TD051 sparse sculpt input map. Omitted fields are unchanged. Protected alignment/cart/physics/export/global state is not externally writable.",
+      "properties": {
+        "padOffset": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 10,
+          "description": "Pad Offset (Z-axis). Vertical Z offset for the headshell pad relative to the base reference. Unit: mm. Category: front_geometry.",
+          "multipleOf": 0.1
+        },
+        "noseL": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 30,
+          "description": "Nose Rounding. Front/nose rounding length between stylus/cartridge region and headshell/body transition. Unit: mm. Category: front_geometry.",
+          "multipleOf": 0.1
+        },
+        "headW": {
+          "type": "number",
+          "minimum": 10,
+          "maximum": 35,
+          "description": "Pad Max Width. Maximum width of the headshell pad area. Unit: mm. Category: front_geometry.",
+          "multipleOf": 0.1
+        },
+        "padL": {
+          "type": "number",
+          "minimum": 10,
+          "maximum": 50,
+          "description": "Pad Total Length. Total X length of the headshell pad. Existing state constraints keep this at least as long as nose rounding. Unit: mm. Category: front_geometry.",
+          "multipleOf": 0.1
+        },
+        "headH": {
+          "type": "number",
+          "minimum": 2,
+          "maximum": 20,
+          "description": "Nose Height (Base). Base/front height parameter for the nose section. Unit: mm. Category: front_geometry.",
+          "multipleOf": 0.1
+        },
+        "sculptHeadFlatEnabled": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "multipleOf": 1,
+          "description": "AI sculpt planar headshell underside enable flag. 0=disabled, 1=force a true lower plane over the configured headshell X zone. Numeric 0/1 keeps legacy full-passthrough deltas numeric. Unit: 0/1. Category: front_geometry."
+        },
+        "sculptHeadFlatStartX": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 60,
+          "multipleOf": 0.5,
+          "description": "X start of the forced planar headshell underside zone. Unit: mm. Category: front_geometry."
+        },
+        "sculptHeadFlatEndX": {
+          "type": "number",
+          "minimum": 5,
+          "maximum": 80,
+          "multipleOf": 0.5,
+          "description": "X end of the forced planar headshell underside zone before the smooth transition into the neck begins. Unit: mm. Category: front_geometry."
+        },
+        "sculptHeadBottomZ": {
+          "type": "number",
+          "minimum": -12,
+          "maximum": 8,
+          "multipleOf": 0.1,
+          "description": "Local Z coordinate of the forced lower headshell plane before body datum is added. For a 6 mm headshell, -3 mm gives a centered lower plane. Unit: mm. Category: front_geometry."
+        },
+        "sculptHeadBlendLength": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 40,
+          "multipleOf": 0.5,
+          "description": "C2-style blend length from the flat headshell underside zone into the natural neck/armwand profile. Use this to remove visible steps and local stiffness discontinuities. Unit: mm. Category: front_geometry."
+        },
+        "sculptHeadFlatWidthFraction": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 0.95,
+          "multipleOf": 0.01,
+          "description": "Fraction of section half-width forced into a real flat lower chord. 0 keeps a rounded underside; 0.65-0.80 creates a practical flat surface without sharp layup traps. Unit: ratio. Category: front_geometry."
+        },
+        "sculptStepSuppressor": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "multipleOf": 0.05,
+          "description": "Strength of AI sculpt transition smoothing. Use 1 to suppress visible side-profile steps that can become stiffness discontinuities. Unit: ratio. Category: front_geometry."
+        },
+        "sculptFrontStiffnessRampEnabled": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Enable deterministic front section-height ramping. 0 off, 1 on. Use to prevent ribbon-thin front/neck spans. Unit: 0/1. Category: front_geometry.",
+          "multipleOf": 1
+        },
+        "sculptFrontMinHeight": {
+          "type": "number",
+          "minimum": 3,
+          "maximum": 12,
+          "description": "Minimum section height at the headshell/front of the stiffness ramp. Recommended 5.8 to 6.5 mm for the current Cobra form. Unit: mm. Category: front_geometry.",
+          "multipleOf": 0.1
+        },
+        "sculptFrontRampStartX": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 80,
+          "description": "X start of the front stiffness ramp. Normally 0 mm at stylus/front datum. Unit: mm. Category: front_geometry.",
+          "multipleOf": 0.5
+        },
+        "sculptFrontRampEndX": {
+          "type": "number",
+          "minimum": 20,
+          "maximum": 140,
+          "description": "X end of the front stiffness ramp before normal monocoque expansion dominates. Recommended 70 to 90 mm for the current headshell-to-puckel transition. Unit: mm. Category: front_geometry.",
+          "multipleOf": 0.5
+        },
+        "sculptFrontRampTargetHeight": {
+          "type": "number",
+          "minimum": 5,
+          "maximum": 18,
+          "description": "Minimum section height reached at sculptFrontRampEndX. Recommended 9.5 to 11 mm. Unit: mm. Category: front_geometry.",
+          "multipleOf": 0.1
+        },
+        "sculptFrontTopBias": {
+          "type": "number",
+          "minimum": 0.5,
+          "maximum": 1,
+          "description": "Distribution of added ramp height. 1 grows upward from flat underside; 0.5 splits around existing profile. Unit: ratio. Category: front_geometry.",
+          "multipleOf": 0.01
+        },
+        "neckW": {
+          "type": "number",
+          "minimum": 5,
+          "maximum": 30,
+          "description": "Neck Width (Waist). Narrow waist width for the neck transition from headshell to main body. Unit: mm. Category: body_geometry.",
+          "multipleOf": 0.1
+        },
+        "neckL": {
+          "type": "number",
+          "minimum": 10,
+          "maximum": 80,
+          "description": "Neck Length. Length of the neck transition before the main body expands. Unit: mm. Category: body_geometry.",
+          "multipleOf": 0.1
+        },
+        "asym": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Asymmetry Belly/Crown. Dimensionless control balancing belly/crown asymmetry in the existing beam shape. Unit: ratio. Category: body_geometry.",
+          "multipleOf": 0.05
+        },
+        "maxH": {
+          "type": "number",
+          "minimum": 15,
+          "maximum": 50,
+          "description": "Max Height (Side). Maximum side-profile height of the main body. Unit: mm. Category: body_geometry.",
+          "multipleOf": 0.1
+        },
+        "maxW": {
+          "type": "number",
+          "minimum": 15,
+          "maximum": 60,
+          "description": "Max Width (Top). Maximum top-view width of the main body. Unit: mm. Category: body_geometry.",
+          "multipleOf": 0.1
+        },
+        "bow": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 30,
+          "description": "Vertical Arch (Lift). Vertical arch/lift control for the existing body profile. Unit: mm. Category: body_geometry.",
+          "multipleOf": 0.1
+        },
+        "thick": {
+          "type": "number",
+          "minimum": 0.2,
+          "maximum": 3,
+          "description": "Wall Thickness. Wall thickness used by the existing shell/export and structural approximations. Unit: mm. Category: material_structure.",
+          "multipleOf": 0.1
+        },
+        "canopyRidgeHeight": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 4,
+          "description": "Canopy Ridge Height. AI-visible upper ridge control for Cobra-like monocoque stiffness grammar. Unit: mm. Category: body_geometry.",
+          "multipleOf": 0.05
+        },
+        "canopyRidgeWidthFraction": {
+          "type": "number",
+          "minimum": 0.05,
+          "maximum": 0.8,
+          "description": "Canopy Ridge Width Fraction. Fractional width of the station-based canopy ridge. Unit: dimensionless. Category: body_geometry.",
+          "multipleOf": 0.01
+        },
+        "canopyRidgeSharpness": {
+          "type": "number",
+          "minimum": 0.5,
+          "maximum": 12,
+          "description": "Canopy Ridge Sharpness. Sharpness exponent for station-based canopy ridge shaping. Unit: dimensionless. Category: body_geometry.",
+          "multipleOf": 0.1
+        },
+        "rearBlendLength": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 60,
+          "description": "Blend Zone Length. Length over which the classic body blends toward the rear/tail section. Unit: mm. Category: rear_geometry.",
+          "multipleOf": 0.1
+        },
+        "rearBendStartX": {
+          "type": "number",
+          "minimum": 180,
+          "maximum": 278,
+          "description": "Bend Start X. Start X location for the existing Cobra/Hollow Elbow rear transition control; this is armwand-to-pivot transition, not heart-counterweight geometry. Notes: Existing TD012 rear geometry only; no Engrove LT geometry is introduced. Unit: mm. Category: rear_geometry.",
+          "multipleOf": 0.1
+        },
+        "rearBendDropZ": {
+          "type": "number",
+          "minimum": 5,
+          "maximum": 50,
+          "description": "Bend Drop Z. Vertical drop magnitude for the existing rear bend. Unit: mm. Category: rear_geometry.",
+          "multipleOf": 0.1
+        },
+        "rearBendLength": {
+          "type": "number",
+          "minimum": 5,
+          "maximum": 80,
+          "description": "Bend Radius/Length. Length/radius-like control for the existing rear bend transition. Unit: mm. Category: rear_geometry.",
+          "multipleOf": 0.1
+        },
+        "rearMouthWidth": {
+          "type": "number",
+          "minimum": 5,
+          "maximum": 40,
+          "description": "Mouth Outer Width (Y). Outer Y width of the existing rear mouth/transition geometry; in Cobra mode this is protected core geometry, not a disc-stack counterweight proxy. Unit: mm. Category: rear_geometry.",
+          "multipleOf": 0.1
+        },
+        "rearMouthLength": {
+          "type": "number",
+          "minimum": 5,
+          "maximum": 40,
+          "description": "Mouth Outer Length (X). Outer X length of the rear mouth in the existing rear accessory geometry. Unit: mm. Category: rear_geometry.",
+          "multipleOf": 0.1
+        },
+        "bulge": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 4,
+          "description": "Rear Radius (Bluntness). Dimensionless bluntness/radius shaping control for the classic tail end. Unit: ratio. Category: rear_geometry.",
+          "multipleOf": 0.1
+        },
+        "tailD": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 25,
+          "description": "End Diameter. End diameter of the existing tail section. Notes: This is not a full-length or envelope-length control. Unit: mm. Category: rear_geometry.",
+          "multipleOf": 0.1
+        },
+        "rearWeightDiscDiameter": {
+          "type": "number",
+          "minimum": 10,
+          "maximum": 40,
+          "description": "Disc Diameter. Diameter of each canonical rear-terminal Cobra disc-stack counterweight plate. Unit: mm. Category: counterweight.",
+          "multipleOf": 0.1
+        },
+        "rearWeightDiscThickness": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 15,
+          "description": "Disc Thickness. Axial thickness of each rear counterweight disc. Unit: mm. Category: counterweight.",
+          "multipleOf": 0.1
+        },
+        "rearWeightDiscCount": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 10,
+          "description": "Disc Count. Integer number of existing rear disc accessories/proxies included in the model/analysis. In Cobra target mode, rear disc stack is not the canonical counterweight. Unit: pcs. Category: counterweight.",
+          "multipleOf": 1
+        },
+        "rearWeightDiscMass": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 50,
+          "description": "Disc Mass. Mass of each rear counterweight disc. Unit: g/ea. Category: counterweight.",
+          "multipleOf": 0.1
+        },
+        "rearFineTrimScrewLength": {
+          "type": "number",
+          "minimum": 5,
+          "maximum": 30,
+          "description": "Fine Trim Length. Length of the existing rear fine-trim screw visual/physics proxy; Cobra reference has an 8 gram fine stylus-load trim screw at the rear. Unit: mm. Category: counterweight.",
+          "multipleOf": 0.1
+        },
+        "rearFineTrimScrewMassEquivalent": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 10,
+          "description": "Fine Trim Equivalent Mass. Non-negative equivalent mass for the rear fine-trim screw. Z balance is adjusted with counterweightZOffset, not negative mass. Notes: Negative mass is prohibited; use counterweightZOffset for vertical balance tuning. Unit: g. Category: counterweight.",
+          "multipleOf": 0.1
+        },
+        "counterweightZOffset": {
+          "type": "number",
+          "minimum": -15,
+          "maximum": 15,
+          "description": "Counterweight Z Offset. Vertical position offset for the physical counterweight stack. This replaces negative-mass balancing hacks. Notes: Physical masses remain non-negative; move the counterweight stack vertically to tune COM Z. Unit: mm. Category: counterweight.",
+          "multipleOf": 0.5
+        },
+        "rearSupportBridgeLength": {
+          "type": "number",
+          "minimum": 0.5,
+          "maximum": 8,
+          "description": "Support Bridge Length. Explicit rear-terminal to disc-stack support bridge length for non-tangent printable counterweight connection. Unit: mm. Category: counterweight.",
+          "multipleOf": 0.1
+        },
+        "rearSupportBridgeRadius": {
+          "type": "number",
+          "minimum": 0.5,
+          "maximum": 4,
+          "description": "Support Bridge Radius. Radius of the printable support bridge between rear terminal and disc stack. Unit: mm. Category: counterweight.",
+          "multipleOf": 0.05
+        },
+        "rearSupportBridgeOverlap": {
+          "type": "number",
+          "minimum": 0.05,
+          "maximum": 1.5,
+          "description": "Support Bridge Overlap. Boolean-safe overlap at both support bridge ends to avoid tangent-only contact. Unit: mm. Category: counterweight.",
+          "multipleOf": 0.05
+        },
+        "titaniumPlateLength": {
+          "type": "number",
+          "minimum": 10,
+          "maximum": 36,
+          "description": "TD051 writable: structural titanium interface plate length in the headshell-to-neck laminated interface zone; not headshellSlots.plate.",
+          "multipleOf": 0.1
+        },
+        "titaniumPlateWidth": {
+          "type": "number",
+          "minimum": 10,
+          "maximum": 24,
+          "description": "TD051 writable: structural titanium interface plate width; not slot-carrier/reference geometry.",
+          "multipleOf": 0.1
+        },
+        "titaniumPlateThickness": {
+          "type": "number",
+          "minimum": 0.5,
+          "maximum": 3,
+          "description": "TD051 writable: structural titanium interface plate thickness.",
+          "multipleOf": 0.05
+        },
+        "titaniumPlateMass": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 8,
+          "description": "TD051 writable: structural titanium interface plate mass, separate from cartridge mass.",
+          "multipleOf": 0.05
+        },
+        "titaniumPlateX": {
+          "type": "number",
+          "minimum": 20,
+          "maximum": 80,
+          "description": "TD051B writable: actual titaniumMountPlate X center consumed by TitaniumMountPlate.resolveTitaniumMountPlatePose and clamped to the headshell-to-neck interface zone; expected interface default around x=32 mm, not the x≈10.2 slot/cartridge underside zone.",
+          "multipleOf": 0.1
+        },
+        "titaniumPlateYOffset": {
+          "type": "number",
+          "minimum": -4,
+          "maximum": 4,
+          "description": "TD051 writable: actual titaniumMountPlate lateral Y offset consumed by TitaniumMountPlate.resolveTitaniumMountPlatePose.",
+          "multipleOf": 0.1
+        },
+        "titaniumPlateZOffset": {
+          "type": "number",
+          "minimum": -2,
+          "maximum": 4,
+          "description": "TD051 writable: actual titaniumMountPlate vertical interface offset consumed by TitaniumMountPlate.resolveTitaniumMountPlatePose; not a loose underside-plate control.",
+          "multipleOf": 0.05
+        },
+        "titaniumAdhesiveThickness": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 0.5,
+          "description": "TD051 writable: adhesive layer in the carbon-to-titanium laminated interface.",
+          "multipleOf": 0.01
+        },
+        "titaniumAdhesiveDampingLossFactor": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "TD051 writable: damping-loss estimate for the interface adhesive layer.",
+          "multipleOf": 0.01
+        }
+      }
+    },
+    "SparseEmptyObjectMap": {
+      "type": "object",
+      "additionalProperties": false,
+      "maxProperties": 0,
+      "description": "External TD051 sparse shape patches must not write selects, checkboxes or flags unless a future schema-specific semantic action explicitly allows a field."
+    },
+    "SparseShapePatchDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "version",
+        "app",
+        "modelFamily",
+        "name"
+      ],
+      "properties": {
+        "schema": {
+          "const": "tonearm-designer-ai-delta"
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "app": {
+          "type": "string"
+        },
+        "modelFamily": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string",
+          "not": {
+            "pattern": "full[\\s_-]?passthrough|full[\\s_-]?state|complete[\\s_-]?session|legacy[\\s_-]?full[\\s_-]?delta|^no_interpretable_request$"
+          },
+          "description": "Sparse patch names must be meaningful and must not use full-state/legacy/no-op names."
+        },
+        "inputs": {
+          "$ref": "#/$defs/SparseShapeInputMap"
+        },
+        "selects": {
+          "$ref": "#/$defs/SparseEmptyObjectMap"
+        },
+        "checkboxes": {
+          "$ref": "#/$defs/SparseEmptyObjectMap"
+        },
+        "flags": {
+          "$ref": "#/$defs/SparseEmptyObjectMap"
+        },
+        "unsupportedAttributes": {
+          "$ref": "#/$defs/SparseUnsupportedAttributes"
+        }
+      },
+      "description": "TD051 external AI sparse shape patch. This replaces the TD048/legacy full-state passthrough pattern. Do not return full session inputs/selects/checkboxes/flags."
+    },
+    "SparseEmptyDeltaWhenUninterpretable": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "version",
+        "app",
+        "modelFamily",
+        "name",
+        "inputs",
+        "selects",
+        "checkboxes",
+        "flags",
+        "unsupportedAttributes"
+      ],
+      "properties": {
+        "schema": {
+          "const": "tonearm-designer-ai-delta"
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "app": {
+          "type": "string"
+        },
+        "modelFamily": {
+          "type": "string"
+        },
+        "name": {
+          "const": "no_interpretable_request"
+        },
+        "inputs": {
+          "$ref": "#/$defs/SparseShapeInputMap",
+          "maxProperties": 0
+        },
+        "selects": {
+          "$ref": "#/$defs/SparseEmptyObjectMap"
+        },
+        "checkboxes": {
+          "$ref": "#/$defs/SparseEmptyObjectMap"
+        },
+        "flags": {
+          "$ref": "#/$defs/SparseEmptyObjectMap"
+        },
+        "unsupportedAttributes": {
+          "$ref": "#/$defs/SparseUnsupportedAttributes"
+        }
+      },
+      "description": "Explicit no-op sparse delta for uninterpretable user intent."
+    },
+    "SparseArchitectureGateOkEnvelope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "delta"
+      ],
+      "properties": {
+        "status": {
+          "const": "ok"
+        },
+        "selectedSpecRegime": {
+          "type": "string"
+        },
+        "mustDevelopModules": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "hardConstraints": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "delta": {
+          "$ref": "#/$defs/SparseShapePatchDelta"
+        },
+        "unmetRequirements": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "validationPlan": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Sparse architecture-gate envelope. Delta remains sparse; no full-state passthrough is allowed."
+    },
+    "SparseUnsupportedAttributes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9]+(?:_[a-z0-9]+)*$"
+      },
+      "description": "Names missing requested geometric/mechanical attributes. Sparse unsupported attribute list. This does not excuse an empty delta except genuine no_interpretable_request."
+    }
+  },
+  "$comment": "TD051 primary contract. External AI emits sparse deltas only. Runtime ignores protected fields, enforces Cobra invariants, separates headshellSlots slot-carrier geometry from titaniumMountPlate and forbids false-writable titanium controls. TD051B: no dangling LegacyFullPassthroughDelta or LegacyEmptyDeltaWhenUninterpretable refs are permitted."
+}

@@ -1,0 +1,1208 @@
+<!DOCTYPE html>
+<!-- AI-CODING NOTE: Desktop help for the ported TD053F runtime; keep empty-session, Manual Trace input, source-boundary, and export limitations aligned with implementation. -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Help — Engrove Tonearm Profile Designer 29.0.0</title>
+    <style>
+        :root {
+            --bg: #1a1a1a;
+            --panel: #232323;
+            --panel-2: #1e1e1e;
+            --border: #333;
+            --border-soft: #2a2a2a;
+            --text: #e0e0e0;
+            --text-soft: #b8b8b8;
+            --muted: #888;
+            --accent: #1f6feb;
+            --gold: #e1b12c;
+            --green: #2ecc71;
+            --orange: #e67e22;
+            --purple: #9b59b6;
+            --red: #e74c3c;
+            --yellow: #f1c40f;
+            --teal: #16a085;
+            --code-bg: #111;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            line-height: 1.55;
+            font-size: 14px;
+        }
+
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #1a1a1a; }
+        ::-webkit-scrollbar-thumb { background: #555; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #777; }
+
+        .layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        nav.toc {
+            position: sticky;
+            top: 0;
+            align-self: flex-start;
+            width: 260px;
+            max-height: 100vh;
+            overflow-y: auto;
+            background: var(--panel);
+            border-right: 1px solid var(--border);
+            padding: 20px 16px;
+            flex-shrink: 0;
+        }
+
+        nav.toc h2 {
+            font-size: 12px;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin: 0 0 10px 0;
+            letter-spacing: 0.05em;
+        }
+
+        nav.toc ol {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            counter-reset: toc;
+        }
+
+        nav.toc ol li {
+            counter-increment: toc;
+            margin: 2px 0;
+        }
+
+        nav.toc ol li a {
+            display: block;
+            color: var(--text-soft);
+            text-decoration: none;
+            padding: 6px 8px;
+            border-radius: 4px;
+            font-size: 13px;
+            transition: background 0.15s, color 0.15s;
+        }
+
+        nav.toc ol li a::before {
+            content: counter(toc) ". ";
+            color: var(--muted);
+            font-weight: bold;
+        }
+
+        nav.toc ol li a:hover {
+            background: #2c2c2c;
+            color: #fff;
+        }
+
+        main {
+            flex: 1;
+            padding: 32px 40px 80px 40px;
+            max-width: 980px;
+            margin: 0 auto;
+        }
+
+        header.page-header {
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 32px;
+            padding-bottom: 16px;
+        }
+
+        header.page-header h1 {
+            font-size: 28px;
+            margin: 0 0 6px 0;
+            color: #fff;
+        }
+
+        header.page-header .subtitle {
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        h2 {
+            font-size: 22px;
+            margin-top: 48px;
+            margin-bottom: 14px;
+            color: #fff;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 6px;
+        }
+
+        h3 {
+            font-size: 17px;
+            margin-top: 28px;
+            margin-bottom: 8px;
+            color: var(--gold);
+        }
+
+        h4 {
+            font-size: 14px;
+            margin-top: 18px;
+            margin-bottom: 6px;
+            color: var(--text);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        p {
+            margin: 8px 0 12px 0;
+            color: var(--text-soft);
+        }
+
+        a { color: var(--accent); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+
+        ul, ol {
+            margin: 6px 0 14px 0;
+            padding-left: 22px;
+            color: var(--text-soft);
+        }
+
+        ul li, ol li { margin: 4px 0; }
+
+        code {
+            font-family: Consolas, 'Courier New', monospace;
+            font-size: 0.92em;
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 3px;
+            color: #f0c674;
+            border: 1px solid #2a2a2a;
+        }
+
+        pre {
+            background: var(--code-bg);
+            border: 1px solid #2a2a2a;
+            border-radius: 6px;
+            padding: 12px 14px;
+            overflow-x: auto;
+            font-size: 12px;
+            line-height: 1.5;
+            color: #c5c8c6;
+        }
+
+        pre code { background: transparent; border: none; padding: 0; color: inherit; }
+
+        .callout {
+            background: var(--panel-2);
+            border-left: 4px solid var(--accent);
+            border-radius: 4px;
+            padding: 10px 14px;
+            margin: 14px 0;
+            color: var(--text-soft);
+        }
+
+        .callout.warn   { border-left-color: var(--red); }
+        .callout.info   { border-left-color: var(--accent); }
+        .callout.tip    { border-left-color: var(--green); }
+        .callout.note   { border-left-color: var(--yellow); }
+
+        .callout strong { color: #fff; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 12px 0 18px 0;
+            font-size: 13px;
+            background: var(--panel-2);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        th, td {
+            padding: 8px 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            vertical-align: top;
+        }
+
+        th {
+            background: #1a1a1a;
+            color: var(--gold);
+            font-weight: bold;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        tr:last-child td { border-bottom: none; }
+
+        td:first-child {
+            color: #fff;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        td code {
+            background: #161616;
+            font-size: 0.85em;
+        }
+
+        .swatch {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            vertical-align: middle;
+            margin-right: 6px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .axes-key {
+            display: flex;
+            gap: 18px;
+            background: var(--panel-2);
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin: 10px 0 18px 0;
+            font-size: 13px;
+        }
+
+        .axes-key span { color: var(--text-soft); }
+        .axes-key .x { color: #ff6b6b; font-weight: bold; }
+        .axes-key .y { color: #5dd55d; font-weight: bold; }
+        .axes-key .z { color: #6b9bff; font-weight: bold; }
+
+        .footer {
+            margin-top: 64px;
+            padding-top: 18px;
+            border-top: 1px solid var(--border);
+            color: var(--muted);
+            font-size: 12px;
+            text-align: center;
+        }
+
+        @media (max-width: 880px) {
+            .layout { flex-direction: column; }
+            nav.toc {
+                position: static;
+                width: 100%;
+                max-height: none;
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+            }
+            main { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+<div class="layout">
+
+<nav class="toc" aria-label="Table of contents">
+    <h2>Contents</h2>
+    <ol>
+        <li><a href="#intro">Introduction</a></li>
+        <li><a href="#empty-trace-import">Empty start &amp; Manual Trace import</a></li>
+        <li><a href="#runtime">Running the Application</a></li>
+        <li><a href="#coords">Coordinate System</a></li>
+        <li><a href="#workflow">Recommended Workflow</a></li>
+        <li><a href="#header">Header Readouts</a></li>
+        <li><a href="#cartridge">Cartridge &amp; Physics</a></li>
+        <li><a href="#cartridge-picker">Cartridge Picker</a></li>
+        <li><a href="#kinematics">Tonearm Kinematics</a></li>
+        <li><a href="#tail">Tail / Neutral Balance</a></li>
+        <li><a href="#headshell">Organic Headshell &amp; Neck</a></li>
+        <li><a href="#beam">Beam Geometry &amp; Asymmetry</a></li>
+        <li><a href="#tail-classic">Tail Section (Classic)</a></li>
+        <li><a href="#material">Material Constants</a></li>
+        <li><a href="#render-mode">Render Mode (3D)</a></li>
+        <li><a href="#export">Export (Parametric CAD)</a></li>
+        <li><a href="#main-view">Main View Cameras &amp; 2D Plots</a></li>
+        <li><a href="#physics-panel">Physical Analysis &amp; COM Panel</a></li>
+        <li><a href="#solver">Solver Sandbox &amp; Optimization Goals</a></li>
+        <li><a href="#interactivity">2D Drag &amp; Tooltips</a></li>
+        <li><a href="#validation">Validation Warnings</a></li>
+        <li><a href="#limits">Limitations &amp; Disclaimers</a></li>
+        <li><a href="#troubleshooting">Troubleshooting</a></li>
+        <li><a href="#td041-update">TD041 maintenance update</a></li>
+        <li><a href="#td042-update">TD042 export validation update</a></li>
+        <li><a href="#td043-update">TD043 reference-frame update</a></li>
+        <li><a href="#td044-update">TD044 stylus-anchored datum update</a></li>
+        <li><a href="#td045-update">TD045 UI readability hotfix</a></li>
+        <li><a href="#td045b-update">TD045B AI engagement-policy update</a></li>
+        <li><a href="#glossary">Glossary</a></li>
+    </ol>
+</nav>
+
+<main>
+
+<header class="page-header">
+    <h1>Engrove Tonearm Profile Designer — Help</h1>
+    <div class="subtitle">Desktop reference manual for port 29.0.0 with retained TD053F runtime — Engrove, 2026</div>
+</header>
+
+<!-- 1 -->
+<section id="intro">
+    <h2>1. Introduction</h2>
+    <p>
+        Tonearm Profile Designer is a single-file, browser-based design and analysis tool for parametric concept work on tonearm beams,
+        headshell-like front sections and tail/counterweight assemblies. The intent is fast iteration between geometry, visualization,
+        coarse mechanical analysis and parametric STL export.
+    </p>
+    <p>
+        The application targets DIY tonearm builders and engineers who want to explore the relationship between geometric parameters
+        (apex height, neck length, asymmetry, tail mass, etc.) and downstream metrics such as effective mass, system resonance with a
+        given cartridge compliance, center-of-mass placement, inertia about the pivot and a static load-equivalent estimate.
+    </p>
+    <div class="callout note">
+        <strong>Scope of analysis.</strong> The internal physics layer is intentionally first-order. It is suitable for ranking design
+        candidates and exploring trade-offs, but it is not a substitute for FEA, modal analysis or measurements on a built prototype.
+    </div>
+</section>
+
+<section id="empty-trace-import">
+    <h2>Empty start and Engrove Manual Trace import</h2>
+    <p>A new session intentionally contains no active 3D object. The viewport remains empty until you import Manual Trace files, open a saved Tonearm Designer session, create a parametric design, or explicitly apply a Freeform preset/response.</p>
+    <h3>Required trace set</h3>
+    <ul>
+        <li>At least one calibrated top view whose engineering plane is X–Y.</li>
+        <li>At least one calibrated side view whose engineering plane is X–Z.</li>
+        <li>A finite positive millimetre scale, an engineering origin, unique axis mappings and usable contour geometry in each file.</li>
+    </ul>
+    <p>The importer accepts Manual Trace JSON, <code>.engrove-trace</code>, <code>.engrove-project</code> and paired SVG exports. Plane classification is read from <code>trace_frame.axes</code>; use the per-file selector only when correcting an older artifact with stale/default axes.</p>
+    <p>JSON coordinates are authoritative. SVG is parsed as inert XML and contributes only supported geometry plus the Engrove binding metadata. External references and active SVG content are rejected.</p>
+    <h3>How the loft is derived</h3>
+    <p>Manual Trace stations are reused when present; otherwise a deterministic station grid is sampled across the common top/side X range. Top-view intersections define center Y and width. Side-view intersections define center Z and height. The remaining cross-section surface uses a declared superellipse assumption because two silhouettes cannot uniquely determine a complete 3D body.</p>
+    <div class="callout warning"><strong>Dimensional boundary.</strong> The importer blocks missing calibration, ambiguous axes, insufficient station coverage and dimensions outside the Freeform kernel limits. It does not silently rescale or clamp an invalid trace into acceptance.</div>
+</section>
+
+<!-- 2 -->
+<section id="runtime">
+    <h2>2. Running the Application</h2>
+    <p>
+        The deployed application is intended for a current desktop Chromium-based browser or Firefox with WebGL enabled. Mobile use is outside this tool's layout and verification contract.
+    </p>
+    <h4>External dependencies</h4>
+    <ul>
+        <li><strong>Three.js r128</strong> — pinned by the tool lockfile and served locally with the application.</li>
+        <li><strong>OrbitControls</strong> — served locally from the same pinned Three.js package.</li>
+    </ul>
+    <p>
+        An internet connection is required on first load so the browser can fetch the two CDN scripts. After they are cached the
+        application can be reopened offline.
+    </p>
+    <h4>Browser requirements</h4>
+    <ul>
+        <li>WebGL 2 capable GPU and driver.</li>
+        <li>Hardware-accelerated 2D canvas.</li>
+        <li>Pointer events (mouse, trackpad or pen).</li>
+    </ul>
+</section>
+
+<!-- 3 -->
+<section id="coords">
+    <h2>3. Coordinate System</h2>
+    <p>
+        All geometry, all reported coordinates and all analysis results use the same right-handed Cartesian system, expressed in
+        millimetres unless otherwise stated.
+    </p>
+    <div class="axes-key">
+        <span><span class="x">X</span> — Length along the beam (front to rear).</span>
+        <span><span class="y">Y</span> — Width across the beam (left/right).</span>
+        <span><span class="z">Z</span> — Height (vertical).</span>
+    </div>
+    <ul>
+        <li>Origin is at the front of the beam: the leftmost ring of the discretized beam sits at <code>x = 0</code>.</li>
+        <li>The pivot lives at <code>x = apex + pivotOffsetX</code>, with optional Y- and Z-offsets.</li>
+        <li>The stylus tip sits at <code>x = cartX</code> for the Goldring and Custom modes, or at <code>x = nomStylusX</code> in Arm-Only mode.</li>
+        <li>Effective length (<code>L_eff</code>) is the planar distance from pivot to stylus tip in the X/Y plane.</li>
+    </ul>
+</section>
+
+<!-- 4 -->
+<section id="workflow">
+    <h2>4. Recommended Workflow</h2>
+    <ol>
+        <li>
+            <strong>Pick a cartridge mode.</strong> Choose Goldring 1042 (the bundled reference profile), Manual Cartridge, or
+            None (Arm Only). The mode controls how mass and stylus position are introduced into the analysis.
+        </li>
+        <li>
+            <strong>Enter cartridge compliance.</strong> Either type the explicit dynamic compliance at 10 Hz, or enter a 100 Hz value
+            and a conversion factor <code>k</code>; the 10 Hz value will be derived automatically.
+        </li>
+        <li>
+            <strong>Set the alignment target.</strong> Pick an alignment preset (Löfgren A / B or Stevenson, all IEC) and a
+            pivot-to-spindle distance. The target <code>L_eff</code>, overhang and offset angle are computed and shown in the
+            Tonearm Kinematics block.
+        </li>
+        <li>
+            <strong>Match the beam to the target.</strong> Either drag <em>Apex Pos</em> until the &quot;current L_eff&quot; lines
+            up with the target, or click <em>Sync to target L_eff</em> to snap the relevant slider.
+        </li>
+        <li>
+            <strong>Shape the beam.</strong> Use the Headshell, Beam Geometry, Tail Section and Material controls to sculpt the
+            mass and stiffness distribution along the arm.
+        </li>
+        <li>
+            <strong>Tune neutral balance.</strong> If you are using the Hollow Elbow (Cobra) tail, use the Disc and Fine Trim
+            controls to land the rear CG and watch the Neutral Balance score in the Tail block.
+        </li>
+        <li>
+            <strong>Inspect the physics.</strong> Open the Physics Panel (floating bottom-right). Confirm that Total COM,
+            static imbalance, and inertia about the pivot are within sensible ranges.
+        </li>
+        <li>
+            <strong>Export.</strong> Pick an export type (thin-walled, solid plug, vertical or horizontal split) and download
+            STL files for further work in your CAD or slicer.
+        </li>
+    </ol>
+</section>
+
+<!-- 5 -->
+<section id="header">
+    <h2>5. Header Readouts</h2>
+    <p>The two boxes at the top of the sidebar are live status readouts, not inputs.</p>
+    <h4>System Mass</h4>
+    <p>
+        Total mass of the configuration: integrated shell mass (from material density and per-ring cross-section) plus cartridge mass,
+        counterweight stack, and fine-trim equivalent mass. The numeric colour switches between purple (no cartridge) and gold (a
+        cartridge mode is active) so you always know which configuration the readout describes.
+    </p>
+    <h4>System Resonance</h4>
+    <p>
+        The arm/cartridge resonance frequency, computed as <code>f = 1000 / (2π · √(M_eff · C10))</code> with
+        <code>M_eff</code> in grams and <code>C10</code> in 10⁻⁶ cm/dyn. A coloured gauge below the value highlights the audiophile
+        comfort zone (7–12 Hz green, 6–7 / 12–14 Hz yellow, outside 5–14 red). When no cartridge is mounted only the effective shell
+        mass is shown; the resonance line is blanked.
+    </p>
+</section>
+
+<!-- 6 -->
+<section id="cartridge">
+    <h2>6. Cartridge &amp; Physics</h2>
+
+    <h3>Cartridge Mode</h3>
+    <table>
+        <tr><th>Option</th><th>Meaning</th></tr>
+        <tr><td>Goldring 1042 (Reference)</td><td>Uses the bundled, anchor-driven Goldring 1042 profile (body, plate, cantilever, pins). Mass and stylus geometry are taken from the reference data set.</td></tr>
+        <tr><td>Selected Cartridge</td><td>Uses the cartridge chosen in the picker. Mass, 10 Hz compliance and tracking-force target are copied from the compact cartridge dataset.</td></tr>
+        <tr><td>Manual Cartridge</td><td>A simple 18 × 16 × tipToTop box with a configurable mass and tip-to-top distance.</td></tr>
+        <tr><td>None (Arm Only)</td><td>No cartridge. A nominal stylus reference X is used purely for L_eff calculation. Static imbalance and resonance are not meaningful in this mode.</td></tr>
+    </table>
+
+    <h3>Setback (Stylus Tip X)</h3>
+    <p>
+        Position of the stylus tip along the beam axis. In Goldring, Selected Cartridge and Manual modes this drives the cartridge body position and
+        therefore the cartridge COM. The slider's upper bound is automatically clamped so the cartridge body cannot run past the
+        physical pad.
+    </p>
+
+    <h3>Custom Mass &amp; Stylus Tip-to-Top</h3>
+    <p>
+        Visible when Selected Cartridge or Manual Cartridge is selected. For picked cartridges, mass is copied from the compact data file. Tip-to-top remains the app box-geometry reference; the picker does not change body-shape geometry. For manual entries, mass is user-controlled. Tip-to-top is the vertical distance from
+        the stylus tip to the top of the cartridge body (used to align the box geometry under the pad).
+    </p>
+
+    <h3>Dynamic Compliance</h3>
+    <p>
+        Two compliance values are tracked because manufacturers report compliance at either 10 Hz or 100 Hz. They are linked through
+        a conversion factor <code>k</code>:
+    </p>
+    <pre><code>C10 = C100 · k</code></pre>
+    <ul>
+        <li>Editing C10 directly is the explicit case (label turns green: <em>[Explicit measurement]</em>).</li>
+        <li>Editing C100 or k drives an estimated C10 (label turns yellow: <em>[Estimated value (C100 · k)]</em>).</li>
+    </ul>
+    <div class="callout note">
+        <strong>k</strong> is empirical and varies with the cartridge suspension. A common rule-of-thumb range is 1.5–2.0; always prefer
+        a manufacturer-supplied 10 Hz figure when one is available.
+    </div>
+
+    <h3>Nominal Stylus X (Arm-Only)</h3>
+    <p>
+        Visible only when the cartridge mode is None. Sets the X position used as a virtual stylus reference for L_eff calculation
+        even though no cartridge mass is present.
+    </p>
+</section>
+
+<section id="cartridge-picker">
+    <h2>Cartridge Picker</h2>
+    <p>
+        The <strong>Select Cartridge</strong> button opens a modal backed by <code>data/tonearmdesigner-cartridges.min.js</code>.
+        The JS data file is compact app data: it contains usable cartridge fields such as manufacturer, model, type, mass, 10 Hz compliance,
+        tracking-force range, stylus, cantilever and output when available.
+    </p>
+
+    <h3>Search and filters</h3>
+    <ul>
+        <li>Search is case-insensitive over manufacturer plus model.</li>
+        <li>Type filtering uses the cartridge type value when present, for example MM, MC, MI or source-specific equivalents.</li>
+        <li>Mass, compliance, tracking force and optional output mV filters are numeric min/max filters.</li>
+        <li>The stylus filter is optional and matches stylus text such as elliptical, line-contact or Shibata when those words exist in the data.</li>
+        <li>The result count shows the number of matching cartridges. Large matches are rendered as a capped visible list for responsiveness.</li>
+    </ul>
+
+    <h3>Apply, Cancel and close behavior</h3>
+    <p>
+        Selecting a result row only updates the preview inside the modal. <strong>Apply</strong> updates the live design once:
+        cartridge display name, cartridge mass, 10 Hz compliance and the tracking-force target are copied into TonearmDesigner state.
+        If a cartridge lacks a recommended tracking force, the midpoint of min/max is used. Cancel, the X button and backdrop clicks
+        do not change the live design.
+    </p>
+    <p>
+        Some cartridge records sit outside the default controller ranges. When Apply needs this, TonearmDesigner expands the affected
+        controller ranges for cartridge mass, 10 Hz compliance or tracking force before setting the value, so selected cartridge data is not
+        silently clamped. The picker warns before Apply when a range expansion is required and shows a status note after Apply. Preview,
+        search, Cancel and X close do not mutate live values or controller ranges.
+    </p>
+
+    <h3>Mass, compliance and tracking force</h3>
+    <p>
+        <strong>Mass</strong> contributes to the arm/cartridge mass and COM calculations. <strong>Compliance</strong> is the dynamic
+        10 Hz value used by the resonance formula. <strong>Tracking force</strong> is copied to the solver target field so optimization
+        can compare the static load-equivalent result against the selected cartridge's recommended force.
+    </p>
+
+    <h3>Estimated compliance indicator</h3>
+    <p>
+        Some dataset entries have <code>compliance_10hz_estimated=true</code>. The app shows an <em>estimated compliance</em>
+        indicator and the compliance label turns yellow. Treat that value as an estimate in resonance and solver interpretation,
+        not as an exact lab measurement.
+    </p>
+
+    <h3>Fallback behavior</h3>
+    <p>
+        The picker loads the local cartridge data through a normal <code>script loading</code> tag, not through <code>fetch()</code>. This avoids Chrome CORS blocking when the app is opened directly from <code>file://</code>.
+        If the script is missing or fails to load, TonearmDesigner keeps running and the original Goldring/reference behavior remains available, with a
+        clear status message in the picker area.
+    </p>
+
+    <h3>Solver and resonance assumptions</h3>
+    <p>
+        The selected cartridge affects resonance through mass and 10 Hz compliance, and it affects the solver through the copied
+        tracking-force target. It does not rewrite the solver architecture, replace the Fas 15.2 evaluation slider, or change the
+        canonical Fas 14.4 counterweight model.
+    </p>
+</section>
+
+<!-- 7 -->
+<section id="kinematics">
+    <h2>7. Tonearm Kinematics</h2>
+    <p>
+        The kinematics block computes the geometric alignment targets for a chosen pivot-to-spindle distance and IEC null-radii
+        preset, then compares them with what the current beam geometry actually achieves.
+    </p>
+    <h3>Pivot-to-Spindle</h3>
+    <p>
+        Horizontal distance between the spindle axis of the turntable and the vertical pivot of the tonearm. This is the prime
+        anchor of every overhang/offset calculation.
+    </p>
+    <h3>Alignment Preset</h3>
+    <table>
+        <tr><th>Preset</th><th>Inner null (mm)</th><th>Outer null (mm)</th></tr>
+        <tr><td>Löfgren A (Baerwald) — IEC</td><td>66.0</td><td>120.9</td></tr>
+        <tr><td>Löfgren B — IEC</td><td>70.3</td><td>116.6</td></tr>
+        <tr><td>Stevenson — IEC</td><td>60.325</td><td>117.4</td></tr>
+    </table>
+    <h3>Targets and current values</h3>
+    <ul>
+        <li><strong>Target L_eff</strong> — geometrically optimal effective length for the chosen preset and pivot-to-spindle.</li>
+        <li><strong>Target Overhang</strong> — <code>L_eff − pivot-to-spindle</code>.</li>
+        <li><strong>Target Offset Angle</strong> — geometric headshell offset that places both nulls at the chosen radii.</li>
+        <li><strong>Current L_eff (Apex − Stylus)</strong> — actual planar distance from the pivot point to the current stylus tip.</li>
+        <li><strong>Δ</strong> — error between current and target. Green if |Δ| ≤ 0.5 mm, red otherwise.</li>
+    </ul>
+    <h3>Sync to target L_eff</h3>
+    <p>
+        Convenience button. When pressed, it back-solves which slider (<em>cartX</em> in cartridge modes, <em>nomStylusX</em> in
+        Arm-Only mode) needs to be set so that the current L_eff matches the target. The slider value is clamped to its declared
+        min / max range.
+    </p>
+</section>
+
+<!-- 8 -->
+<section id="tail">
+    <h2>8. Tail / Neutral Balance</h2>
+    <p>
+        The tail block selects between the original Classic geometry and the Hollow Elbow (Cobra) geometry. The Cobra mode adds a
+        smoothly-blended G1/C1 cubic-bezier rear bend that drops vertically and ends in a configurable rectangular mouth.
+    </p>
+
+    <h3>Tail Mode</h3>
+    <table>
+        <tr><th>Mode</th><th>Notes</th></tr>
+        <tr><td>Classic Tail</td><td>Bell-shaped tapered rear behind the apex; controlled by the &quot;Tail Section (Classic Only)&quot; sliders further down.</td></tr>
+        <tr><td>Hollow Elbow (Cobra)</td><td>Adds a vertical bend with explicit blend zone and mouth, plus a counterweight stack and fine-trim screw.</td></tr>
+    </table>
+
+    <h3>Cobra blend / bend / mouth</h3>
+    <table>
+        <tr><th>Slider</th><th>Meaning</th></tr>
+        <tr><td>Blend Zone Length</td><td>How far back from <em>Bend Start X</em> the cross-section transition begins. Larger = smoother.</td></tr>
+        <tr><td>Bend Start X</td><td>Axial position where the rear bend leaves the straight beam.</td></tr>
+        <tr><td>Bend Drop Z</td><td>Total vertical drop along the bend, in millimetres.</td></tr>
+        <tr><td>Bend Radius/Length</td><td>Length of the bend's horizontal projection. Combined with Drop Z, defines bend curvature.</td></tr>
+        <tr><td>Mouth Outer Width / Length</td><td>Cross-section dimensions at the rear opening (Y × X).</td></tr>
+    </table>
+
+    <h3>Counterweight stack</h3>
+    <p>
+        Pure cylindrical discs stacked at the mouth. Diameter, thickness, count and mass per disc are independent. Discs are placed
+        progressively further back so the stack center sits behind the mouth at <code>−count·thickness/2</code>.
+    </p>
+
+    <h3>Fine trim screw</h3>
+    <p>
+        Equivalent point mass for a fine-trim adjustment screw, attached above the apex. Mass can be negative to model a screw that
+        is pulled inward (lowering the rear effective mass).
+    </p>
+
+    <h3>Rear CG / Neutral Balance / Score</h3>
+    <p>
+        Computed from the integrated rear shell mass plus the counterweight and fine-trim point masses. The neutral-balance score
+        reflects how well the rear CG aligns with the line drawn from the front cartridge reference through the pivot:
+    </p>
+    <table>
+        <tr><th>Score</th><th>Error</th></tr>
+        <tr><td>good</td><td>≤ 3.0 mm</td></tr>
+        <tr><td>ok</td><td>3.0–7.0 mm</td></tr>
+        <tr><td>poor</td><td>&gt; 7.0 mm</td></tr>
+    </table>
+
+    <h3>Display toggles</h3>
+    <ul>
+        <li><strong>Show counterweights (3D)</strong> — render the disc stack.</li>
+        <li><strong>Show fine-trim screw (3D)</strong> — render the cylindrical fine-trim screw.</li>
+        <li><strong>Show Rear CG</strong> — purple marker at the rear CG in 2D.</li>
+        <li><strong>Show neutral balance line</strong> — yellow dashed line through stylus / pivot / rear CG in side view.</li>
+        <li><strong>Show tower clearance</strong> — translucent red strip around the apex in side view.</li>
+        <li><strong>Include weights in export</strong> — adds the disc stack geometry to the exported STL.</li>
+    </ul>
+</section>
+
+<!-- 9 -->
+<section id="headshell">
+    <h2>9. Organic Headshell &amp; Neck</h2>
+    <p>The front 60–80 mm of the beam is treated as a flat-bottomed headshell that smoothly transitions through a neck waist into the main beam.</p>
+    <table>
+        <tr><th>Slider</th><th>Effect</th></tr>
+        <tr><td>Pad Offset (Z-axis)</td><td>Vertical translation of the cartridge mounting plane. Use to fine-tune VTA-like geometry independent of beam height.</td></tr>
+        <tr><td>Nose Rounding</td><td>X-extent of the elliptical nose at the very front. Larger = blunter nose.</td></tr>
+        <tr><td>Pad Max Width</td><td>Maximum Y-width of the headshell pad.</td></tr>
+        <tr><td>Pad Total Length</td><td>X-length of the flat pad zone. Auto-clamped to be ≥ Nose Rounding.</td></tr>
+        <tr><td>Nose Height (Base)</td><td>Z-height of the pad zone before the beam grows in height.</td></tr>
+        <tr><td>Neck Width (Waist)</td><td>Minimum Y-width at the neck. Auto-clamped to be ≤ Pad Max Width.</td></tr>
+        <tr><td>Neck Length</td><td>X-length of the headshell-to-beam transition.</td></tr>
+    </table>
+</section>
+
+<!-- 10 -->
+<section id="beam">
+    <h2>10. Beam Geometry &amp; Asymmetry</h2>
+    <p>The main beam profile is constructed from a small set of high-leverage parameters.</p>
+    <table>
+        <tr><th>Slider</th><th>Effect</th></tr>
+        <tr><td>Asymmetry Belly/Crown</td><td>0 = symmetric beam (top and bottom mirror each other); 1 = full belly (height grows downward only).</td></tr>
+        <tr><td>Apex Pos (Pivot)</td><td>X-coordinate of the apex / vertical pivot. Drives where maximum height and maximum width sit.</td></tr>
+        <tr><td>Max Height (Side)</td><td>Maximum Z-height of the beam at apex.</td></tr>
+        <tr><td>Max Width (Top)</td><td>Maximum Y-width of the beam at apex.</td></tr>
+        <tr><td>Vertical Arch (Lift)</td><td>How much the centerline of the beam arches upward toward the apex (Z lift between pad and apex).</td></tr>
+    </table>
+</section>
+
+<!-- 11 -->
+<section id="tail-classic">
+    <h2>11. Tail Section (Classic Only)</h2>
+    <p>Active only when the Tail Mode is set to <em>Classic Tail</em>.</p>
+    <table>
+        <tr><th>Slider</th><th>Effect</th></tr>
+        <tr><td>Rear Radius (Bluntness)</td><td>Power-law exponent that controls how blunt or pointy the tail termination is.</td></tr>
+        <tr><td>End Diameter</td><td>Final cross-section diameter at the rear of the beam.</td></tr>
+    </table>
+</section>
+
+<!-- 12 -->
+<section id="material">
+    <h2>12. Material (Effective Constants)</h2>
+    <p>
+        Material selection drives an effective 1D approximation: a single density, Young's modulus E (MPa), and shear modulus G (MPa).
+        These are not anisotropic FEA constants — they are reasonable bulk values for a fibre-in-epoxy laminate.
+    </p>
+    <table>
+        <tr><th>Material</th><th>Density (g/cm³)</th><th>E (MPa)</th><th>G (MPa)</th></tr>
+        <tr><td>Carbon Fiber/Epoxy</td><td>1.55</td><td>135 000</td><td>5 000</td></tr>
+        <tr><td>Glass Fiber/Epoxy</td><td>1.90</td><td>45 000</td><td>4 000</td></tr>
+        <tr><td>Kevlar/Epoxy</td><td>1.38</td><td>75 000</td><td>2 000</td></tr>
+        <tr><td>Flax Fiber/Epoxy</td><td>1.30</td><td>30 000</td><td>1 500</td></tr>
+    </table>
+    <p>
+        <strong>Wall Thickness</strong> is the offset distance from the outer ring to the inner ring. The same wall thickness is used
+        all the way along the beam. Increasing it adds mass and increases bending stiffness EI; decreasing it can trigger area-inversion
+        validation warnings in narrow cross-sections.
+    </p>
+</section>
+
+<!-- 13 -->
+<section id="render-mode">
+    <h2>13. Render Mode (3D)</h2>
+    <table>
+        <tr><th>Mode</th><th>Use</th></tr>
+        <tr><td>Light CAD (Surface Analysis)</td><td>Default. Neutral grey shell with orange caps; best for inspecting curvature.</td></tr>
+        <tr><td>Wireframe (Mesh)</td><td>Shows the underlying triangulation; useful for spotting topology problems.</td></tr>
+        <tr><td>Dark Carbon Fiber</td><td>Marketing-style dark anisotropic shading.</td></tr>
+        <tr><td>X-Ray (Transparency)</td><td>Translucent shell; lets you see the inner ring and accessory geometry through the wall.</td></tr>
+    </table>
+</section>
+
+<!-- 14 -->
+<section id="export">
+    <h2>14. Export (Parametric CAD)</h2>
+    <p>The export block writes one or more STL files based on the current geometry and material thickness.</p>
+
+    <h3>Export Type</h3>
+    <table>
+        <tr><th>Type</th><th>Output</th></tr>
+        <tr><td>Thin-walled arm</td><td>Hollow shell with the configured wall thickness, sealed by front and rear caps. Good for printable shells.</td></tr>
+        <tr><td>Solid plug</td><td>Solid outer shell only. Good for FEA imports or as a casting positive.</td></tr>
+        <tr><td>Vertical split (Y=0)</td><td>Two halves cut along the Y=0 plane, each as its own STL. The clearance slider opens an air gap between the parts.</td></tr>
+        <tr><td>Horizontal split (zCenter)</td><td>Two halves cut along the local centerline of each ring (Z = ring center).</td></tr>
+    </table>
+
+    <h3>Export Format</h3>
+    <ul>
+        <li><strong>Binary STL (Recommended)</strong> — compact, fast, the right default for almost everything downstream.</li>
+        <li><strong>ASCII STL</strong> — human readable but very large; only useful for debugging.</li>
+    </ul>
+
+    <h3>Download Export Model</h3>
+    <p>
+        Triggers an export-time validation pass. If the geometry is internally consistent the resulting file(s) are downloaded by
+        the browser. If the geometry is invalid (area-inversion, bad bend parameters, etc.) the export is aborted with a banner
+        message and no file is written. See <a href="#validation">Validation Warnings</a>.
+    </p>
+    <div class="callout note">
+        Pivot, COM markers and inertia axes are <em>not</em> part of the exported STL. They are render-only overlays. The disc stack
+        and fine-trim screw are exported only when <em>Include weights in export</em> is enabled and the Cobra tail mode is active.
+    </div>
+</section>
+
+<!-- 15 -->
+<section id="main-view">
+    <h2>15. Main View Cameras &amp; 2D Plots</h2>
+
+    <h3>3D camera buttons</h3>
+    <table>
+        <tr><th>Button</th><th>View</th></tr>
+        <tr><td>Isometric</td><td>Default 3D oblique view of the whole arm.</td></tr>
+        <tr><td>Side</td><td>Strict X/Z side projection from −Y.</td></tr>
+        <tr><td>Top</td><td>Strict X/Y top projection from +Z.</td></tr>
+        <tr><td>Front</td><td>Y/Z front projection from −X.</td></tr>
+        <tr><td>Focus Cartridge</td><td>Camera framed on the stylus tip.</td></tr>
+        <tr><td>Focus Tail</td><td>Camera framed on the rear terminal of the beam.</td></tr>
+    </table>
+    <p>
+        OrbitControls is active in all views: drag to orbit, right-drag (or shift-drag) to pan, scroll to zoom. The small axes
+        gizmo in the bottom-left of the 3D view always reflects the current camera orientation.
+    </p>
+
+    <h3>Side Profile (Z-X)</h3>
+    <p>
+        2D orthographic projection from the −Y direction. Renders the actual cross-section centerline and rims as well as optional
+        bending-stiffness EI_y and per-mm mass envelopes. Markers for stylus, pivot and (when enabled) Total / Rear / Counterweight /
+        Cartridge COM are overlaid.
+    </p>
+
+    <h3>Top View (Y-X)</h3>
+    <p>
+        2D orthographic projection from +Z. Shows the planar half-width and the optional EI_z envelope. Markers for stylus, pivot
+        and Total COM are overlaid.
+    </p>
+</section>
+
+<!-- 16 -->
+<section id="physics-panel">
+    <h2>16. Physical Analysis &amp; COM Panel</h2>
+    <p>
+        A floating, draggable, dismissible panel anchored bottom-right of the viewport. Toggle it via the <em>Physics Panel</em>
+        button, drag it by its header, and close it with the × button. It is independent of sidebar scroll position.
+    </p>
+
+    <h3>Display toggles</h3>
+    <ul>
+        <li><span class="swatch" style="background:#e74c3c"></span><strong>Show Vertical Pivot</strong> — red marker and dashed vertical line in 2D and 3D.</li>
+        <li><span class="swatch" style="background:#2ecc71"></span><strong>Show Total COM</strong> — combined center of mass of shell + cartridge + counterweight + fine trim.</li>
+        <li><span class="swatch" style="background:#9b59b6"></span><strong>Show Rear Assembly COM</strong> — COM of the rear shell + counterweight + fine trim only.</li>
+        <li><span class="swatch" style="background:#e67e22"></span><strong>Show Counterweight COM</strong> — disc stack COM only.</li>
+        <li><span class="swatch" style="background:#f1c40f"></span><strong>Show Cartridge COM</strong> — cartridge body COM only.</li>
+        <li><strong>Show Inertia Axes (3D)</strong> — principal inertia axes in the X/Z plane plus the Y inertia axis, drawn through the pivot.</li>
+        <li><strong>Show Measurement Lines (2D)</strong> — dashed lines between Stylus, Pivot, Total COM, Rear COM and Counterweight COM in the 2D projections.</li>
+    </ul>
+
+    <h3>Vertical pivot offset (XYZ)</h3>
+    <p>
+        Three sliders that translate the vertical pivot relative to the apex. They drive the same internal state that the 2D
+        drag handles (see Interactivity) write to.
+    </p>
+
+    <h3>Vertical Relations meters</h3>
+    <p>
+        A bank of vertical bar meters that show, in millimetres, how high or low each of Pivot / Total COM / Rear COM / Counterweight /
+        Cart COM sits relative to the stylus tip. The meter centerline is the stylus tip plane; positive readings are above the
+        stylus, negative below. The colour gradient is purely cosmetic — the absolute number is what matters.
+    </p>
+
+    <h3>Coordinates &amp; Distances</h3>
+    <p>
+        Numeric XYZ coordinates of pivot, stylus and all visible COM markers. Below them, the 3D distances and per-axis Δx, Δy, Δz
+        components for every relevant pair (stylus → pivot, pivot → total COM, etc.).
+    </p>
+
+    <h3>Calculated Static Imbalance</h3>
+    <p>
+        First-order static load-equivalent estimate derived from the static moment of the total mass distribution about the pivot:
+    </p>
+    <pre><code>moment_gmm = total_mass · (pivot_x − total_COM_x)
+gf         = moment_gmm / (pivot_x − stylus_x)
+mN         = gf · 9.80665</code></pre>
+    <p>The Static Imbalance Gauge below the readout reflects the same value on a 0–5 g coloured bar:</p>
+    <table>
+        <tr><th>Range</th><th>Quality</th></tr>
+        <tr><td>1.5 – 2.5 g</td><td>good (green)</td></tr>
+        <tr><td>1.0 – 3.0 g</td><td>ok (yellow)</td></tr>
+        <tr><td>outside 1.0 – 3.0 g, or lifting</td><td>poor (red)</td></tr>
+    </table>
+    <p>
+        A textual hint adapts to the current state — for example, suggesting that the user shift the total COM forward when the
+        downforce is too low, or reduce the rear moment when it is too high.
+    </p>
+
+    <h3>Inertia (about Pivot)</h3>
+    <ul>
+        <li><strong>I_vertical (vertical bearing axis)</strong> — moment of inertia about the Z-axis through the pivot, in g·mm². Drives lateral tracking response.</li>
+        <li><strong>I_horizontal (lateral axis)</strong> — moment of inertia about the Y-axis through the pivot, in g·mm². Drives vertical tracking response.</li>
+        <li><strong>Radius of Gyration (vertical)</strong> — <code>k_zz = √(I_zz / m_total)</code>, in mm. Useful as a single-number characterization of mass distribution.</li>
+    </ul>
+</section>
+
+
+
+<!-- 17 -->
+<section id="solver">
+    <h2>17. Solver Sandbox &amp; Optimization Goals</h2>
+
+    <p>
+        The Solver opens from the main controls with <strong>Open Solver</strong>. It uses a full-screen
+        modal with its own 3D preview and a read-only sandbox copy of the current design. The live
+        design is not changed while variables, targets, candidates or the modal preview are edited.
+        <strong>Live design changes only after Apply</strong>.
+    </p>
+
+    <div class="callout">
+        <strong>Apply-only contract:</strong> <strong>Apply</strong> writes the selected candidate to the
+        live design. <strong>Discard</strong> and the upper-right <strong>X</strong> close the Solver
+        without applying. Backdrop click and Escape are intentionally disabled. <strong>Reset</strong>
+        returns the solver sandbox to the opening snapshot and does not apply changes to the live model.
+    </div>
+
+    <h3>Variables</h3>
+    <p>
+        The Variables panel lists adjustable design parameters. Each variable can be locked or unlocked.
+        Only unlocked variables may be changed by the solver. For each adjustable variable the panel shows
+        a current value plus editable <strong>min</strong>, <strong>max</strong> and <strong>step</strong>
+        fields. The solver samples only inside those ranges and preserves hard safety limits where the
+        application defines them.
+    </p>
+
+    <h3>Editing solver fields</h3>
+    <p>
+        Numeric fields in the Solver keep a local edit buffer while you type. Partial values such as
+        <code>-</code>, <code>0.</code>, <code>0,</code> or <code>2.</code> remain in the field until you
+        commit the edit with blur, Enter or <strong>Run Solver</strong>. The solver does not start, rebuild
+        results or mutate its numeric policy on every keypress.
+    </p>
+    <p>
+        Invalid pending edits are marked in the field and must be corrected before a solver run starts.
+        Dot and comma decimal input are accepted when committed.
+    </p>
+
+    <h3>Optimization targets</h3>
+    <p>
+        The Optimization Goals panel contains active solver targets. Enabled targets contribute to the
+        candidate score; disabled targets are displayed for reference but do not affect scoring. If no
+        target is enabled, <strong>Run Solver</strong> refuses to start and asks you to enable at least one
+        optimization target.
+    </p>
+    <ul>
+        <li><strong>Tracking force / needle pressure:</strong> target force in grams with tolerance.</li>
+        <li><strong>Total tonearm COM:</strong> total center-of-mass target, shown as available X/Z values.</li>
+        <li><strong>Counterweight COM:</strong> rear counterweight / rear disc stack COM target. This follows the rear-terminal, top-anchored downward disc stack model.</li>
+        <li><strong>Manufacturing diameter min/max:</strong> a hard build constraint for the estimated maximum diameter, useful for carbon fiber sleeve or sock compatibility.</li>
+        <li><strong>Effective mass / resonance:</strong> shown when available as target or acceptable range values.</li>
+    </ul>
+
+    <h3>Running the solver</h3>
+    <p>
+        Press <strong>Run Solver</strong> to evaluate candidates. Candidates are suggestions ranked from
+        the active target score and hard constraints. The result list shows score, active target deltas,
+        tracking force, total COM, counterweight COM, total mass, effective mass/resonance when available,
+        estimated diameter/build constraint status and warning flags. Selecting a result updates only the
+        solver modal preview until Apply is pressed.
+    </p>
+
+    <h3>Evaluation limit slider and async progress</h3>
+    <p>
+        The <strong>Solver evaluations</strong> slider controls the candidate evaluation cap for a run.
+        It ranges from <strong>2,500</strong> to <strong>15,000</strong> candidates in 500-candidate steps.
+        The selected value is displayed beside the slider and is used as the run's maximum evaluation count.
+    </p>
+    <p>
+        The solver still shows the estimated grid separately from evaluated candidates. If the estimated
+        grid is smaller than the selected cap, only the estimated grid is evaluated. If the estimated grid
+        is larger, the run is explicitly shown as a capped evaluation and does not imply exhaustive search.
+        During calculation a spinner and progress text show evaluated count, actual cap and percentage.
+        Evaluation is chunked so the browser can repaint between batches.
+    </p>
+
+    <h3>Warnings and validation</h3>
+    <p>
+        Solver output is a ranked candidate suggestion, not proof of final mechanical perfection. Some
+        values may be marked estimated, especially build-envelope values such as maximum diameter. Browser
+        rendering, WebGL behavior and physical build validation may still be required before treating a
+        candidate as final.
+    </p>
+</section>
+
+
+<!-- 18 -->
+<section id="interactivity">
+    <h2>18. 2D Drag &amp; Tooltips</h2>
+
+    <h3>Tooltips</h3>
+    <p>
+        Hovering over any marker in the side or top view produces a contextual tooltip. The tooltip lists the marker's coordinates,
+        its vertical relation to the stylus and to the pivot, and (where applicable) a hint about which slider the marker is bound
+        to for direct dragging.
+    </p>
+
+    <h3>Drag handles</h3>
+    <p>Markers that are bound to sliders show a thin white &quot;halo&quot; ring. They can be dragged directly:</p>
+    <table>
+        <tr><th>Marker</th><th>Side view drag</th><th>Top view drag</th></tr>
+        <tr><td>Vertical Pivot</td><td>X / Z via pivotOffsetX / pivotOffsetZ</td><td>X / Y via pivotOffsetX / pivotOffsetY</td></tr>
+        <tr><td>Stylus Tip (cartridge mode)</td><td>X via cartX, Z via padOffset (or customZ in Manual mode)</td><td>X via cartX</td></tr>
+        <tr><td>Stylus Tip (Arm-Only mode)</td><td>X via nomStylusX</td><td>X via nomStylusX</td></tr>
+    </table>
+    <p>
+        Slider values are clamped to their declared min / max and snapped to step. The drag is a relative offset from the value at
+        the start of the gesture, not absolute, so coarse pointer movement will not overshoot a slider's bounds.
+    </p>
+</section>
+
+<!-- 19 -->
+<section id="validation">
+    <h2>19. Validation Warnings</h2>
+    <p>The application performs several validation passes; any failure is shown as a red banner above the 3D view.</p>
+
+    <h4>Cobra tail validation (continuous)</h4>
+    <ul>
+        <li><em>Rear bend start must be after apex.</em> Moving Bend Start X to or before the apex would collapse the blend zone.</li>
+        <li><em>Rear bend start is too far back.</em> Bend Start X must leave at least 5 mm of beam behind it.</li>
+        <li><em>Bend radius (length) is too short.</em> The bend's horizontal projection must be ≥ 5 mm.</li>
+        <li><em>Blend zone cannot be negative.</em> Self-explanatory.</li>
+        <li><em>Mouth is too narrow.</em> Both Mouth Outer Width and Length must be ≥ 2 mm.</li>
+    </ul>
+
+    <h4>Per-ring geometry validation (continuous)</h4>
+    <p>
+        For every cross-section ring, the application checks that the inner-ring area does not collapse below a small threshold of
+        the outer-ring area. If the wall is too thick relative to a narrow cross-section the ring inverts and you get the message
+        <em>Area inversion detected. Solidity cannot be guaranteed.</em>
+    </p>
+
+    <h4>Export-time validation</h4>
+    <p>
+        Pressing <em>Download Export Model</em> re-runs the full validation pass and additionally tries to pre-build the requested
+        geometry. If anything fails an alert is shown (<em>Export aborted: Geometry error</em>) and no file is written.
+    </p>
+</section>
+
+<!-- 20 -->
+<section id="limits">
+    <h2>20. Limitations &amp; Disclaimers</h2>
+    <ul>
+        <li>
+            The physics layer is first-order. Static imbalance is a quasi-static moment-balance indicator; it ignores anti-skating, dynamic
+            coupling between cartridge compliance and arm modes, and the mass of wiring.
+        </li>
+        <li>
+            Material constants are bulk approximations. EI_y and EI_z are computed from cross-section second moments and a single
+            material E; they do not represent fibre-direction-dependent stiffness.
+        </li>
+        <li>
+            Resonance is calculated with a single 10 Hz dynamic compliance. Real cartridges show frequency-dependent compliance and
+            damping that this calculation does not capture.
+        </li>
+        <li>
+            Goldring 1042 reference data is geometric only. Real cartridge body inertia distribution and cantilever effective mass
+            are approximated by point masses.
+        </li>
+        <li>
+            STL export quality depends on the cross-section discretization (60 segments per ring). Smooth blends look good at this
+            resolution; very tight features may need post-processing in the downstream CAD tool.
+        </li>
+    </ul>
+</section>
+
+<!-- 21 -->
+<section id="troubleshooting">
+    <h2>21. Troubleshooting</h2>
+
+    <h4>The 3D view is blank.</h4>
+    <p>
+        Confirm that the browser successfully fetched the Three.js and OrbitControls scripts (look in DevTools → Network). On
+        first launch this requires an internet connection. WebGL must also be enabled in the browser flags.
+    </p>
+
+    <h4>The red &quot;Geometry error&quot; banner is stuck on.</h4>
+    <p>
+        Read the message. If it mentions area inversion, decrease Wall Thickness or increase the relevant cross-section dimension
+        (Max Width / Max Height / Mouth dimensions). If it mentions the bend, increase Bend Start X or Bend Radius.
+    </p>
+
+    <h4>Static imbalance is negative or zero.</h4>
+    <p>
+        The total COM sits behind or directly under the pivot. In Cobra tail mode, reduce the disc count, decrease disc mass, or
+        reduce Bend Drop Z so the rear assembly applies less counter-moment. In Classic mode, increase the cartridge mass or move
+        the cartridge forward (smaller setback).
+    </p>
+
+    <h4>Resonance is N/A.</h4>
+    <p>You are in Arm-Only mode. Pick a cartridge mode to enable the calculation.</p>
+
+    <h4>The exported STL looks faceted in the slicer.</h4>
+    <p>
+        This is normal for an STL with 60 segments per ring. For surfaces of revolution the visible facet count is bounded; if
+        finer tessellation is needed, post-process in your CAD tool.
+    </p>
+
+    <h4>The Sync to target L_eff button does nothing visible.</h4>
+    <p>
+        It only adjusts the slider that drives the stylus X (cartX or nomStylusX, depending on mode). If the target is outside
+        that slider's range the value is clamped to the nearest valid endpoint and the Δ readout will still show a residual error.
+    </p>
+</section>
+
+<!-- 22 -->
+<section id="glossary">
+    <h2>22. Glossary</h2>
+    <table>
+        <tr><th>Term</th><th>Meaning</th></tr>
+        <tr><td>Apex</td><td>The X-coordinate of the vertical pivot, also where Max Height and Max Width are reached.</td></tr>
+        <tr><td>COM</td><td>Center of Mass. Combined point at which the integrated mass distribution can be considered to act.</td></tr>
+        <tr><td>Compliance</td><td>Cartridge suspension softness in 10⁻⁶ cm/dyn, frequency-dependent.</td></tr>
+        <tr><td>EI_y / EI_z</td><td>Bending stiffness about the Y- or Z-axis, product of Young's modulus E and area moment of inertia I.</td></tr>
+        <tr><td>Effective Length (L_eff)</td><td>Planar distance pivot → stylus tip in the X/Y plane.</td></tr>
+        <tr><td>Effective Mass (M_eff)</td><td>The mass &quot;seen&quot; at the stylus tip due to the inertia of the arm rotating about the pivot. <code>M_eff = I_pivot / L_eff²</code>.</td></tr>
+        <tr><td>Null radii</td><td>The two radii on the record at which a pivoting tonearm achieves zero tracking error for a chosen alignment.</td></tr>
+        <tr><td>Overhang</td><td><code>L_eff − pivot-to-spindle</code>. How far the stylus tip overhangs the spindle.</td></tr>
+        <tr><td>Offset Angle</td><td>Angle between the cartridge's main axis and the line from pivot to stylus tip.</td></tr>
+        <tr><td>Pivot</td><td>The vertical bearing axis the arm rotates about. Treated here as a point at <code>(apex + Δx, Δy, Δz)</code>.</td></tr>
+        <tr><td>Static Imbalance</td><td>Quasi-static stylus-tip load-equivalent from mass distribution about the pivot, in grams-force equivalent.</td></tr>
+    </table>
+</section>
+
+<section id="td041-update" class="help-section">
+    <h2>TD041 Static-imbalance wording cleanup</h2>
+    <p>TD041 is a maintenance correction on the previous engineering update. It removes remaining user-facing old force-label wording and keeps compatibility aliases internally.</p>
+    <ul>
+        <li><strong>Visible wording</strong> now uses static imbalance/load-equivalent terminology.</li>
+        <li><strong>Compatibility identifiers</strong> such as legacy DOM/CSS names are preserved where needed.</li>
+        <li><strong>Metadata</strong> was bumped to the TD041 release value in the TD041 package.</li>
+    </ul>
+</section>
+
+<section id="td042-update" class="help-section">
+    <h2>TD042 Export validation and AI cleanup</h2>
+    <p>TD042 focuses on export winding correctness, mesh validation and prompt consistency without changing LT Mechanism behavior.</p>
+    <ul>
+        <li><strong>Export winding</strong> is corrected at the solid, hollow and split source mesh paths.</li>
+        <li><strong>Validation</strong> checks signed volume, arc-length reference volume, cap normals and sliver metrics.</li>
+        <li><strong>Watchdog</strong> winding correction remains available but should not trigger during normal export.</li>
+        <li><strong>Sessions</strong> read legacy mesh-quality fields but no longer persist them in new saves.</li>
+        <li><strong>AI prompt</strong> keeps computed shape facts as the primary current-form truth and reduces duplicated context.</li>
+    </ul>
+</section>
+
+
+<section id="td043-update" class="help-section">
+    <h2>TD043 reference-frame update</h2>
+    <p>TD043 separates the vertical datum from the generated body envelope. The LP top plane is defined as scene Z=0, the vertical pivot is controlled as height above LP, and the body envelope can be lifted or lowered independently.</p>
+    <ul>
+        <li><code>verticalPivotHeightAboveLP</code> is the primary pivot-height control.</li>
+        <li><code>pivotOffsetZ</code> is retained as a legacy load alias and is not saved in new sessions.</li>
+        <li><code>armBodyDatumOffsetZ</code> moves the profile/body envelope without moving the pivot datum.</li>
+        <li>The side profile can show a dashed LP top plane and the Physics Panel shows read-only datum values.</li>
+        <li>Cobra mechanics metadata stubs are read-only and do not add pivot/tower/heart-counterweight geometry in TD043.</li>
+    </ul>
+</section>
+
+
+<section id="td044-update" class="help-section">
+    <h2>TD044 stylus-anchored playback datum update</h2>
+    <p>TD044 defines the stylus tip as the playback Z-origin. During normal playback the stylus sits on the LP top plane, so <code>stylus.z</code> is constrained to <code>lpTopZ</code>.</p>
+    <ul>
+        <li><strong>Stylus lock.</strong> <code>stylusLockedToLP</code> is enabled by default and auto-solves <code>armBodyDatumOffsetZ</code> so the stylus tip remains on the LP plane as body-shape sliders change.</li>
+        <li><strong>Body datum auto-solve.</strong> The solver uses the cartridge tip-to-top relationship; for Goldring 1042 it shifts the arm body so the headshell underside meets the cartridge-top plane above the stylus.</li>
+        <li><strong>Manual override.</strong> Disable the lock only when intentionally studying VTA/SRA misalignment. Then <code>armBodyDatumOffsetZ</code> becomes a manual control and the Stylus → LP ΔZ readout shows the mismatch.</li>
+        <li><strong>Correction from TD043.</strong> TD043 separated pivot and body datums but still allowed the stylus to float below the LP plane for default settings. TD044 corrects that latent physical-frame error.</li>
+        <li><strong>Pivot height remains independent.</strong> <code>verticalPivotHeightAboveLP</code> remains the pivot/VTA-tower height control; when the stylus lock is on, Pivot–stylus ΔZ equals that value.</li>
+    </ul>
+</section>
+
+
+<section id="td045-update">
+    <h2>TD045 UI readability hotfix</h2>
+    <p>TD045 keeps the TD044 stylus-anchored datum architecture and applies two UI readability fixes.</p>
+    <ul>
+        <li>The red geometry/analysis warning banner can now be collapsed while preserving warning state and count.</li>
+        <li>The side-profile static-imbalance badge is drawn in a fixed status area instead of being anchored beside the stylus, so it no longer covers the headshell, cartridge, or front arm.</li>
+        <li>No STL winding, mesh validation, LT Mechanism, or core physics formulas changed in this hotfix.</li>
+    </ul>
+</section>
+
+
+<section id="td045b-update">
+    <h2>TD045B AI engagement-policy update</h2>
+    <p>TD045B changes the AI Shape Designer contract so large Cobra requests produce best-effort full-state deltas instead of empty safe exits.</p>
+    <ul>
+        <li><strong>Best effort is mandatory.</strong> If a requested Cobra detail is not available as writable geometry, the AI must still move every available writable control toward the requested design.</li>
+        <li><strong>Full passthrough.</strong> AI deltas should include all writable inputs, all session selects and all session checkboxes. Sparse legacy deltas are accepted with a warning and auto-filled from the current session.</li>
+        <li><strong><code>unsupportedAttributes</code>.</strong> Missing geometry such as <code>heart_shaped_counterweight</code>, <code>pivot_tower_separation</code> is reported as a string array for transparency.</li>
+        <li>The former <code>no_safe_cobra_delta_missing_geometry</code> paved-road response is removed from the prompt contract.</li>
+    </ul>
+</section>
+
+<div class="footer">
+    Engrove Tonearm Profile Designer 29.0.0 — retained TD053F runtime — Engrove, 2026. Released under SPDX 0BSD.
+</div>
+
+    <section>
+        <h2>Fas 15.3c Solver Continuation and Guided Mode</h2>
+        <p>The solver modal is still a sandbox. The live design changes only when a selected candidate is applied. Discard and X close the modal without applying a candidate, and backdrop/Escape close remains disabled.</p>
+
+        <h3>Smart solver ordering</h3>
+        <p>The solver can run with Smart prioritized, Exhaustive order, Local refinement, Counterweight first, Geometry first or Resonance first strategy. Smart prioritized is the default and orders early batches by active targets, variable groups, baseline-near values and coarse-to-fine passes. It is deterministic and does not use external AI calls or hidden randomness.</p>
+        <p>Exhaustive order remains available for comparison. Prioritized and refinement modes still report that they have not covered the full grid unless continuation reaches exhaustion.</p>
+        <h3>Run Solver, Continue Search and Reset Search</h3>
+        <p>The first run starts a solver search session from cursor 0. If the variables, targets, weights and evaluation limit have not changed, the next run continues with the next batch and the button shows <strong>Continue Search</strong>. Progress and results are cumulative, for example batch 2 continues from the previous cursor and keeps the global best candidates. Reset Search clears the continuation cursor and results while preserving the current solver settings.</p>
+        <p>If a variable range, target setting, target weight or evaluation limit changes, the previous search session is invalidated. A new Run Solver begins a fresh search for the new signature. The app does not imply a full exhaustive search unless the estimated grid is exhausted.</p>
+        <h3>Responsive solver layout</h3>
+        <p>The solver uses Guide, Expert and Results as the left work panels while the 3D preview is a persistent right-side panel. The preview canvas stays mounted during normal solver use and is refreshed when the solver opens, results update, a selected candidate changes, or the layout is resized. This avoids depending on a hidden Preview tab for WebGL initialization.</p>
+        <h3>Guided setup</h3>
+        <p>Guided setup offers simple questions and presets: Tracking Force Fine Tune, Resonance Window Tune, Counterweight Balance Tune, Manufacturing Diameter Safe Tune and Balanced Optimization. Applying guide settings changes only the solver sandbox settings. Expert mode then reflects the variables, targets, weights and evaluation depth chosen by the guide. The guide does not run the solver automatically.</p>
+        <h3>Input editing</h3>
+        <p>Solver numeric fields keep local edit buffers while typing. Partial values such as "-", "0.", "0," and "2." are kept until blur, Enter or Run Solver commits them. Invalid pending values block Run Solver instead of being converted silently to zero.</p>
+    </section>
+
+</main>
+</div>
+</body>
+</html>

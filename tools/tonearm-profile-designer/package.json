@@ -1,0 +1,11 @@
+{
+  "name": "engrove-tonearm-profile-designer",
+  "version": "29.0.0",
+  "private": true,
+  "description": "Desktop browser tonearm geometry designer with Engrove Manual Trace import.",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "node scripts/test.mjs"
+  },
+  "license": "0BSD"
+}

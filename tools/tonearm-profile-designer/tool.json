@@ -1,0 +1,92 @@
+{
+  "$schema": "../../schema/tool.schema.json",
+  "schemaVersion": "1.0.0",
+  "slug": "tonearm-profile-designer",
+  "name": "Engrove Tonearm Profile Designer",
+  "shortName": "Tonearm Designer",
+  "summary": "Convert calibrated Engrove Manual Trace top and side views into an editable 3D tonearm loft, then analyze, refine and export it on a desktop browser.",
+  "description": "A PC-only, browser-local tonearm engineering application that opens with an empty session, imports calibrated JSON, Engrove project packages and paired SVG exports from Engrove Manual Trace, constructs a deterministic centerline-and-ring 3D loft, and preserves the TD053F parametric, Freeform, physics, solver, AI handoff, session, report, PNG and STL workflows.",
+  "category": "engineering-design-application",
+  "tags": ["tonearm design", "3D geometry", "Manual Trace", "engineering analysis", "CAD preparation"],
+  "keywords": ["tonearm profile designer", "Manual Trace to 3D", "tonearm STL generator", "centerline ring loft", "tonearm effective mass calculator", "Engrove tonearm engineering tool"],
+  "entry": "index.html",
+  "buildOutputDir": "dist",
+  "public": true,
+  "hidden": false,
+  "language": "en",
+  "version": "29.0.0",
+  "updated": "2026-07-11",
+  "canonicalPath": "/tools/tonearm-profile-designer/",
+  "icon": "🦾",
+  "ogImage": "/assets/tool-default-1200x630.png",
+  "robots": "index,follow",
+  "capabilities": [
+    "Start with an empty workspace and create geometry only after an explicit import, session open or new-parametric action.",
+    "Import multiple Engrove Manual Trace JSON, .engrove-trace, .engrove-project and paired SVG files with per-file plane classification and provenance.",
+    "Construct a deterministic Freeform centerline-and-ring loft from calibrated orthographic top and side silhouette bounds and Manual Trace station data.",
+    "Preserve TD053F parametric Cobra and classic geometry controls, Freeform AI workbench, cartridge picker, solver, LT mechanism preview and physical analysis.",
+    "Save and reopen complete sessions and export STL, Onshape sidecar JSON, 3D PNG, AI Vibe JSON and technical Markdown reports.",
+    "Run entirely in the desktop browser without uploading operator files to an application server."
+  ],
+  "inputs": [
+    {"name": "manual_trace_files", "type": "Engrove Manual Trace JSON, project package or paired SVG files", "required": false, "description": "Calibrated orthographic trace artifacts used as deterministic geometry input."},
+    {"name": "tonearm_session", "type": "Tonearm Designer session JSON", "required": false, "description": "A previously saved complete application session."},
+    {"name": "operator_parameters", "type": "desktop form controls and validated AI response JSON", "required": false, "description": "Explicit design, material, cartridge, solver and export settings."}
+  ],
+  "outputs": [
+    {"name": "tonearm_session", "type": "JSON", "description": "A resumable application session including active geometry and Manual Trace import provenance."},
+    {"name": "tonearm_mesh", "type": "binary or ASCII STL", "description": "The explicitly selected active parametric or accepted Freeform mesh."},
+    {"name": "technical_report", "type": "Markdown", "description": "A runtime snapshot of controls, analysis, source audit and stated limitations."},
+    {"name": "visual_reference", "type": "PNG", "description": "An 800 by 600 pixel image of the active 3D model."},
+    {"name": "ai_and_onshape_sidecars", "type": "JSON", "description": "Structured AI Vibe and Onshape handoff metadata for the active design."}
+  ],
+  "whenToUse": [
+    "Use after producing calibrated top and side silhouettes in Engrove Manual Trace.",
+    "Use to refine and compare tonearm profile geometry on a desktop workstation.",
+    "Use when browser-local STL, session, image or technical-report output is needed."
+  ],
+  "whenNotToUse": [
+    "Do not use an uncalibrated or axis-ambiguous trace as dimensional manufacturing truth.",
+    "Do not treat the analytical stiffness, resonance or manufacturability proxies as FEA, metrology or laboratory certification.",
+    "Do not use the tool as a replacement for final B-rep CAD cleanup, tolerancing or production validation."
+  ],
+  "limitations": [
+    "A trace-derived loft requires at least one valid top-plane and one valid side-plane Manual Trace artifact with an origin, millimetre scale and usable contour geometry.",
+    "Top and side silhouettes constrain station width, height and center position; unmeasured cross-section shape between those bounds remains a deterministic modelling assumption.",
+    "The imported Freeform kernel clamps values to its documented geometric limits and blocks inputs that would require silent dimensional loss.",
+    "Three.js rendering and browser downloads require a current desktop browser with WebGL and local download permission.",
+    "STL is a mesh reference output, not a parametric STEP or manufacturing-ready B-rep model."
+  ],
+  "privacy": {"processing": "local", "storesApplicationUserDataOnServer": false, "requiresAccount": false, "requiresOAuth": false},
+  "access": {"cost": "free", "registrationRequired": false},
+  "claims": {
+    "mayClaim": [
+      "The tool starts with no active or rendered 3D design.",
+      "Supported Manual Trace files are parsed and converted locally in the browser after explicit operator action.",
+      "Accepted trace-derived geometry is bound to the existing Freeform render, session, report and export source path.",
+      "The original TD053F runtime modules and portable acceptance harnesses remain included in the source repository."
+    ],
+    "negativeClaimBoundaries": [
+      "A source-level or local browser check is not proof of Cloudflare deployment or production availability.",
+      "Deterministic trace conversion does not establish that the source image, calibration or operator contour is correct.",
+      "A closed STL mesh and analytical proxy results do not prove manufacturability, structural performance or audio performance."
+    ],
+    "mustNotClaim": [
+      "Do not claim metrology-grade dimensional accuracy without independently verified calibration and source imagery.",
+      "Do not claim CAD, FEA, Onshape, manufacturing or acoustic validation from this browser application alone.",
+      "Do not claim that paired SVG geometry overrides the Manual Trace JSON source-of-truth contract."
+    ]
+  },
+  "faq": [
+    {"question": "Why does the tool open with an empty viewport?", "answer": "A new session intentionally has no active design. Import calibrated Manual Trace files, open a saved session, or explicitly create a parametric design."},
+    {"question": "Which Manual Trace files can I import?", "answer": "The importer accepts Engrove Manual Trace JSON exports, resumable .engrove-trace or .engrove-project packages, and paired SVG exports containing the Engrove trace binding metadata."},
+    {"question": "What is required to create a trace-derived 3D model?", "answer": "Provide calibrated top and side views with finite millimetre scale, an engineering origin, non-ambiguous axes and usable silhouette contours. The importer blocks incomplete geometry instead of guessing silently."},
+    {"question": "Does the imported model exactly reproduce every 3D surface?", "answer": "No. Orthographic silhouettes determine longitudinal center, width and height at sampled stations. Cross-section family and interpolation between views remain explicit deterministic assumptions."}
+  ],
+  "evidence": [
+    {"type": "source", "label": "Tonearm Profile Designer source", "url": "https://github.com/Engrove/tools/tree/main/tools/tonearm-profile-designer"},
+    {"type": "source", "label": "Engrove Manual Trace source", "url": "https://github.com/Engrove/tools/tree/main/tools/manual-trace"},
+    {"type": "documentation", "label": "Engrove Tools repository documentation", "url": "https://github.com/Engrove/tools"}
+  ],
+  "relatedTools": ["manual-trace"]
+}
