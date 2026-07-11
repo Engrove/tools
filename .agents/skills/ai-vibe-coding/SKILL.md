@@ -1,0 +1,3 @@
+---
+name: ai-vibe-coding
+description: Mandatory repository-wide coding governance for every AI agent that analyzes, edits, tests, reviews, commits, publishes, or reports on Engrove/tools. Trigger for every task touching this repository, regardless of agent, model, toolchain, language, or change size. Requires authoritative-source verification, explicit risk and blast-radius classification, minimal fully sufficient diffs, consumer-aware testing, write read
