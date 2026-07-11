@@ -1,0 +1,26 @@
+name: SEO integrity
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.16.0'
+          cache: npm
+          cache-dependency-path: tools/cobra-wand/package-lock.json
+      - name: Verify source, build, SEO parity, and determinism
+        env:
+          PUPPETEER_SKIP_DOWNLOAD: 'true'
+        run: npm run check:sanitation
