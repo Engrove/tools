@@ -17,7 +17,7 @@
   "updated": "2026-07-11",
   "canonicalPath": "/tools/example-hello/",
   "icon": "👋",
-  "ogImage": "/assets/tool-default-1200x630.png",
+  "ogImage": "/assets/tool-default-1200x630.svg",
   "robots": "index,follow",
   "capabilities": ["Demonstrates static tool discovery and canonical routing."],
   "inputs": [],
