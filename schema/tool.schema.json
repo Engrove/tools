@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tools.engroveaudio.com/schema/tool.schema.json",
+  "title": "Engrove public tool manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["$schema","schemaVersion","slug","name","shortName","summary","description","category","tags","keywords","entry","public","hidden","language","version","updated","canonicalPath","icon","ogImage","robots","capabilities","inputs","outputs","whenToUse","whenNotToUse","limitations","privacy","access","claims","faq","evidence","relatedTools"],
+  "properties": {
+    "$schema":{"type":"string"},"schemaVersion":{"const":"1.0.0"},
+    "slug":{"type":"string","pattern":"^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+    "name":{"type":"string","minLength":1},"shortName":{"type":"string","minLength":1},
+    "summary":{"type":"string","minLength":20,"maxLength":180},"description":{"type":"string","minLength":40},
+    "category":{"type":"string","minLength":1},
+    "tags":{"type":"array","minItems":1,"uniqueItems":true,"items":{"type":"string","minLength":1}},
+    "keywords":{"type":"array","minItems":1,"uniqueItems":true,"items":{"type":"string","minLength":2}},
+    "entry":{"type":"string","pattern":"^(?!/)(?!.*\\.\\.)(?!.*\\\\).+$"},
+    "public":{"const":true},"hidden":{"const":false},"language":{"const":"en"},
+    "version":{"type":"string","pattern":"^\\d+\\.\\d+\\.\\d+(?:[-+][0-9A-Za-z.-]+)?$"},
+    "updated":{"type":"string","pattern":"^\\d{4}-\\d{2}-\\d{2}$"},
+    "canonicalPath":{"type":"string","pattern":"^/tools/[a-z0-9]+(?:-[a-z0-9]+)*/$"},
+    "icon":{"type":"string","minLength":1},"ogImage":{"type":"string","pattern":"^/"},
+    "robots":{"enum":["index,follow","noindex,nofollow"]},
+    "capabilities":{"$ref":"#/$defs/nonEmptyStrings"},
+    "inputs":{"type":"array","items":{"$ref":"#/$defs/io"}},
+    "outputs":{"type":"array","items":{"$ref":"#/$defs/io"}},
+    "whenToUse":{"$ref":"#/$defs/nonEmptyStrings"},"whenNotToUse":{"$ref":"#/$defs/nonEmptyStrings"},"limitations":{"$ref":"#/$defs/nonEmptyStrings"},
+    "privacy":{"type":"object","additionalProperties":false,"required":["processing","storesApplicationUserDataOnServer","requiresAccount","requiresOAuth"],"properties":{"processing":{"enum":["local","server","hybrid"]},"storesApplicationUserDataOnServer":{"type":"boolean"},"requiresAccount":{"type":"boolean"},"requiresOAuth":{"type":"boolean"}}},
+    "access":{"type":"object","additionalProperties":false,"required":["cost","registrationRequired"],"properties":{"cost":{"enum":["free","paid","mixed"]},"registrationRequired":{"type":"boolean"}}},
+    "claims":{"type":"object","additionalProperties":false,"required":["mayClaim","negativeClaimBoundaries","mustNotClaim"],"properties":{"mayClaim":{"$ref":"#/$defs/nonEmptyStrings"},"negativeClaimBoundaries":{"$ref":"#/$defs/nonEmptyStrings"},"mustNotClaim":{"$ref":"#/$defs/nonEmptyStrings"}}},
+    "faq":{"type":"array","items":{"type":"object","additionalProperties":false,"required":["question","answer"],"properties":{"question":{"type":"string","minLength":5},"answer":{"type":"string","minLength":10}}}},
+    "evidence":{"type":"array","items":{"type":"object","additionalProperties":false,"required":["type","label","url"],"properties":{"type":{"enum":["documentation","source","research","standard"]},"label":{"type":"string","minLength":1},"url":{"type":"string","pattern":"^https://"}}}},
+    "relatedTools":{"type":"array","uniqueItems":true,"items":{"type":"string","pattern":"^[a-z0-9]+(?:-[a-z0-9]+)*$"}}
+  },
+  "$defs": {
+    "nonEmptyStrings":{"type":"array","minItems":1,"items":{"type":"string","minLength":1}},
+    "io":{"type":"object","additionalProperties":false,"required":["name","type","description"],"properties":{"name":{"type":"string","minLength":1},"type":{"type":"string","minLength":1},"required":{"type":"boolean"},"description":{"type":"string","minLength":3}}}
+  }
+}
