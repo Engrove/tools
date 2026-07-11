@@ -5,6 +5,10 @@
   "name": "Engrove Tools",
   "canonicalOrigin": "https://tools.engroveaudio.com",
   "language": "en",
+  "primaryPublicWebsite": {
+    "name": "Engrove Audio Tools",
+    "url": "https://engroveaudio.com"
+  },
   "organization": {
     "id": "https://tools.engroveaudio.com/#organization",
     "name": "Engrove",
