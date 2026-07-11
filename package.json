@@ -23,6 +23,7 @@
     "check:agent-parity": "node scripts/check-seo.mjs",
     "check:claims": "node scripts/check-seo.mjs",
     "check:preview-policy": "node scripts/check-seo.mjs",
+    "check:determinism": "node scripts/check-determinism.mjs",
     "check:seo": "node scripts/check-seo.mjs",
     "check:sanitation": "npm run clean && npm run build && npm run check:seo"
   },
