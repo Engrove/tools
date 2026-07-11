@@ -69,16 +69,7 @@ Build semantics are authoritative in `scripts/build.mjs`:
 - Do not commit large generated binaries, base64 payloads, `node_modules/`, browser binaries, or WASM blobs to evade the gate.
 - Assets that must exceed the limit require pinned external object storage/CDN delivery plus explicit runtime loading, CORS validation, content-type validation, cache policy, and browser smoke testing.
 
-### 3.2 OpenCascade WASM
-
-- `tools/cobra-wand/src/core/oc/load.ts` intentionally externalizes `opencascade.full.wasm`.
-- Browser builds MUST NOT reintroduce `import "opencascade.js/dist/opencascade.full.wasm?url"` or any equivalent Vite bundling of the full WASM into Pages output.
-- The external WASM URL MUST be immutable and version-pinned.
-- The pinned URL version MUST match `tools/cobra-wand/package.json` and `package-lock.json`.
-- Dependency upgrades MUST update and test the package version, lockfile, external URL, browser loading, CORS behavior, MIME type, OCCT initialization, model generation, and export workflows as one atomic change.
-- Node tests/scripts may continue to use the package's Node loader.
-
-### 3.3 Cloud build dependency behavior
+### 3.2 Cloud build dependency behavior
 
 - Preserve `PUPPETEER_SKIP_DOWNLOAD=true` in the root per-tool build environment.
 - Puppeteer is a test dependency; Cloudflare production builds MUST NOT download Chromium.
@@ -87,7 +78,7 @@ Build semantics are authoritative in `scripts/build.mjs`:
 - Buildable production tools SHOULD have a committed lockfile. Missing lockfiles require explicit justification.
 - Full repository work requires Node.js `>=22.12.0` and npm `>=10`.
 
-### 3.4 Relative hosting
+### 3.3 Relative hosting
 
 - Tools are hosted below `/tools/<slug>/`.
 - Vite tools MUST use relative asset paths. Preserve `base: "./"` unless a verified routing redesign replaces it.
@@ -118,36 +109,7 @@ npm run build
 
 The root build is mandatory even for documentation-only changes because Cloudflare rebuilds the complete tree.
 
-For changes under `tools/cobra-wand/`, run from that directory:
-
-```bash
-PUPPETEER_SKIP_DOWNLOAD=true npm ci --no-audit --no-fund
-npx tsc --noEmit
-npx vitest run test/trace.test.ts test/trace-v18.test.ts \
-  test/schema.test.ts test/interp.test.ts test/ai.test.ts \
-  test/cp11.leak.test.ts test/stl-verifier.test.ts
-npm run build
-```
-
-Also run `npm test` when changing any of the following:
-
-- OCCT initialization or geometry generation;
-- section interpolation or lofting;
-- mesh generation or watertight validation;
-- mass, volume, effective-mass, balance, resonance, or manufacturability calculations;
-- STL or STEP export;
-- OpenCascade package version or WASM loading;
-- geometry test fixtures or tolerances.
-
-Browser smoke test is mandatory when changing runtime loading, UI state, persistence, routing, or generated assets:
-
-- open the built hub;
-- open `/tools/cobra-wand/` through the hub route;
-- confirm no console errors, failed dynamic imports, CORS errors, MIME errors, or WASM initialization failures;
-- generate a 3D model;
-- verify trace-to-3D state application;
-- verify workspace save/load when persistence changed;
-- verify STL/STEP export when export paths changed.
+Browser smoke testing is mandatory when changing runtime loading, UI state, persistence, routing, or generated assets. Open the built hub, open each affected tool through its hub route, and confirm there are no console errors, failed dynamic imports, CORS errors, MIME errors, or initialization failures.
 
 If any mandatory gate cannot run, report `PASS_WITH_LIMITATIONS` or `FAIL`; never report `PASS`.
 
@@ -179,42 +141,7 @@ If any mandatory gate cannot run, report `PASS_WITH_LIMITATIONS` or `FAIL`; neve
 - Do not inject unsanitized user or AI content through `innerHTML`.
 - File export must be deterministic, explicit, and user-triggered.
 
-## 8. Cobra-wand non-negotiable domain invariants
-
-Read `tools/cobra-wand/README.md` and `CONTRIBUTING.md` before editing.
-
-### 8.1 LT separation contract
-
-- The wand tool MUST NOT read, write, generate, infer, serialize, or leak LT mechanism fields.
-- Recursive denylist tokens: `P1`, `P2`, `P3`, `L23`, `STATOR`, `STATOR_TRACK`, `ENGROVELT`, `LTMECHANISM`.
-- Preserve recursive validation in schema and AI prompt/response paths.
-- Preserve CP11 leakage tests.
-- Do not rename or encode forbidden fields to bypass the contract.
-
-### 8.2 Geometry and coordinate contract
-
-- Needle tip: `X = 0.0 mm`.
-- Pivot/rotation datum: `X = 237.1 mm`, Verified.
-- Nose datum: `X = -11.855 mm`.
-- Rear ballast-lobe datum: `X = 296.375 mm`.
-- Body is straight and Y-symmetric.
-- Tangential LT geometry has no offset angle and no overhang.
-- Defaults and constants MUST be tagged `Verified` with source or `Assumed` with rationale.
-- Do not convert assumptions into verified facts.
-
-### 8.3 Regression guards from resolved defects
-
-- Do not re-tessellate an already meshed OCCT shape at a different deflection in tests or export gates; build fresh geometry for independent mesh verification.
-- Preserve adaptive B-rep volume calculation using `VolumeProperties_2` with the established tolerance. Do not revert to fixed-order `VolumeProperties_1` for curved loft volume metrics.
-- Decode STEP `Uint8Array` output before textual assertions.
-- Preserve stable shape IDs across trace export/import.
-- Address named zones by stable identity such as `(traceId, shapeId)`, not by display name alone.
-- Refresh measurements before serialization. Do not serialize stale editor-derived measurement state.
-- Metadata edits must update both live editor state and persisted store state.
-- Workspace persistence must keep multi-trace state and 3D parameter state together.
-- Production export gates must reject non-watertight or otherwise invalid geometry; do not bypass gates to produce a file.
-
-## 9. Documentation consistency
+## 8. Documentation consistency
 
 - README describes current user/developer behavior; this file governs AI execution behavior.
 - Update README when commands, architecture, tool discovery, deployment, runtime dependencies, URLs, or user-visible behavior change.
@@ -222,7 +149,7 @@ Read `tools/cobra-wand/README.md` and `CONTRIBUTING.md` before editing.
 - Remove stale instructions instead of accumulating contradictions.
 - Test counts and version claims must match observed output and committed package versions.
 
-## 10. Git and publishing rules
+## 9. Git and publishing rules
 
 - Default: work on an isolated branch and review the complete diff before updating `main`.
 - Direct `main` writes require explicit user instruction.
@@ -233,7 +160,7 @@ Read `tools/cobra-wand/README.md` and `CONTRIBUTING.md` before editing.
 - A green build is not proof of correct browser behavior.
 - A working preview is not proof that the custom production domain serves the same commit.
 
-## 11. Required completion report
+## 10. Required completion report
 
 Return exactly grounded status information using this semantic structure:
 

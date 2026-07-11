@@ -21,7 +21,6 @@ jobs:
         with:
           node-version: '22.16.0'
           cache: npm
-          cache-dependency-path: tools/cobra-wand/package-lock.json
       - name: JavaScript syntax
         run: |
           node --check scripts/lib/registry.mjs
