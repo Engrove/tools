@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 /**
  * AI-CODING NOTE:
- * Responsibility: Execute source, registry, generated-output, and deterministic-build checks.
+ * Responsibility: Execute source, governance, registry, generated-output, and deterministic-build checks.
  * Inputs: Command name, repository source, and generated dist.
  * Outputs: Exit status and precise validation result.
- * Safe edits: Add exact parsed checks.
+ * Safe edits: Add exact parsed checks and mandatory governance invariants.
  * Do not: Convert failures to warnings or use substring-only structured-data parity.
  * Verification: npm run check:sanitation.
  */
@@ -18,9 +18,46 @@ const ROOT=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const DIST=path.join(ROOT,'dist');
 const mode=process.argv[2]||'seo';
 const requireValue=(value,message)=>{if(!value)throw new Error(message)};
+const read=(relative)=>fs.readFile(path.join(ROOT,relative),'utf8');
+const requireContains=(content,needle,label)=>requireValue(content.includes(needle),`${label}: missing ${JSON.stringify(needle)}`);
 const registry=await loadRegistry(ROOT);
+
+async function checkGovernance(){
+  const canonicalPath='AI_VIBE_CODING_RULES.md';
+  const skillPath='.agents/skills/ai-vibe-coding/SKILL.md';
+  const metadataPath='.agents/skills/ai-vibe-coding/agents/openai.yaml';
+  const agentBootstraps=['CLAUDE.md','GEMINI.md','.github/copilot-instructions.md','.cursor/rules/ai-vibe-coding.mdc','.windsurfrules',skillPath];
+  const policySurfaces=['AGENTS.md','EIC.md','AI_CODING_DOCTRINE.md','README.md',...agentBootstraps];
+  const required=[canonicalPath,...policySurfaces,metadataPath];
+  for(const file of required)requireValue(await exists(path.join(ROOT,file)),`missing AI governance contract: ${file}`);
+
+  const canonical=await read(canonicalPath);
+  requireValue(canonical.length>=25000,`${canonicalPath}: unexpectedly short or truncated`);
+  requireContains(canonical,'# AI Vibe Coding – autonomt regelverk för kodande AI',canonicalPath);
+  const sections=[...canonical.matchAll(/^## (\d+)\./gm)].map((match)=>Number(match[1]));
+  requireValue(JSON.stringify(sections)===JSON.stringify(Array.from({length:21},(_,index)=>index+1)),`${canonicalPath}: expected ordered sections 1-21, got ${sections.join(',')}`);
+  for(const marker of ['`VERIFIED`','`CANDIDATE`','`BLOCKER`','`PASS_WITH_SCOPE`','`NOT_TESTED`','`UNKNOWN_IMPACT`','Korrekthet och kodkvalitet är högsta prioritet.','Simulera aldrig framgång.'])requireContains(canonical,marker,canonicalPath);
+
+  for(const file of policySurfaces)requireContains(await read(file),'AI_VIBE_CODING_RULES.md',file);
+  for(const file of agentBootstraps)requireContains(await read(file),'AGENTS.md',file);
+
+  const agents=await read('AGENTS.md');
+  for(const phrase of ['MODE: `AI_VIBE_MANDATORY`','SCOPE: repository root and all descendants','MUST NOT weaken','Never report an unqualified `PASS`'])requireContains(agents,phrase,'AGENTS.md');
+
+  const skill=await read(skillPath);
+  requireContains(skill,'name: ai-vibe-coding',skillPath);
+  requireContains(skill,'Trigger for every task touching this repository',skillPath);
+  requireContains(skill,'Read `AI_VIBE_CODING_RULES.md` completely',skillPath);
+
+  const metadata=await read(metadataPath);
+  requireContains(metadata,'display_name: "AI Vibe Coding Governance"',metadataPath);
+  requireContains(metadata,'short_description:',metadataPath);
+  console.log(`AI governance check passed: sections=${sections.length} surfaces=${policySurfaces.length}`);
+}
+
 if(mode==='source'){
-  for(const file of ['AGENTS.md','EIC.md','AI_CODING_DOCTRINE.md','config/site.json','schema/site.schema.json','schema/tool.schema.json','functions/_middleware.ts','public/_headers'])requireValue(await exists(path.join(ROOT,file)),`missing source contract: ${file}`);
+  for(const file of ['AGENTS.md','EIC.md','AI_CODING_DOCTRINE.md','AI_VIBE_CODING_RULES.md','config/site.json','schema/site.schema.json','schema/tool.schema.json','functions/_middleware.ts','public/_headers'])requireValue(await exists(path.join(ROOT,file)),`missing source contract: ${file}`);
+  await checkGovernance();
   console.log(`Source check passed: tools=${registry.publicTools.length}`);
 }else if(mode==='schema'||mode==='registry'){
   console.log(`${mode} check passed: tools=${registry.publicTools.length}`);
