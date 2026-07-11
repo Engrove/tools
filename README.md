@@ -1,33 +1,48 @@
 # Engrove Tools
 
-A hub for my self-developed **html / js / node / vite** tools, published via
-Cloudflare Pages at **<https://tools.engroveaudio.com>**.
+A static hub for self-developed **HTML / JavaScript / TypeScript / Node / Vite** tools, published through Cloudflare Pages at **<https://tools.engroveaudio.com>**.
 
-The landing page automatically lists every tool. Adding a new tool is just:
-drop a folder into `tools/` — no edits to the index page required.
+The landing page is generated automatically from the folders under `tools/`. Do not register tools manually in the hub UI.
 
-## How it works
+## AI coding agents
 
-```
+Repository-wide machine instructions are defined in [`AGENTS.md`](AGENTS.md). AI coding systems must read it before analysis, editing, testing, committing, or reporting.
+
+Compatibility bootstrap files are provided for Claude Code, Gemini, and GitHub Copilot. They point to `AGENTS.md`; they are not independent policy sources.
+
+## Repository layout
+
+```text
+src/                         hub UI
+scripts/build.mjs            tool discovery, per-tool builds, manifest generation, deployment gates
 tools/
-  <my-tool>/
-    index.html      ← the tool (required entry point)
-    tool.json       ← optional metadata (name, icon, description, tags)
-    ...              ← any other assets the tool needs
+  _template/                 ignored scaffold
+  <tool-slug>/
+    index.html               static entry or source entry
+    tool.json                optional hub metadata
+    package.json             optional; scripts.build makes the tool buildable
+    ...                      tool source and assets
+dist/                        generated Cloudflare Pages output; never commit
 ```
+
+## Build behavior
 
 At build time, `scripts/build.mjs`:
 
-1. scans every folder under `tools/`,
-2. reads the optional `tool.json` in each (falling back to the folder name),
-3. copies each folder into `dist/tools/<slug>/`,
-4. copies the hub UI (`src/`) into `dist/`, and
-5. writes `dist/tools.json` — the manifest the landing page fetches to render
-   the cards.
+1. removes and recreates the root `dist/`,
+2. copies the hub UI from `src/`,
+3. scans every non-hidden directory under `tools/`,
+4. reads optional `tool.json` metadata,
+5. identifies tools with a `package.json` `build` script,
+6. installs and builds each buildable tool,
+7. copies only that tool's configured build output, defaulting to its `dist/`,
+8. copies static tools as-is,
+9. writes `dist/tools.json`, and
+10. rejects any generated file larger than Cloudflare Pages' 25 MiB per-file limit.
 
-The result in `dist/` is a plain static site that Cloudflare Pages serves.
+Buildable tools with a lockfile use `npm ci --no-audit --no-fund`. Puppeteer's browser download is disabled during the production build because browser binaries are not part of the static deployment.
 
-## Adding a tool
+## Adding a static tool
 
 1. Copy the scaffold:
 
@@ -42,64 +57,94 @@ The result in `dist/` is a plain static site that Cloudflare Pages serves.
      "name": "My New Tool",
      "description": "What it does, in one line.",
      "icon": "🎛️",
-     "tags": ["audio", "vite"],
+     "tags": ["audio", "static"],
      "entry": "index.html",
      "hidden": false
    }
    ```
 
-   Every field is optional. Without `tool.json`, the folder name becomes the
-   title and `index.html` is used as the entry point.
+3. Add a self-contained `index.html` and any local assets.
+4. Run the root build before publishing.
 
-3. Put your tool's files in the folder. Push — Cloudflare rebuilds and the tool
-   appears on the hub.
+## Adding a buildable tool
 
-### tool.json fields
+A tool is buildable when its own `package.json` contains `scripts.build`.
 
-| Field         | Default              | Purpose                                             |
-| ------------- | -------------------- | --------------------------------------------------- |
-| `name`        | title-cased folder   | Card title                                          |
-| `description` | empty                | Card subtitle                                       |
-| `icon`        | 🛠️                   | Emoji shown on the card                             |
-| `tags`        | `[]`                 | Filterable pills on the card                        |
-| `entry`       | first `index.html`\* | File to open when the card is clicked               |
-| `hidden`      | `false`              | Set `true` to keep a folder in the repo but off-hub |
+Requirements:
 
-\* The build looks for `index.html`, then `dist/index.html`,
-`build/index.html`, `public/index.html`.
+- commit the source and a reproducible lockfile;
+- produce static output in `dist/`, or declare another directory with `tool.json.buildOutputDir`;
+- use relative asset paths because the tool is hosted below `/tools/<slug>/`;
+- for Vite, normally set `base: "./"`;
+- do not commit generated `dist/`, `node_modules/`, browser binaries, or oversized WASM/media assets;
+- ensure every generated file is at most 25 MiB;
+- externally hosted runtime assets must be immutable, version-pinned, CORS-compatible, and browser-tested.
 
-### Folder naming
+Example `tool.json`:
 
-- Folders starting with `_` (e.g. `_template`) or `.` are ignored by the build.
-- Use lowercase, hyphenated folder names — they become the tool's URL slug:
-  `tools/audio-eq/` → `https://tools.engroveaudio.com/tools/audio-eq/`.
-
-### Tools that need a build step (vite/node)
-
-Each folder is copied to the site **as-is**. For a Vite tool, commit its built
-static output (or point `entry` at `dist/index.html`) so the folder is
-self-contained. Per-tool build orchestration can be added to `scripts/build.mjs`
-later if needed.
-
-## Local development
-
-```bash
-npm install        # no runtime deps, but sets up the project
-npm run build      # generates dist/
-npm run dev        # builds, then serves dist/ at http://localhost:4173
+```json
+{
+  "name": "My Vite Tool",
+  "description": "A compiled browser tool.",
+  "icon": "🛠️",
+  "tags": ["vite", "typescript"],
+  "buildOutputDir": "dist",
+  "entry": "index.html",
+  "hidden": false
+}
 ```
 
-## Deployment (Cloudflare Pages)
+## `tool.json` fields
 
-Connect this repo to Cloudflare Pages with:
+| Field | Default | Purpose |
+|---|---|---|
+| `name` | title-cased folder | Hub card title |
+| `description` | empty | Hub card subtitle |
+| `icon` | 🛠️ | Card icon |
+| `tags` | `[]` | Filterable tags |
+| `entry` | first supported `index.html` | Entry relative to the copied output directory |
+| `hidden` | `false` | Keep the folder in the repository but exclude it from the hub |
+| `buildOutputDir` | `dist` for buildable tools | Directory copied after the tool build |
+
+Entry candidates are checked in this order when `entry` is not specified: `index.html`, `dist/index.html`, `build/index.html`, `public/index.html`.
+
+Folders beginning with `_` or `.` are ignored. Use lowercase hyphenated slugs:
+
+```text
+tools/audio-eq/ -> https://tools.engroveaudio.com/tools/audio-eq/
+```
+
+## Local development and validation
+
+Requirements:
+
+- Node.js `>=22.12.0`
+- npm `>=10`
+
+From the repository root:
+
+```bash
+npm run clean
+npm run build
+npm run dev
+```
+
+`npm run build` is mandatory before every push to `main`, including documentation-only changes, because Cloudflare rebuilds the complete repository state on every push.
+
+Tool-specific type checks, tests, full geometry gates, and browser smoke tests are defined in `AGENTS.md` and the tool's own documentation.
+
+## Deployment
+
+Cloudflare Pages configuration:
 
 - **Production branch:** `main`
 - **Build command:** `npm run build`
 - **Build output directory:** `dist`
 - **Custom domain:** `tools.engroveaudio.com`
 
-Cloudflare rebuilds on every push to `main`. `dist/` is git-ignored — it is a
-build artifact, never committed.
+A successful GitHub commit does not prove that Cloudflare deployed successfully. A successful build does not prove that runtime assets, WASM initialization, routing, persistence, or exports work in the browser. Deployment-sensitive changes require verification of the actual Pages deployment and production URL.
+
+`dist/` is generated, git-ignored, and must never be committed.
 
 Use at your own risk.
 
