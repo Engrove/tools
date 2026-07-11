@@ -22,13 +22,16 @@ jobs:
           node-version: '22.16.0'
           cache: npm
           cache-dependency-path: tools/cobra-wand/package-lock.json
-      - name: JavaScript syntax
-        run: |
-          node --check scripts/lib/seo-core.mjs
-          node --check scripts/build.mjs
-          node --check scripts/check-entry.mjs
-          node --check scripts/clean.mjs
-          node --check src/app.js
+      - name: Syntax seo-core
+        run: node --check scripts/lib/seo-core.mjs
+      - name: Syntax build
+        run: node --check scripts/build.mjs
+      - name: Syntax checks
+        run: node --check scripts/check-entry.mjs
+      - name: Syntax clean
+        run: node --check scripts/clean.mjs
+      - name: Syntax hub enhancement
+        run: node --check src/app.js
       - name: Schema and registry
         run: npm run check:schema
       - name: Source governance
