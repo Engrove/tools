@@ -2,8 +2,8 @@
 /**
  * AI-CODING NOTE:
  * Responsibility: invoke the deterministic SEO/AI registry compiler and finalize valid embedded tool documents.
- * Inputs: repository source tree and generated dist directory.
- * Outputs: validated semantic discovery surfaces and same-origin app documents in dist.
+ * Inputs: repository source tree, public headers and generated dist directory.
+ * Outputs: validated semantic discovery surfaces, same-origin app documents and Cloudflare headers in dist.
  * Safe edits: invocation parameters, deterministic document finalization and explicit error reporting.
  * Do not: duplicate registry logic or generate independent route lists.
  * Verification: npm run build && npm run check:seo.
@@ -36,6 +36,7 @@ async function finalizeToolDocuments(registry) {
 compileSeo({ root, dist })
   .then(async registry => {
     await finalizeToolDocuments(registry);
+    await fs.copyFile(path.join(root, 'public', '_headers'), path.join(dist, '_headers'));
     console.log(`SEO compiler: ${registry.publicTools.length} public tool(s), deterministic surfaces emitted.`);
   })
   .catch(error => {
