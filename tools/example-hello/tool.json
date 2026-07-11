@@ -1,7 +1,92 @@
 {
+  "$schema": "../../schema/tool.schema.json",
+  "schemaVersion": "1.0.0",
+  "slug": "example-hello",
   "name": "Hello Example",
-  "description": "A minimal example tool. Copy tools/_template to start a new one, then delete this folder.",
+  "shortName": "Hello",
+  "summary": "Demonstrate the required folder layout and a minimal interactive browser tool in the Engrove Tools hub.",
+  "description": "A deliberately small static example that documents the repository tool-folder convention and displays a browser-local greeting when the user presses a button.",
+  "category": "repository-example",
+  "tags": ["example", "html", "repository"],
+  "keywords": ["Engrove Tools example", "static browser tool example", "tool folder template"],
+  "entry": "index.html",
+  "buildOutputDir": ".",
+  "public": true,
+  "hidden": false,
+  "language": "en",
+  "version": "1.0.0",
+  "updated": "2026-07-11",
+  "canonicalPath": "/tools/example-hello/",
   "icon": "👋",
-  "tags": ["example", "html"],
-  "entry": "index.html"
+  "ogImage": "/assets/tool-default-1200x630.png",
+  "robots": "index,follow",
+  "capabilities": [
+    "Show the minimum static HTML structure expected for a repository tool.",
+    "Display a browser-local greeting containing the user's local date and time after a button press."
+  ],
+  "inputs": [
+    {
+      "name": "button_action",
+      "type": "user interface action",
+      "required": true,
+      "description": "A user click on the Say hello button."
+    }
+  ],
+  "outputs": [
+    {
+      "name": "greeting_text",
+      "type": "text",
+      "description": "A greeting rendered in the page with the browser's local date and time."
+    }
+  ],
+  "whenToUse": [
+    "Use it as a minimal reference when creating a new static tool folder.",
+    "Use it to verify that the hub can publish and launch a simple no-build HTML tool."
+  ],
+  "whenNotToUse": [
+    "Do not treat it as a production engineering calculator or data-processing utility.",
+    "Do not use the displayed browser time as an authoritative time source."
+  ],
+  "limitations": [
+    "The page is an example rather than an engineering application.",
+    "The displayed date and time depend on the user's browser and device settings."
+  ],
+  "privacy": {
+    "processing": "local",
+    "storesApplicationUserDataOnServer": false,
+    "requiresAccount": false,
+    "requiresOAuth": false
+  },
+  "access": {
+    "cost": "free",
+    "registrationRequired": false
+  },
+  "claims": {
+    "mayClaim": [
+      "The page demonstrates a static tool folder with an index.html entry file.",
+      "The greeting is generated locally in the browser after a user action."
+    ],
+    "negativeClaimBoundaries": [
+      "No public backend API is provided.",
+      "No account, registration, or OAuth flow is required."
+    ],
+    "mustNotClaim": [
+      "Do not claim authoritative timekeeping.",
+      "Do not claim engineering calculation capability."
+    ]
+  },
+  "faq": [
+    {
+      "question": "Does the example send the greeting to a server?",
+      "answer": "No. The greeting is generated and displayed locally in the browser."
+    }
+  ],
+  "evidence": [
+    {
+      "type": "source",
+      "label": "Hello Example source directory",
+      "url": "https://github.com/Engrove/tools/tree/main/tools/example-hello"
+    }
+  ],
+  "relatedTools": []
 }
