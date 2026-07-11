@@ -1,7 +1,12 @@
 # Gemini bootstrap
 
-MANDATORY: Read `/AGENTS.md` completely before analysis, planning, editing, testing, committing, or reporting.
+MANDATORY before analysis, planning, editing, testing, reviewing, committing, publishing, or reporting:
 
-`/AGENTS.md` is the canonical repository-wide AI execution contract. Do not duplicate, reinterpret, summarize away, or override its requirements in this file.
+1. Read `/AI_VIBE_CODING_RULES.md` completely.
+2. Read `/AGENTS.md` completely.
+3. Read `/EIC.md` and `/AI_CODING_DOCTRINE.md`.
+4. Apply any nearer path-scoped `AGENTS.md` as additional or stricter local requirements.
 
-For work below a directory containing a nearer `AGENTS.md`, apply that path-scoped file after the root contract.
+`AI_VIBE_CODING_RULES.md` is the complete general policy. `/AGENTS.md` binds it to repository-specific architecture and invariants. Do not duplicate, reinterpret, summarize away, weaken, or override either source in this file.
+
+Correctness, code quality, contract preservation, safety, and verifiable evidence outrank speed, response latency, token use, and token optimization. Use scoped test statuses; never report an unqualified `PASS`.
