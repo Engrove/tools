@@ -18,6 +18,11 @@ const dist = path.join(root, 'dist');
 const marker = '<section aria-label="Interactive tool">';
 const suffix = '</section></main></body></html>\n';
 
+function noindexAppDocument(html, canonicalUrl) {
+  const directives = `<meta name="robots" content="noindex,nofollow"><link rel="canonical" href="${canonicalUrl}">`;
+  return html.includes('</head>') ? html.replace('</head>', `${directives}</head>`) : `${directives}${html}`;
+}
+
 async function finalizeHubDocument() {
   const hubPath = path.join(dist, 'index.html');
   const html = await fs.readFile(hubPath, 'utf8');
@@ -32,7 +37,8 @@ async function finalizeToolDocuments(registry) {
     const end = html.lastIndexOf(suffix);
     if (start < 0 || end < start) throw new Error(`SEO_TOOL_DOCUMENT_INVALID: ${tool.slug}`);
     const appHtml = html.slice(start + marker.length, end);
-    await fs.writeFile(path.join(dist, 'tools', tool.slug, 'app.html'), appHtml);
+    const canonicalUrl = `${registry.site.canonicalOrigin}${tool.canonicalPath}`;
+    await fs.writeFile(path.join(dist, 'tools', tool.slug, 'app.html'), noindexAppDocument(appHtml, canonicalUrl));
     const title = tool.name.replace(/[&<>"']/g, '');
     const iframe = `<section aria-label="Interactive tool"><h2>Launch tool</h2><iframe src="./app.html" title="${title}" style="width:100%;min-height:80vh;border:0" loading="eager"></iframe>${suffix}`;
     await fs.writeFile(indexPath, `${html.slice(0, start)}${iframe}`);
