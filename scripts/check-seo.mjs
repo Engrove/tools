@@ -5,7 +5,7 @@
  * Inputs: config/site.json, tools/*/tool.json and dist semantic outputs.
  * Outputs: exit 0 on parity; actionable failure otherwise.
  * Safe edits: stronger parsing and additional deterministic invariants.
- * Do not: use substring-only route discovery or accept missing generated surfaces.
+ * Do not: use substring-only route discovery for structured files or accept missing generated surfaces.
  * Verification: npm run build && npm run check:seo.
  */
 import { promises as fs } from 'node:fs';
@@ -17,7 +17,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const dist = path.join(root, 'dist');
 const required = [
   'index.html','tools.json','robots.txt','sitemap.xml','sitemap.json','sitemap.txt','llms.txt','llms-full.txt',
-  'for-agents.md','for-agents/index.html','ai.json','agent-capabilities.json','public-info.json',
+  'for-agents.md','for-agents/index.html','ai.json','agent-capabilities.json','public-info.json','_headers',
   '.well-known/engrove-tools.json','.well-known/agent-skills/index.json','.well-known/agent-skills/engrove-tools/SKILL.md',
 ];
 
@@ -50,12 +50,24 @@ const sitemapSlugs = sitemap.urls
   .filter(Boolean);
 equalSet(sitemapSlugs, expected, 'sitemap.json');
 const hub = await text('index.html');
+if (!hub.includes('<h1>Engrove Tools</h1>')) fail('hub H1 missing');
+if (!hub.includes('<script type="application/ld+json">')) fail('hub JSON-LD missing');
+if (!hub.includes('/assets/tool-default-1200x630.svg')) fail('hub social image is not a shipped asset');
 for (const tool of registry.publicTools) {
   if (!hub.includes(`href="${tool.canonicalPath}"`)) fail(`hub missing ${tool.slug}`);
+  const sourceEntry = path.resolve(root,'tools',tool.slug,tool.entry);
+  if (!sourceEntry.startsWith(path.resolve(root,'tools',tool.slug)+path.sep)) fail(`${tool.slug}: source entry escapes directory`);
+  await fs.access(sourceEntry);
+  const ogAsset = path.join(dist, tool.ogImage.replace(/^\//,''));
+  await fs.access(ogAsset);
   const page = await text(`tools/${tool.slug}/index.html`);
   if (!page.includes(`<link rel="canonical" href="${registry.site.canonicalOrigin}${tool.canonicalPath}">`)) fail(`${tool.slug}: canonical missing`);
   if (!page.includes('<script type="application/ld+json">')) fail(`${tool.slug}: JSON-LD missing`);
   if (!page.includes(tool.summary)) fail(`${tool.slug}: visible summary missing`);
+  if (!page.includes('<iframe src="./app.html"')) fail(`${tool.slug}: launch surface missing`);
+  const app = await text(`tools/${tool.slug}/app.html`);
+  if (!app.includes('<meta name="robots" content="noindex,nofollow">')) fail(`${tool.slug}: app.html noindex missing`);
+  if (!app.includes(`<link rel="canonical" href="${registry.site.canonicalOrigin}${tool.canonicalPath}">`)) fail(`${tool.slug}: app canonical missing`);
   await fs.access(path.join(dist,'tools',tool.slug,'tool.ai.json'));
   await fs.access(path.join(dist,'tools',tool.slug,'tool.md'));
 }
@@ -63,4 +75,7 @@ const robots = await text('robots.txt');
 if (!robots.includes('Content-Signal: search=yes, ai-input=yes, ai-train=no')) fail('robots content policy missing');
 if (!robots.includes(`${registry.site.canonicalOrigin}/sitemap.xml`)) fail('robots sitemap missing');
 if (caps.publicProgrammaticBackendApi !== false || caps.hasServerMcpEndpoint !== false) fail('capability boundary inverted');
+const middleware = await fs.readFile(path.join(root,'functions','_middleware.ts'),'utf8');
+if (!middleware.includes("endsWith('.pages.dev')") || !middleware.includes('X-Robots-Tag')) fail('preview-host noindex middleware missing');
+if (!middleware.includes("includes('text/markdown')") || !middleware.includes('Vary')) fail('Markdown negotiation middleware missing');
 console.log(`SEO CHECK PASS: ${expected.length} public tool(s), exact parity across generated surfaces.`);
