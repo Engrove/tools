@@ -4,7 +4,7 @@
   "title": "Engrove Tools site configuration",
   "type": "object",
   "additionalProperties": false,
-  "required": ["$schema", "schemaVersion", "siteId", "name", "canonicalOrigin", "language", "organization", "contentPolicy", "analytics"],
+  "required": ["$schema", "schemaVersion", "siteId", "name", "canonicalOrigin", "language", "primaryPublicWebsite", "organization", "contentPolicy", "analytics"],
   "properties": {
     "$schema": { "type": "string", "const": "../schema/site.schema.json" },
     "schemaVersion": { "type": "string", "const": "1.0.0" },
@@ -12,6 +12,15 @@
     "name": { "type": "string", "minLength": 1 },
     "canonicalOrigin": { "type": "string", "const": "https://tools.engroveaudio.com" },
     "language": { "type": "string", "const": "en" },
+    "primaryPublicWebsite": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "url"],
+      "properties": {
+        "name": { "const": "Engrove Audio Tools" },
+        "url": { "const": "https://engroveaudio.com" }
+      }
+    },
     "organization": {
       "type": "object",
       "additionalProperties": false,
