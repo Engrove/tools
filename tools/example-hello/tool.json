@@ -1,0 +1,7 @@
+{
+  "name": "Hello Example",
+  "description": "A minimal example tool. Copy tools/_template to start a new one, then delete this folder.",
+  "icon": "👋",
+  "tags": ["example", "html"],
+  "entry": "index.html"
+}

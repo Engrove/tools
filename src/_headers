@@ -1,0 +1,11 @@
+# Cloudflare Pages custom headers.
+# https://developers.cloudflare.com/pages/configuration/headers/
+
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: SAMEORIGIN
+
+# Always fetch a fresh tool manifest so newly added tools show up immediately.
+/tools.json
+  Cache-Control: no-cache

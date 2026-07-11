@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Engrove Tools</title>
+    <meta
+      name="description"
+      content="A hub for Engrove's self-developed html / js / node / vite tools."
+    />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%9B%A0%EF%B8%8F%3C/text%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="wrap">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true">🛠️</span>
+          <div>
+            <h1>Engrove Tools</h1>
+            <p class="tagline">A hub for my self-developed web &amp; node tools.</p>
+          </div>
+        </div>
+        <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Toggle color theme">
+          <span class="theme-toggle-icon" aria-hidden="true"></span>
+        </button>
+      </div>
+    </header>
+
+    <main class="wrap">
+      <div class="toolbar">
+        <label class="search" for="search">
+          <span class="search-icon" aria-hidden="true">🔍</span>
+          <input
+            id="search"
+            type="search"
+            placeholder="Filter tools…"
+            autocomplete="off"
+            spellcheck="false"
+          />
+        </label>
+        <span id="count" class="count" aria-live="polite"></span>
+      </div>
+
+      <section id="grid" class="grid" aria-label="Available tools"></section>
+
+      <div id="empty" class="empty" hidden>
+        <p class="empty-title">No tools yet</p>
+        <p>
+          Add a folder under <code>tools/</code> with an <code>index.html</code> and it will
+          appear here on the next build.
+        </p>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div class="wrap">
+        <span id="generated"></span>
+        <a href="https://github.com/Engrove/tools" rel="noopener">Source on GitHub</a>
+      </div>
+    </footer>
+
+    <script src="app.js" type="module"></script>
+  </body>
+</html>

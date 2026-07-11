@@ -1,0 +1,8 @@
+{
+  "name": "My Tool",
+  "description": "One-line description of what this tool does.",
+  "icon": "🛠️",
+  "tags": ["html"],
+  "entry": "index.html",
+  "hidden": false
+}

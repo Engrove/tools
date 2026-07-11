@@ -1,0 +1,16 @@
+{
+  "name": "engrove-tools-hub",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Hub and auto-generated index for Engrove's self-developed html/js/node/vite tools.",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "dev": "node scripts/build.mjs && node scripts/serve.mjs",
+    "clean": "node -e \"import('node:fs').then(fs=>fs.rmSync('dist',{recursive:true,force:true}))\""
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "Unlicense"
+}
