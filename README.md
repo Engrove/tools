@@ -101,6 +101,8 @@ Connect this repo to Cloudflare Pages with:
 Cloudflare rebuilds on every push to `main`. `dist/` is git-ignored — it is a
 build artifact, never committed.
 
+Use at your own risk.
+
 ## License
 
 Released into the public domain under the [Unlicense](LICENSE).
