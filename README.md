@@ -4,23 +4,23 @@ Engrove Tools is a deterministic static hub for browser-based engineering and au
 
 ## AI governance
 
-AI coding agents must read `AGENTS.md`, `EIC.md`, and `AI_CODING_DOCTRINE.md` before changing the repository. Public SEO, route, claim, privacy, and AI-discovery state is owned only by `config/site.json` and validated `tools/*/tool.json` manifests.
+AI coding agents must read `AGENTS.md`, `EIC.md`, and `AI_CODING_DOCTRINE.md` before changing the repository. Public SEO, route, claim, privacy, analytics, and AI-discovery state is owned only by `config/site.json` and validated `tools/*/tool.json` manifests.
 
 ## Source model
 
 ```text
-config/site.json              global public identity and policy
+config/site.json              global public identity, policy and analytics IDs
 schema/site.schema.json       strict site schema
 schema/tool.schema.json       strict per-tool schema
 tools/<slug>/tool.json        required public metadata
 scripts/lib/registry.mjs      immutable normalized registry
+scripts/lib/render.mjs        deterministic HTML, discovery and analytics renderer
 scripts/build.mjs             deterministic build orchestrator
-src/index.html                generated hub template
 functions/_middleware.ts      preview noindex and Markdown negotiation
 dist/                         disposable generated deployment output
 ```
 
-A public tool manifest must be complete. The build fails on missing fields, unknown properties, invalid routes, stale inferred dates, unresolved related tools, unsafe paths, unsupported claims, or parity differences.
+A public tool manifest must be complete. The build fails on missing fields, unknown properties, invalid routes, stale inferred dates, unresolved related tools, unsafe paths, unsupported claims, analytics drift, or parity differences.
 
 ## Public routing
 
@@ -51,8 +51,8 @@ The build:
 3. builds each buildable tool with a reproducible lockfile;
 4. copies only allowed runtime assets;
 5. generates static hub and per-tool landing HTML;
-6. generates canonical metadata, JSON-LD, sitemaps, robots, AI discovery resources, and headers;
-7. rejects unsupported claims, route drift, missing parity, and files above Cloudflare Pages' 25 MiB limit;
+6. generates canonical metadata, JSON-LD, sitemaps, robots, AI discovery resources, analytics bootstrap, and headers;
+7. rejects unsupported claims, route drift, missing parity, analytics configuration drift, and files above Cloudflare Pages' 25 MiB limit;
 8. writes `dist/` only after pre-write validation and runs post-write checks.
 
 `dist/` and per-tool build output are generated and must not be committed.
@@ -69,6 +69,18 @@ The build generates:
 - static HTML and JSON-LD for the hub and every public tool.
 
 These files are generated from the registry and must never be hand-edited.
+
+## Analytics
+
+Production analytics configuration is source-owned in `config/site.json`:
+
+- Google Analytics 4: `G-GFWZVJD0KJ`
+- Microsoft Clarity: `xkp2rvqux5`
+- permitted hostname: `tools.engroveaudio.com`
+
+The build generates `/analytics.js` and references it from the hub, semantic tool pages, agent HTML page, and interactive application entry pages. The loader exits before contacting either provider unless `window.location.hostname` exactly equals `tools.engroveaudio.com`; local development and Cloudflare preview hosts therefore do not generate analytics traffic.
+
+Analytics sends browser usage data to Google and Microsoft. Changes to provider IDs, host policy, loaded pages, CSP origins, or data-collection behavior require explicit approval and corresponding schema, renderer, verification, and documentation updates.
 
 ## Cloudflare Pages
 
