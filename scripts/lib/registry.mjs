@@ -10,7 +10,7 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 
-const SITE_KEYS=['$schema','schemaVersion','siteId','name','canonicalOrigin','language','organization','contentPolicy','analytics'];
+const SITE_KEYS=['$schema','schemaVersion','siteId','name','canonicalOrigin','language','primaryPublicWebsite','organization','contentPolicy','analytics'];
 const REQUIRED=['$schema','schemaVersion','slug','name','shortName','summary','description','category','tags','keywords','entry','public','hidden','language','version','updated','canonicalPath','icon','ogImage','robots','capabilities','inputs','outputs','whenToUse','whenNotToUse','limitations','privacy','access','claims','faq','evidence','relatedTools'];
 const OPTIONAL=['buildOutputDir'];
 export const exists=async(file)=>fs.access(file).then(()=>true,()=>false);
@@ -48,7 +48,12 @@ export async function loadRegistry(root,sourceRevision=null){
   exact(site,SITE_KEYS,'site');
   assert(site.$schema==='../schema/site.schema.json'&&site.schemaVersion==='1.0.0','site schema mismatch');
   assert(site.canonicalOrigin==='https://tools.engroveaudio.com'&&site.language==='en','site identity mismatch');
+  exact(site.primaryPublicWebsite,['name','url'],'site.primaryPublicWebsite');
+  assert(site.primaryPublicWebsite.name==='Engrove Audio Tools','primary public website name mismatch');
+  https(site.primaryPublicWebsite.url,'site.primaryPublicWebsite.url');
+  assert(site.primaryPublicWebsite.url==='https://engroveaudio.com','primary public website URL mismatch');
   exact(site.organization,['id','name','url'],'site.organization');https(site.organization.id,'site.organization.id');https(site.organization.url,'site.organization.url');
+  assert(site.organization.url===site.primaryPublicWebsite.url,'organization URL must match primary public website');
   exact(site.contentPolicy,['searchIndexing','aiRetrievalInputContext','aiModelTraining'],'site.contentPolicy');exact(site.contentPolicy.aiModelTraining,['policy','enforcement'],'site.contentPolicy.aiModelTraining');
   exact(site.analytics,['enabled','productionHostname','googleAnalyticsMeasurementId','microsoftClarityProjectId'],'site.analytics');
   assert(site.analytics.enabled===true,'site.analytics.enabled must be true');
