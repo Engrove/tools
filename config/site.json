@@ -17,5 +17,11 @@
       "policy": "not permitted without explicit permission",
       "enforcement": "policy signal; not a technical access-control guarantee"
     }
+  },
+  "analytics": {
+    "enabled": true,
+    "productionHostname": "tools.engroveaudio.com",
+    "googleAnalyticsMeasurementId": "G-GFWZVJD0KJ",
+    "microsoftClarityProjectId": "xkp2rvqux5"
   }
 }
