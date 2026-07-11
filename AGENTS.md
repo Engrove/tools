@@ -1,177 +1,203 @@
 # Engrove/tools AI execution contract
 
-MODE: `MACHINE_FIRST`
-SCOPE: repository root and all descendants unless a nearer `AGENTS.md` explicitly overrides a rule
-CANONICAL: this file is the single repository-wide source of truth for AI coding agents
+MODE: `AI_VIBE_MANDATORY`
+SCOPE: repository root and all descendants
+CANONICAL_GENERAL_POLICY: `AI_VIBE_CODING_RULES.md`
+CANONICAL_REPOSITORY_POLICY: this file
 
 ## 0. Mandatory bootstrap
 
-1. Read this file completely before analysis, planning, editing, testing, committing, or reporting.
-2. Inspect the current repository state. Do not infer current behavior from prior conversations, old reports, commit messages, or README text.
-3. Read the files that control the requested behavior before proposing changes.
-4. For work under `tools/<slug>/`, also read that tool's `README.md`, `CONTRIBUTING.md`, `package.json`, `tool.json`, tests, schemas, and nearest instruction files.
-5. Treat executable code, schemas, tests, and build scripts as stronger evidence than descriptive documentation.
-6. If instructions conflict, use this order:
-   - explicit current user requirement;
-   - nearest path-scoped instruction file;
-   - this file;
-   - executable tests and schemas;
-   - implementation code;
-   - README and historical documents.
-7. If a requested change would violate a non-negotiable production, security, geometry, persistence, or export invariant, stop and report the conflict. Do not silently weaken the invariant.
-8. Never claim a command, test, browser workflow, deployment, or production URL was verified unless it was actually executed and its result was observed.
+Every AI agent that analyzes, edits, reviews, tests, commits, publishes, or reports on this repository MUST, before substantive work:
+
+1. read `AI_VIBE_CODING_RULES.md` completely;
+2. read this file completely;
+3. read `EIC.md` and `AI_CODING_DOCTRINE.md`;
+4. inspect the current repository state and the files that own the requested behavior;
+5. classify work level, risk, invariants, direct consumers, and blast radius as required by the canonical policy.
+
+This applies regardless of model, vendor, coding assistant, IDE, connector, CLI, task size, or requested output. Tool-specific instruction files may add stricter rules but MUST NOT weaken, bypass, summarize away, or contradict `AI_VIBE_CODING_RULES.md`.
+
+Instruction precedence:
+
+1. current explicit user requirement, except where it requests fabricated evidence, unsafe behavior, or silent violation of repository invariants;
+2. nearest path-scoped `AGENTS.md`, only for additional or stricter local requirements;
+3. this file;
+4. `AI_VIBE_CODING_RULES.md`;
+5. `AI_CODING_DOCTRINE.md` and `EIC.md`;
+6. executable schemas, checks, tests, and build code;
+7. implementation code;
+8. README and historical reports.
+
+If two authoritative sources materially conflict, report `BLOCKER`. Never resolve the conflict by inventing a hierarchy not defined here.
 
 ## 1. Repository identity
 
 - Repository: `Engrove/tools`.
-- Product: static hub for independent browser tools.
+- Product: deterministic static hub for independent browser tools.
 - Production branch: `main`.
 - Production host: Cloudflare Pages.
 - Canonical production domain: `https://tools.engroveaudio.com`.
 - Root build command: `npm run build`.
 - Root build output: `dist/`.
 - `dist/` is generated, ignored, disposable, and MUST NOT be committed.
-- Every push to `main`, including documentation-only pushes, rebuilds the complete repository state.
-- A harmless final commit can expose a pre-existing build defect. Therefore validate the complete root build before every push to `main`.
+- Every push to `main`, including documentation-only changes, rebuilds the complete repository state.
+- A source commit, CI result, preview deployment, and production custom-domain response are separate evidence domains.
 
 ## 2. Repository architecture
 
 ```text
-src/                         hub UI copied to dist/
-scripts/build.mjs            authoritative discovery/build/copy/manifest/deployment gate
-tools/<slug>/                isolated tool source
-  tool.json                  optional hub metadata
-  index.html                 static entry OR source entry
-  package.json               presence of scripts.build makes the tool buildable
-  dist/                      generated per-tool output; never commit unless explicitly required by a different contract
-dist/                        generated Cloudflare Pages artifact
+config/site.json              public site identity and analytics source
+schema/*.schema.json          strict source schemas
+tools/<slug>/tool.json        required public tool metadata
+src/                          hub runtime source
+scripts/lib/registry.mjs      immutable normalized registry
+scripts/lib/render.mjs        generated HTML and discovery renderer
+scripts/lib/verify.mjs        generated-output and parity gates
+scripts/build.mjs             deterministic build orchestrator
+functions/_middleware.ts      preview and content-negotiation policy
+dist/                         disposable generated deployment output
 ```
 
 Build semantics are authoritative in `scripts/build.mjs`:
 
 - Ignore tool directories beginning with `_` or `.`.
-- Skip tools with `tool.json.hidden === true`.
-- Static tool: no `package.json` build script; copy source directory as-is.
-- Buildable tool: `package.json.scripts.build` exists; install dependencies, run the tool build, and copy only `tool.json.buildOutputDir` or default `dist/`.
-- Entry resolution occurs inside the copied output directory.
-- The hub manifest is generated as `dist/tools.json`.
-- Do not duplicate tool registration manually in the hub UI.
-- Preserve tool isolation. Do not create hidden coupling between tools unless a shared module is explicitly designed, tested, and documented.
+- Every non-hidden tool directory requires a valid `tool.json`.
+- Static tool: no `package.json` build script; copy allowed runtime source.
+- Buildable tool: install from the lockfile where available, execute the build, and copy only the declared output.
+- Canonical public route: `/tools/<slug>/`.
+- Interactive application route: `/tools/<slug>/app/`.
+- The hub, sitemap, structured data, and AI-discovery files are generated from the normalized registry.
+- Never duplicate tool registration or generated SEO data manually.
+- Preserve tool isolation unless a shared module has an explicit owner, contract, tests, and documentation.
 
-## 3. Cloudflare Pages hard invariants
+## 3. Repository-specific hard invariants
 
-### 3.1 Per-file asset limit
+### 3.1 Cloudflare Pages
 
 - Maximum generated asset size: `25 * 1024 * 1024` bytes.
-- `scripts/build.mjs` MUST retain the recursive post-build size gate.
-- Any generated file above the limit is a release blocker.
-- Do not bypass, disable, round up, or convert this gate to a warning.
-- Do not commit large generated binaries, base64 payloads, `node_modules/`, browser binaries, or WASM blobs to evade the gate.
-- Assets that must exceed the limit require pinned external object storage/CDN delivery plus explicit runtime loading, CORS validation, content-type validation, cache policy, and browser smoke testing.
-
-### 3.2 Cloud build dependency behavior
-
-- Preserve `PUPPETEER_SKIP_DOWNLOAD=true` in the root per-tool build environment.
-- Puppeteer is a test dependency; Cloudflare production builds MUST NOT download Chromium.
-- Preserve `npm ci --no-audit --no-fund` when a lockfile exists.
-- Use `npm install --no-audit --no-fund` only when no lockfile exists.
-- Buildable production tools SHOULD have a committed lockfile. Missing lockfiles require explicit justification.
-- Full repository work requires Node.js `>=22.12.0` and npm `>=10`.
-
-### 3.3 Relative hosting
-
-- Tools are hosted below `/tools/<slug>/`.
-- Vite tools MUST use relative asset paths. Preserve `base: "./"` unless a verified routing redesign replaces it.
-- Do not assume root hosting, SPA rewrite behavior, server-side execution, filesystem persistence, or privileged browser APIs.
+- The recursive post-build size gate MUST remain blocking.
+- Do not commit generated binaries, base64 payloads, `node_modules/`, browser binaries, or WASM blobs to evade the limit.
 - Production output must remain static and Cloudflare Pages compatible.
+- Vite tools MUST use relative asset paths unless a verified routing redesign replaces that contract.
+- Do not assume server-side execution, filesystem persistence, privileged browser APIs, or SPA fallback behavior.
 
-## 4. Required workflow
+### 3.2 Dependency behavior
 
-1. Resolve scope and invariants.
-2. Inspect current implementation and tests.
-3. Identify the smallest complete change set.
-4. Modify source, tests, schemas, metadata, and documentation together when behavior changes.
-5. Run the narrowest relevant tests during iteration.
-6. Run the complete required gate before publishing.
-7. Inspect generated output, not only source compilation.
-8. Inspect `git diff` for unrelated edits, generated files, secrets, binaries, stale comments, and contradictory docs.
-9. Publish only the intended files.
-10. Verify the resulting commit and, when deployment is part of the task, verify the actual production deployment and URL.
+- Preserve `PUPPETEER_SKIP_DOWNLOAD=true` in production build environments.
+- Use `npm ci --no-audit --no-fund` when a lockfile exists.
+- Use `npm install --no-audit --no-fund` only when no lockfile exists.
+- Buildable production tools SHOULD commit a lockfile; absence requires explicit justification.
+- Full repository work requires Node.js `>=22.12.0` and npm `>=10`.
+- Do not add or update dependencies without a concrete requirement, compatibility analysis, lockfile handling, and relevant build/runtime verification.
+
+### 3.3 Public metadata and claims
+
+- `config/site.json` and validated `tools/*/tool.json` manifests own all public SEO, route, privacy, analytics, capability, claim, and freshness state.
+- Required metadata fails closed. Do not infer missing public values from filenames, timestamps, source comments, or prior conversations.
+- Public claims MUST remain within manifest-defined `mayClaim`, `negativeClaimBoundaries`, and `mustNotClaim` contracts.
+- Generated public files are changed only through their generators.
+
+### 3.4 Security and browser data
+
+- Never commit credentials, API keys, tokens, private URLs, session data, user files, or environment-specific secrets.
+- Do not add telemetry, analytics, tracking, remote logging, or external data submission without explicit approval and corresponding policy, CSP, schema, renderer, test, and documentation changes.
+- Do not use `eval`, `new Function`, dynamic script injection, or unpinned remote executable code.
+- Treat imported JSON, SVG, project files, AI responses, browser storage, and fetched text as untrusted input.
+- Validate before application and preserve manual acceptance boundaries where they exist.
+- SVG/HTML sanitization MUST reject unsafe active content and external `url(...)` references. Only local `url(#id)` fragment references may survive where supported.
+- Do not inject unsanitized user or AI content through `innerHTML`.
+- File export must be deterministic, explicit, and user-triggered.
+
+## 4. Required change workflow
+
+Follow `AI_VIBE_CODING_RULES.md` in full. Repository-specific minimum sequence:
+
+1. state goal, requirements, non-goals, change point, consumers, possible contract changes, invariants, verification surfaces, work level, and risk;
+2. inspect current source and direct consumers;
+3. identify the smallest fully sufficient change set;
+4. modify source, tests, schemas, metadata, and documentation together when behavior changes;
+5. run narrow checks during iteration;
+6. run the complete root gate before publishing;
+7. inspect generated output, not only source compilation;
+8. inspect the full diff for unrelated edits, generated files, secrets, binaries, stale comments, and contradictory documentation;
+9. publish only intended files;
+10. perform persistent readback of branch, commit, and changed files;
+11. verify production only through the deployment owner or custom-domain response.
+
+Do not optimize the workflow for speed, low token use, or minimal analysis. Optimize for correctness, code quality, contract preservation, security, and evidence.
 
 ## 5. Mandatory validation gates
 
-Every push to `main` MUST pass from repository root:
+Every update intended for `main` MUST pass from repository root:
 
 ```bash
 npm run clean
 npm run build
+npm run check:seo
+npm run check:determinism
+npm run check:sanitation
 ```
 
-The root build is mandatory even for documentation-only changes because Cloudflare rebuilds the complete tree.
+`npm run check` validates source governance and mandatory AI-policy integration.
 
-Browser smoke testing is mandatory when changing runtime loading, UI state, persistence, routing, or generated assets. Open the built hub, open each affected tool through its hub route, and confirm there are no console errors, failed dynamic imports, CORS errors, MIME errors, or initialization failures.
+Browser smoke testing is mandatory when changing runtime loading, UI state, persistence, routing, generated assets, or browser-visible behavior. Open the built hub, launch each affected tool through its generated hub route, and inspect console, network, initialization, persistence, and relevant export/import workflows.
 
-If any mandatory gate cannot run, report `PASS_WITH_LIMITATIONS` or `FAIL`; never report `PASS`.
+Use only scoped statuses from the canonical policy:
+
+- `PASS_WITH_SCOPE`
+- `PARTIAL_PASS`
+- `NOT_TESTED`
+- `NOT_AVAILABLE`
+- `BLOCKER`
+
+Never report an unqualified `PASS`.
 
 ## 6. Change discipline
 
-- Prefer minimal, local, reversible diffs.
-- Do not perform opportunistic refactors inside a bug fix.
+- Prefer minimal, local, reversible diffs that are fully sufficient.
+- Do not perform opportunistic refactors inside unrelated work.
 - Do not rewrite stable modules only to change style.
-- Do not add runtime dependencies when platform APIs or existing dependencies suffice.
-- Do not update dependencies without a concrete requirement, lockfile update, compatibility analysis, build verification, and browser verification.
-- Do not suppress TypeScript errors with `any`, broad casts, `@ts-ignore`, or disabled checks unless the exact boundary is unavoidable and documented.
-- Do not weaken schemas, validation, safety gates, or tests to make a failing payload pass.
-- Fix the implementation or correct invalid test assumptions.
-- Do not introduce silent fallback behavior that hides corrupted state, invalid geometry, missing assets, or failed exports.
-- Errors must be actionable and identify the failing tool, file, operation, and invariant.
-- New or materially rewritten modules SHOULD remain under 500 non-generated lines. Exceeding this requires a clear cohesion reason.
-- Keep functions single-purpose. Split orchestration from pure logic and browser side effects.
-- Preserve existing naming conventions and local formatting.
-- Comments must explain invariants, non-obvious constraints, or failure causes; do not narrate obvious syntax.
+- Do not weaken schemas, validation, safety gates, or tests to make a payload pass.
+- Fix the implementation or correct an invalid test assumption.
+- Do not introduce silent fallback behavior that hides corrupted state, invalid geometry, missing assets, failed exports, or unsupported configuration.
+- Errors must identify the failing tool, file, operation, and invariant without exposing sensitive data.
+- New or materially rewritten modules SHOULD remain under 500 non-generated lines. Exceeding this requires a documented cohesion reason.
+- Each module owns one responsibility; orchestration should remain thin.
+- Comments explain invariants, non-obvious constraints, security motives, or failure causes—not obvious syntax or unsupported status claims.
 
-## 7. Data, security, and browser safety
+## 7. Documentation consistency
 
-- Never commit credentials, API keys, tokens, private URLs, session data, user files, or environment-specific secrets.
-- Do not add telemetry, analytics, tracking, remote logging, or external data submission without explicit approval.
-- Do not use `eval`, `new Function`, dynamic script injection, or unpinned remote executable code.
-- Treat imported JSON, SVG, project files, AI responses, and browser storage as untrusted input.
-- Validate before application. Preserve schema validation and manual acceptance boundaries.
-- SVG/HTML sanitization MUST reject external `url(...)` references and unsafe active content. Only local `url(#id)` fragment references may survive where supported.
-- Do not inject unsanitized user or AI content through `innerHTML`.
-- File export must be deterministic, explicit, and user-triggered.
+- `AI_VIBE_CODING_RULES.md` is the complete general execution policy.
+- This file binds that policy to repository-specific architecture and invariants.
+- `AI_CODING_DOCTRINE.md` is a compact doctrine, not a competing source.
+- `EIC.md`, `CLAUDE.md`, `GEMINI.md`, `.github/copilot-instructions.md`, and `.agents/skills/ai-vibe-coding/SKILL.md` are bootstrap surfaces and MUST point back to the canonical policy.
+- README describes current developer behavior and mandatory bootstrap.
+- Remove stale instructions instead of accumulating contradictory copies.
+- Test counts and version claims must match observed output and committed versions.
 
-## 8. Documentation consistency
-
-- README describes current user/developer behavior; this file governs AI execution behavior.
-- Update README when commands, architecture, tool discovery, deployment, runtime dependencies, URLs, or user-visible behavior change.
-- Update this file when a recurring AI failure, release blocker, architectural invariant, or mandatory gate is discovered.
-- Remove stale instructions instead of accumulating contradictions.
-- Test counts and version claims must match observed output and committed package versions.
-
-## 9. Git and publishing rules
+## 8. Git and publishing rules
 
 - Default: work on an isolated branch and review the complete diff before updating `main`.
 - Direct `main` writes require explicit user instruction.
 - Never force-push or rewrite `main`.
 - Do not mix unrelated tasks in one change set.
-- Commit messages must state the actual intent, not the file operation.
-- A successful GitHub commit is not proof of a successful Cloudflare deployment.
-- A green build is not proof of correct browser behavior.
-- A working preview is not proof that the custom production domain serves the same commit.
+- Commit messages must state intent, not merely file operations.
+- Publication is a destructive/high-impact action under the canonical policy and requires explicit user mandate. This request provides that mandate only for the requested policy integration.
+- A successful write is not complete until repository readback confirms the correct target, commit, and content.
 
-## 10. Required completion report
+## 9. Completion report
 
-Return exactly grounded status information using this semantic structure:
+Use the compact report structure defined in section 20 of `AI_VIBE_CODING_RULES.md`. At minimum include:
 
 ```text
-RESULT: PASS | PASS_WITH_LIMITATIONS | FAIL
-SCOPE: files/components changed
-COMMITS: branch and commit identifiers
-VALIDATION: commands/workflows actually executed and observed
-DEPLOYMENT: commit/build/domain actually verified, or NOT_VERIFIED
-LIMITATIONS: unavailable tools, blocked network, missing credentials, or unexecuted gates
-RESIDUAL_RISK: concrete remaining risks only
+Resultat:
+Omfattning:
+Ändringar:
+Kvalitetsbedömning:
+Verifiering:
+Begränsningar:
+Claim:
+Nästa steg:
 ```
 
-Never omit limitations. Never transform an assumption into a verification claim.
+Never transform an assumption, successful API response, source commit, local test, CI result, preview, or metadata record into a stronger claim than its authoritative evidence supports.
