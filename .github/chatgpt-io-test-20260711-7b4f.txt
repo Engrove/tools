@@ -1,0 +1,4 @@
+Engrove/tools GitHub connector I/O test
+operation=create-read-delete
+nonce=20260711-7b4f
+expected_status=temporary
