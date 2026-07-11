@@ -1,8 +1,80 @@
 {
-  "name": "Alien LT · Trace→3D",
-  "description": "Parametrisk 3D-generator för tonarmskropp (Alien LT): manuell/SVG-trace, AI-promptpipeline, OCCT-parametrisk modell, gated STL/STEP-export.",
+  "$schema": "../../schema/tool.schema.json",
+  "schemaVersion": "1.0.0",
+  "slug": "cobra-wand",
+  "name": "Alien LT Trace to 3D",
+  "shortName": "Trace to 3D",
+  "summary": "A browser-based parametric tonearm-wand tool that converts traced reference geometry into a gated 3D model and export workflow.",
+  "description": "The tool combines manual and SVG-assisted tracing, structured AI parameter exchange, OpenCascade-based parametric geometry, interactive 3D preview, project persistence and validation-gated STL and STEP export for the Engrove Alien LT wand body.",
+  "category": "audio-cad-tool",
+  "tags": ["3d", "cad", "occt", "tonearm", "trace", "audio-engineering"],
+  "keywords": ["tonearm wand CAD", "trace to 3D tonearm", "parametric tonearm body", "OpenCascade browser CAD"],
+  "entry": "index.html",
+  "public": true,
+  "hidden": false,
+  "language": "en",
+  "version": "0.2.0",
+  "updated": "2026-07-11",
+  "canonicalPath": "/tools/cobra-wand/",
   "icon": "🐍",
-  "tags": ["3d", "cad", "vite", "occt", "tonearm"],
-  "buildOutputDir": "dist",
-  "entry": "index.html"
+  "ogImage": "/assets/tool-default-1200x630.png",
+  "robots": "index,follow",
+  "capabilities": [
+    "Create and edit multiple named 2D traces with stable shape identifiers.",
+    "Generate a parametric OpenCascade 3D wand body from validated parameters.",
+    "Exchange structured parameter proposals through a manual AI prompt and JSON workflow.",
+    "Export STL and STEP only after geometry validation gates pass.",
+    "Save and restore trace and 3D workspace state together."
+  ],
+  "inputs": [
+    {"name":"trace_geometry","type":"2D vector geometry","required":false,"description":"Manual or SVG-derived top and side reference geometry."},
+    {"name":"wand_parameters","type":"JSON object","required":false,"description":"Validated dimensions and shape parameters in millimetres."}
+  ],
+  "outputs": [
+    {"name":"interactive_model","type":"3D preview","description":"A browser-rendered parametric wand-body model."},
+    {"name":"stl_export","type":"STL file","description":"A triangulated export produced only after watertight validation."},
+    {"name":"step_export","type":"STEP file","description":"An AP242-oriented CAD exchange export produced from validated geometry."},
+    {"name":"workspace","type":"project file","description":"Combined trace and 3D parameter state for later continuation."}
+  ],
+  "whenToUse": [
+    "Use when translating documented tonearm-wand reference geometry into a parametric browser CAD model.",
+    "Use when iterating traced profiles and explicit dimensions before downstream CAD refinement or prototyping."
+  ],
+  "whenNotToUse": [
+    "Do not use as a certified metrology system or as proof of manufacturing compliance.",
+    "Do not use to model or serialize the separate LT mechanism fields excluded by the project contract."
+  ],
+  "limitations": [
+    "Output accuracy depends on the quality, scale and interpretation of supplied traces and parameters.",
+    "The tool does not perform finite-element analysis, laboratory verification or manufacturing certification.",
+    "OpenCascade WebAssembly is loaded from a version-pinned external CDN asset because the full binary exceeds the Cloudflare Pages per-file limit."
+  ],
+  "privacy": {"processing":"local","storesApplicationUserDataOnServer":false,"requiresAccount":false,"requiresOAuth":false},
+  "access": {"cost":"free","registrationRequired":false},
+  "claims": {
+    "mayClaim": [
+      "The tool provides local browser-based tracing, parametric model generation and validation-gated export.",
+      "The tool supports structured manual AI parameter exchange without requiring an AI API key."
+    ],
+    "negativeClaimBoundaries": [
+      "No public programmatic backend API is provided.",
+      "No user account, OAuth flow or commerce system is provided.",
+      "The generated geometry is not certified or laboratory-validated."
+    ],
+    "mustNotClaim": [
+      "The tool guarantees dimensional accuracy.",
+      "The tool produces certified or laboratory-grade measurements.",
+      "The tool provides a public backend API or server MCP endpoint."
+    ]
+  },
+  "faq": [
+    {"question":"Does the tool upload project data to an Engrove server?","answer":"No. The application processes tool state locally in the browser and does not require an account or OAuth connection."},
+    {"question":"Are STL and STEP files guaranteed to be manufacturing-ready?","answer":"No. Exports pass the implemented software validation gates, but users must independently verify dimensions, materials and manufacturing requirements."},
+    {"question":"Does the tool include the separate LT mechanism geometry?","answer":"No. The wand application contract explicitly excludes the LT mechanism fields and prevents them from entering its schemas and AI exchange surfaces."}
+  ],
+  "evidence": [
+    {"type":"documentation","label":"Technical documentation","url":"https://github.com/Engrove/tools/tree/main/tools/cobra-wand"},
+    {"type":"source","label":"Repository source","url":"https://github.com/Engrove/tools"}
+  ],
+  "relatedTools": ["example-hello"]
 }
