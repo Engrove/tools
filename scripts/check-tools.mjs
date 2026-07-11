@@ -8,3 +8,28 @@
  * Do not: Hardcode tool slugs, infer public tools outside the registry, or downgrade process failures.
  * Verification: node --test test/tool-test-runner.test.mjs && npm run check:tools && npm run check:sanitation.
  */
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { loadRegistry } from './lib/registry.mjs';
+import { runPublicToolTests } from './lib/tool-test-runner.mjs';
+
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+
+try {
+  const registry = await loadRegistry(root);
+  const summary = await runPublicToolTests(registry.publicTools);
+  console.log(JSON.stringify(summary, null, 2));
+  if (summary.status !== 'PASS') process.exitCode = 1;
+} catch (error) {
+  console.error(JSON.stringify({
+    status: 'FAIL',
+    publicTools: null,
+    testableTools: null,
+    passed: 0,
+    failed: 1,
+    notApplicable: null,
+    tools: [],
+    error: error?.stack ?? String(error)
+  }, null, 2));
+  process.exitCode = 1;
+}
