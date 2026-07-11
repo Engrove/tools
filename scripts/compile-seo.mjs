@@ -18,6 +18,12 @@ const dist = path.join(root, 'dist');
 const marker = '<section aria-label="Interactive tool">';
 const suffix = '</section></main></body></html>\n';
 
+async function finalizeHubDocument() {
+  const hubPath = path.join(dist, 'index.html');
+  const html = await fs.readFile(hubPath, 'utf8');
+  await fs.writeFile(hubPath, html.replaceAll('/assets/tool-default-1200x630.png', '/assets/tool-default-1200x630.svg'));
+}
+
 async function finalizeToolDocuments(registry) {
   for (const tool of registry.publicTools) {
     const indexPath = path.join(dist, 'tools', tool.slug, 'index.html');
@@ -35,6 +41,7 @@ async function finalizeToolDocuments(registry) {
 
 compileSeo({ root, dist })
   .then(async registry => {
+    await finalizeHubDocument();
     await finalizeToolDocuments(registry);
     await fs.copyFile(path.join(root, 'public', '_headers'), path.join(dist, '_headers'));
     console.log(`SEO compiler: ${registry.publicTools.length} public tool(s), deterministic surfaces emitted.`);
