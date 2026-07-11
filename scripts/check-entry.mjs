@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * AI-CODING NOTE:
- * Responsibility: Execute source, registry, generated-output, and deterministic-build checks.
+ * Responsibility: Execute source, registry, generated-output, deterministic-build, and AI-governance checks.
  * Inputs: Command name, repository source, and generated dist.
  * Outputs: Exit status and precise validation result.
  * Safe edits: Add exact parsed checks.
@@ -20,7 +20,13 @@ const mode=process.argv[2]||'seo';
 const requireValue=(value,message)=>{if(!value)throw new Error(message)};
 const registry=await loadRegistry(ROOT);
 if(mode==='source'){
-  for(const file of ['AGENTS.md','EIC.md','AI_CODING_DOCTRINE.md','config/site.json','schema/site.schema.json','schema/tool.schema.json','functions/_middleware.ts','public/_headers'])requireValue(await exists(path.join(ROOT,file)),`missing source contract: ${file}`);
+  for(const file of ['AGENTS.md','EIC.md','AI_CODING_DOCTRINE.md','CLAUDE.md','GEMINI.md','.github/copilot-instructions.md','config/site.json','schema/site.schema.json','schema/tool.schema.json','functions/_middleware.ts','public/_headers'])requireValue(await exists(path.join(ROOT,file)),`missing source contract: ${file}`);
+  const doctrine=await fs.readFile(path.join(ROOT,'AI_CODING_DOCTRINE.md'),'utf8');
+  for(const marker of ['AI_VIBE_AUTONOMOUS_STRICT','PASS_WITH_SCOPE','UNKNOWN_IMPACT','Repositorysanning bevisar inte runtimebeteende','Korrekthet och kodkvalitet är högsta prioritet'])requireValue(doctrine.includes(marker),`AI doctrine marker missing: ${marker}`);
+  const agents=await fs.readFile(path.join(ROOT,'AGENTS.md'),'utf8');
+  requireValue(agents.includes('CANONICAL_METHOD: `/AI_CODING_DOCTRINE.md`'),'AGENTS.md does not prioritize AI doctrine');
+  requireValue(agents.includes('Correctness and code quality outrank speed'),'AGENTS.md priority rule missing');
+  for(const file of ['CLAUDE.md','GEMINI.md','.github/copilot-instructions.md']){const content=await fs.readFile(path.join(ROOT,file),'utf8');requireValue(content.includes('/AI_CODING_DOCTRINE.md')&&content.includes('/AGENTS.md'),`${file} bootstrap contract missing`)}
   console.log(`Source check passed: tools=${registry.publicTools.length}`);
 }else if(mode==='schema'||mode==='registry'){
   console.log(`${mode} check passed: tools=${registry.publicTools.length}`);
