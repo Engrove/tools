@@ -7,7 +7,9 @@
  * Do not: change canonical origin, create runtime API claims or expose non-generated files.
  * Verification: npm run check:preview-policy and preview deployment smoke.
  */
-interface Env {}
+interface Env {
+  ASSETS: { fetch(request: Request): Promise<Response> };
+}
 
 const MARKDOWN_ROUTES: Readonly<Record<string, string>> = Object.freeze({
   '/for-agents/': '/for-agents.md',
