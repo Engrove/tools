@@ -20,7 +20,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22.16.0'
-          cache: npm
       - name: JavaScript syntax
         run: |
           node --check scripts/lib/registry.mjs
@@ -30,6 +29,13 @@ jobs:
           node --check scripts/check-entry.mjs
           node --check scripts/clean.mjs
           node --check src/app.js
+          node --check tools/manual-trace/app-00.js
+          node --check tools/manual-trace/app-01.js
+          node --check tools/manual-trace/app-02.js
+          node --check tools/manual-trace/app-03.js
+          node --check tools/manual-trace/app-04.js
+          node --check tools/manual-trace/app-05.js
+          node --check tools/manual-trace/app-06.js
       - name: Schema and registry
         run: npm run check:schema
       - name: Source governance

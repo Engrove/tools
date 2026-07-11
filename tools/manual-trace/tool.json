@@ -1,0 +1,99 @@
+{
+  "$schema": "../../schema/tool.schema.json",
+  "schemaVersion": "1.0.0",
+  "slug": "manual-trace",
+  "name": "Engrove Manual Trace",
+  "shortName": "Manual Trace",
+  "summary": "Trace raster images and SVG geometry into structured editable contours, datums, stations, measurements and semantic zones on a desktop browser.",
+  "description": "A desktop-focused, browser-local engineering trace editor for importing reference images or SVG files, detecting SVG geometry, manually refining contours, assigning technical metadata and relations, calibrating measurements, and exporting paired JSON, SVG or resumable Engrove project packages.",
+  "category": "engineering-design-application",
+  "tags": ["tracing", "SVG", "geometry", "metrology", "CAD preparation"],
+  "keywords": ["manual vector trace tool", "SVG auto trace editor", "engineering contour digitizer", "image measurement calibration", "AI readable geometry JSON", "Engrove trace project"],
+  "entry": "index.html",
+  "buildOutputDir": ".",
+  "public": true,
+  "hidden": false,
+  "language": "en",
+  "version": "18.0.0",
+  "updated": "2026-07-11",
+  "canonicalPath": "/tools/manual-trace/",
+  "icon": "📐",
+  "ogImage": "/assets/tool-default-1200x630.png",
+  "robots": "index,follow",
+  "capabilities": [
+    "Import raster reference images by file selection, drag and drop, or clipboard paste.",
+    "Import SVG files, sanitize active content, detect filled or stroked geometry, preview candidates, and create editable polyline or Bezier traces.",
+    "Create and edit paths, polylines, lines, measurements, origins, stations, rectangles, circles, semantic zones, and ignore masks.",
+    "Assign names, roles, feature kinds, descriptions, semantic metadata, and explicit reference relations to traced objects.",
+    "Calibrate pixel measurements against a real length and preserve the engineering coordinate-frame definition.",
+    "Save and reopen resumable Engrove project packages containing geometry, application state, source image data, SVG trace provenance, and panel layout settings.",
+    "Export paired JSON and SVG representations with stable object IDs, geometry summaries, source bindings, and 64-point sampled polylines."
+  ],
+  "inputs": [
+    {"name": "reference_image", "type": "raster image file or clipboard image", "required": false, "description": "A browser-supported raster image used as the visual tracing reference."},
+    {"name": "source_svg", "type": "SVG file", "required": false, "description": "An SVG source whose supported geometry can be sanitized, detected and converted to editable trace objects."},
+    {"name": "trace_json_or_project", "type": "JSON or .engrove-trace file", "required": false, "description": "Previously exported trace data or a complete resumable project package."},
+    {"name": "operator_geometry_and_metadata", "type": "pointer, keyboard and form input", "required": true, "description": "Operator-created geometry, calibration, coordinate-frame choices, metadata and relations."}
+  ],
+  "outputs": [
+    {"name": "trace_json", "type": "JSON file or clipboard text", "description": "Structured trace geometry, engineering frame, metadata, relations, provenance and optional embedded image data."},
+    {"name": "bound_svg", "type": "SVG file", "description": "Visual vector export whose groups retain stable JSON object identifiers and JSON paths."},
+    {"name": "engrove_trace_project", "type": ".engrove-trace JSON package", "description": "Resumable browser project containing workspace state, geometry, source data and project metadata."}
+  ],
+  "whenToUse": [
+    "Use it to digitize a technical silhouette or reference drawing before downstream CAD or AI-assisted geometric interpretation.",
+    "Use it when geometry needs explicit object IDs, stations, datums, semantic zones, descriptions and reference relations rather than only a visual vector path.",
+    "Use it to refine supported SVG geometry while retaining source provenance and paired JSON/SVG bindings.",
+    "Use it on a desktop PC where a large canvas, mouse input and resizable tool and inspector panels are available."
+  ],
+  "whenNotToUse": [
+    "Do not treat traced output as dimensionally valid until scale, source projection, datum placement and operator review have been controlled.",
+    "Do not use it as a general-purpose CAD solid modeller, automatic manufacturing-tolerance system or metrology certification tool.",
+    "Do not rely on it to reconstruct unsupported SVG text, raster images, external styles, use elements or arbitrary embedded content.",
+    "Do not use the application as a mobile-first tracing interface."
+  ],
+  "limitations": [
+    "The application is designed and verified for desktop-class PC browsers; mobile layouts and touch-only workflows are outside the supported target.",
+    "SVG auto detection supports path, polygon, polyline, rect, circle, ellipse and line geometry after security sanitization; unsupported and active SVG content is removed.",
+    "Bezier smoothing, simplification and sampled polylines are geometric approximations and can deviate from the source contour.",
+    "Physical scale remains unknown until the operator defines and calibrates a reference measurement.",
+    "Projects are saved by explicit download and are not automatically synchronized or stored by an application backend.",
+    "Clipboard access, downloads and local file behavior depend on browser permissions and policy.",
+    "The output is not automatically CAD truth, metrological truth, manufacturing-toleranced geometry or mechanically verified design data."
+  ],
+  "privacy": {"processing": "local browser processing; production page analytics are loaded only under the repository-wide production-host policy", "storesApplicationUserDataOnServer": false, "requiresAccount": false, "requiresOAuth": false},
+  "access": {"cost": "free", "registrationRequired": false},
+  "claims": {
+    "mayClaim": [
+      "The application imports browser-supported raster images and supported SVG geometry for local tracing and editing.",
+      "The application can save resumable Engrove trace project packages and export paired JSON and SVG files.",
+      "Exported trace objects retain stable identifiers, semantic metadata, source provenance and JSON-to-SVG bindings where implemented by the application.",
+      "Imported SVG active elements, external links and non-fragment URL references are removed before detection.",
+      "Application project data is processed locally and is not stored by an application backend."
+    ],
+    "negativeClaimBoundaries": [
+      "No public backend API, server-side project store, account system or OAuth flow is provided.",
+      "No automatic claim of physical scale, CAD accuracy, manufacturing tolerance or metrological certification is made.",
+      "No mobile-first or touch-only workflow is supported as a product target.",
+      "Production-host usage analytics are separate from application project storage and follow the repository-wide analytics policy."
+    ],
+    "mustNotClaim": [
+      "Do not claim automatic sub-pixel or metrology-grade accuracy.",
+      "Do not claim that generated contours are production-ready CAD without independent verification.",
+      "Do not claim complete SVG specification support.",
+      "Do not claim server synchronization, cloud backup or collaborative editing.",
+      "Do not claim that sanitization makes arbitrary untrusted files risk-free."
+    ]
+  },
+  "faq": [
+    {"question": "Does Manual Trace upload my source image or project to an application server?", "answer": "No. Source files and project state are processed in the browser. Persistent projects are created only when you explicitly download an Engrove trace project file."},
+    {"question": "Can the exported geometry be used directly for manufacturing?", "answer": "Not without independent verification. The output records traced geometric intent, but source projection, scale, datum placement, approximation error and manufacturing tolerances must be validated separately."},
+    {"question": "Which SVG elements can Auto Trace detect?", "answer": "The detector handles path, polygon, polyline, rect, circle, ellipse and line geometry after removing active and unsupported content. Text, use elements, external styles and raster images are not reconstructed."},
+    {"question": "Can I continue a tracing session later?", "answer": "Yes. Save an .engrove-trace project package and reopen it later. The package preserves the workspace, geometry, source data, trace associations and relevant settings."}
+  ],
+  "evidence": [
+    {"type": "source", "label": "Manual Trace source directory", "url": "https://github.com/Engrove/tools/tree/main/tools/manual-trace"},
+    {"type": "documentation", "label": "Manual Trace functional documentation", "url": "https://github.com/Engrove/tools/blob/main/tools/manual-trace/README.md"}
+  ],
+  "relatedTools": []
+}
