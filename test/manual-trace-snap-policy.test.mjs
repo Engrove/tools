@@ -12,8 +12,37 @@ import vm from 'node:vm';
 
 const source = await readFile(new URL('../tools/manual-trace/app-07.js', import.meta.url), 'utf8');
 
+function createMockElement() {
+  const listeners = [];
+
+  return {
+    onclick: null,
+    onchange: null,
+    value: '',
+    checked: false,
+    childNodes: [],
+    className: '',
+    title: '',
+    listeners,
+    closest: () => null,
+    addEventListener(type, handler, capture = false) {
+      listeners.push({ type, handler, capture });
+    },
+    append(...nodes) {
+      this.childNodes.push(...nodes);
+    },
+    after() {},
+    setAttribute() {}
+  };
+}
+
 function createContext() {
   const listeners = [];
+  const elements = new Map();
+  const getElement = id => {
+    if (!elements.has(id)) elements.set(id, createMockElement());
+    return elements.get(id);
+  };
   const context = {
     S: {
       continueLastPoint: undefined,
@@ -29,10 +58,10 @@ function createContext() {
       frame: {},
       project_meta: {}
     },
-    $: () => ({ onclick: null, onchange: null, value: '', checked: false, closest: () => null }),
+    $: getElement,
     document: {
       querySelectorAll: () => [],
-      createElement: () => ({ childNodes: [], append() {}, after() {}, setAttribute() {}, className: '', title: '' }),
+      createElement: () => createMockElement(),
       createTextNode: text => ({ nodeType: 3, textContent: text })
     },
     window: {
@@ -71,7 +100,8 @@ function createContext() {
     isKeyboardOwnedByUi: () => false,
     ORIGIN_SEL: 'trace_frame.origin',
     console,
-    listeners
+    listeners,
+    elements
   };
   context.globalThis = context;
   return context;
@@ -81,6 +111,10 @@ function runAssertions(assertionSource) {
   const context = createContext();
   vm.runInNewContext(`${source}\n${assertionSource}`, context, { filename: 'app-07.js' });
 }
+
+test('app-07 initializes against browser-like control mocks', () => {
+  runAssertions('');
+});
 
 test('completed geometry does not implicitly continue by default', () => {
   runAssertions(`
