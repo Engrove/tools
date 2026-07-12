@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "tonearm-observation-package-v1/object-frame.schema.json",
+  "$defs": {
+    "AxisDefinition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["label", "direction", "knowledge_state", "source"],
+      "properties": {
+        "label": {
+          "type": "string",
+          "enum": ["longitudinal", "lateral", "vertical"]
+        },
+        "direction": {
+          "$ref": "shared.schema.json#/$defs/Vector3"
+        },
+        "knowledge_state": {
+          "$ref": "shared.schema.json#/$defs/KnowledgeState"
+        },
+        "source": {
+          "$ref": "shared.schema.json#/$defs/NullableSourceReference"
+        }
+      }
+    },
+    "ObjectFrame": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["frame_id", "handedness", "units", "origin", "axes"],
+      "properties": {
+        "frame_id": {
+          "$ref": "shared.schema.json#/$defs/Id"
+        },
+        "handedness": {
+          "type": "string",
+          "enum": ["right_handed", "left_handed", "unknown"]
+        },
+        "units": {
+          "const": "mm"
+        },
+        "origin": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "coordinates",
+            "landmark_id",
+            "knowledge_state",
+            "source"
+          ],
+          "properties": {
+            "coordinates": {
+              "anyOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "$ref": "shared.schema.json#/$defs/Point3"
+                }
+              ]
+            },
+            "landmark_id": {
+              "$ref": "shared.schema.json#/$defs/NullableId"
+            },
+            "knowledge_state": {
+              "$ref": "shared.schema.json#/$defs/KnowledgeState"
+            },
+            "source": {
+              "$ref": "shared.schema.json#/$defs/NullableSourceReference"
+            }
+          }
+        },
+        "axes": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["x", "y", "z"],
+          "properties": {
+            "x": {
+              "$ref": "#/$defs/AxisDefinition"
+            },
+            "y": {
+              "$ref": "#/$defs/AxisDefinition"
+            },
+            "z": {
+              "$ref": "#/$defs/AxisDefinition"
+            }
+          }
+        }
+      }
+    }
+  }
+}
