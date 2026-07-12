@@ -1,10 +1,49 @@
 /**
  * AI-CODING NOTE:
- * Responsibility: Top-bar menu coordination, unsaved-work detection, destructive-action protection, and transient geometry-state protection, chunk 8 of 8.
+ * Responsibility: Top-bar menu coordination, unsaved-work detection, destructive-action protection, transient geometry-state protection, and CAD-style continuation/snap policy, chunk 8 of 8.
  * Dependency: Loads after all core Manual Trace state, persistence, and event-binding scripts.
- * Safe edits: Preserve native <details> behavior, browser-native beforeunload semantics, normal object-level editing, and visible geometry continuation state.
+ * Safe edits: Preserve native <details> behavior, browser-native beforeunload semantics, normal object-level editing, visible geometry continuation state, and explicit object-snap control.
  */
 "use strict";
+
+if(S.continueLastPoint===undefined)S.continueLastPoint=false;
+
+function installCadSnapControls(){
+ const snapControl=$("snap");
+ const snapLabel=snapControl?.closest("label");
+ if(snapControl){
+  snapControl.title="Snap creation points to existing geometry points. Hold Alt to bypass.";
+  if(snapLabel){
+   snapLabel.title=snapControl.title;
+   const textNode=[...snapLabel.childNodes].find(node=>node.nodeType===3);
+   if(textNode)textNode.textContent=" Object snap"
+  }
+ }
+ let control=$("continueLast");
+ if(control)return control;
+ const snapRow=snapControl?.closest(".rowline");
+ if(!snapRow?.parentNode)return null;
+ const row=document.createElement("div");
+ row.className="rowline";
+ const label=document.createElement("label");
+ label.title="When enabled, a completed object's final point becomes the start of the next geometry object.";
+ control=document.createElement("input");
+ control.id="continueLast";
+ control.type="checkbox";
+ const hint=document.createElement("span");
+ hint.className="small";
+ hint.textContent="Alt bypasses snap";
+ label.append(control,document.createTextNode(" Continue from last point"));
+ row.append(label,hint);
+ snapRow.after(row);
+ return control
+}
+
+const continueLastControl=installCadSnapControls();
+
+function syncContinuationControl(){
+ if(continueLastControl)continueLastControl.checked=!!S.continueLastPoint
+}
 
 document.querySelectorAll("#bar details.menu").forEach(menu=>{
  menu.addEventListener("toggle",()=>{
@@ -52,6 +91,7 @@ function workspaceProtectionState(){
    current_object:S.cur||null,
    anchor:S.anchor||null,
    trace_frame:S.frame||null,
+   settings:{continueLastPoint:!!S.continueLastPoint},
    svg_trace:{
     sourceName:trace.sourceName||null,
     candidates:Array.isArray(trace.candidates)?trace.candidates:[],
@@ -110,6 +150,7 @@ function runProtectedReplacement(action,fn,thisArg,args){
 const syncWithoutWorkspaceProtection=sync;
 sync=function(...args){
  const result=syncWithoutWorkspaceProtection.apply(this,args);
+ syncContinuationControl();
  if(workspaceProtectionPendingClean){
   workspaceProtectionPendingClean=false;
   markWorkspaceProtectionClean(true)
@@ -117,17 +158,40 @@ sync=function(...args){
  return result
 };
 
+const projectPayloadWithoutContinuationPolicy=projectPayload;
+projectPayload=function(...args){
+ const payload=projectPayloadWithoutContinuationPolicy.apply(this,args);
+ payload.workspace=payload.workspace||{};
+ payload.workspace.settings={
+  ...(payload.workspace.settings||{}),
+  continue_last_point:!!S.continueLastPoint
+ };
+ return payload
+};
+
 const applyProjectPackageWithoutWorkspaceProtection=applyProjectPackage;
-applyProjectPackage=function(...args){
+applyProjectPackage=function(project,...rest){
+ const savedSetting=project?.workspace?.settings?.continue_last_point;
+ S.continueLastPoint=savedSetting===undefined?false:!!savedSetting;
+ syncContinuationControl();
+ let normalizedProject=project;
+ if(!S.continueLastPoint&&project?.workspace?.anchor&&!project.workspace.current_object){
+  normalizedProject=clone(project);
+  normalizedProject.workspace.anchor=null
+ }
  workspaceProtectionPendingClean=true;
- try{return applyProjectPackageWithoutWorkspaceProtection.apply(this,args)}
+ try{return applyProjectPackageWithoutWorkspaceProtection.call(this,normalizedProject,...rest)}
  catch(error){workspaceProtectionPendingClean=false;throw error}
 };
 
 const applyTraceObjectWithoutWorkspaceProtection=applyTraceObject;
-applyTraceObject=function(...args){
+applyTraceObject=function(traceObject,...rest){
+ if(!isProjectPackage(traceObject)){
+  S.continueLastPoint=false;
+  syncContinuationControl()
+ }
  workspaceProtectionPendingClean=true;
- try{return applyTraceObjectWithoutWorkspaceProtection.apply(this,args)}
+ try{return applyTraceObjectWithoutWorkspaceProtection.call(this,traceObject,...rest)}
  catch(error){workspaceProtectionPendingClean=false;throw error}
 };
 
@@ -171,8 +235,21 @@ clearTrace=function(){
  return true
 };
 
-function clearStaleGeometryAnchor(){
- if(S.cur||!S.anchor)return false;
+const commitCurrentWithoutContinuationPolicy=commitCurrentKeepAnchor;
+commitCurrentKeepAnchor=function(...args){
+ const options=args[0]||{};
+ const keepAnchor=!!S.continueLastPoint&&!options.closed;
+ const result=commitCurrentWithoutContinuationPolicy.apply(this,args);
+ if(!keepAnchor&&!S.cur&&S.anchor){
+  setAnchor(null);
+  S.snapHit=null;
+  sync(false)
+ }
+ return result
+};
+
+function clearStaleGeometryAnchor(force=false){
+ if(S.cur||!S.anchor||(!force&&S.continueLastPoint))return false;
  setAnchor(null);
  S.snapHit=null;
  sync(false);
@@ -190,14 +267,14 @@ undoActivePoint=function(...args){
   return true
  }
  const result=undoActivePointWithoutAnchorProtection.apply(this,args);
- if(result&&!S.cur)clearStaleGeometryAnchor();
+ if(result&&!S.cur)clearStaleGeometryAnchor(true);
  return result
 };
 
 const undoWithoutAnchorProtection=undo;
 undo=function(...args){
  const result=undoWithoutAnchorProtection.apply(this,args);
- clearStaleGeometryAnchor();
+ clearStaleGeometryAnchor(true);
  return result
 };
 
@@ -208,6 +285,77 @@ redo=function(...args){
  return result
 };
 
+function drawingToolUsesObjectSnap(){
+ return ["origin","station","measure","line","pen","poly","zone","rect","circle","mask"].includes(S.tool)
+}
+
+function objectSnapPointFromHit(hit){
+ if(!hit?.point||hit.kind==="in"||hit.kind==="out")return null;
+ return hit.point
+}
+
+cv.addEventListener("mousedown",event=>{
+ if(event.button!==0||S.space||S.tool==="pan"||!drawingToolUsesObjectSnap())return;
+ const screenPoint=scr(event),raw=toImg(screenPoint);
+ if(!originHit(raw))return;
+ event.preventDefault();
+ event.stopImmediatePropagation();
+ S.drag={
+  mode:"originClickOrEdit",
+  sp:screenPoint,
+  start:raw,
+  target:clone(S.frame.origin),
+  orig:clone(S.frame.origin),
+  moved:false,
+  histDone:false
+ };
+ S.snapHit=S.snap&&!event.altKey?{...clone(S.frame.origin),dist:d(raw,S.frame.origin)}:null;
+ draw()
+},true);
+
+cv.addEventListener("mousemove",event=>{
+ const drag=S.drag;
+ if(!drag||drag.mode!=="originClickOrEdit")return;
+ const screenPoint=scr(event),distance=Math.hypot(screenPoint.x-drag.sp.x,screenPoint.y-drag.sp.y);
+ if(distance<=3)return;
+ if(!drag.histDone){hist();S.sel=ORIGIN_SEL;drag.histDone=true}
+ drag.moved=true;
+ moveOriginTo(toImg(screenPoint),drag.orig,drag.start);
+ S.snapHit=null;
+ sync(false);
+ draw();
+ event.preventDefault();
+ event.stopImmediatePropagation()
+},true);
+
+window.addEventListener("mouseup",event=>{
+ const drag=S.drag;
+ if(!drag||drag.mode!=="originClickOrEdit")return;
+ if(!drag.moved){
+  const startPoint=S.snap&&!event.altKey?drag.target:drag.start;
+  clickToolAt(startPoint,event)
+ }
+ S.drag=null;
+ S.snapHit=null;
+ draw();
+ event.preventDefault();
+ event.stopImmediatePropagation()
+},true);
+
+window.addEventListener("mouseup",event=>{
+ const drag=S.drag;
+ if(!drag||drag.mode!=="nodeClickOrEdit"||drag.moved||!drawingToolUsesObjectSnap())return;
+ const exactPoint=objectSnapPointFromHit(drag.hit);
+ if(!exactPoint)return;
+ const startPoint=S.snap&&!event.altKey?clone(exactPoint):drag.start;
+ clickToolAt(startPoint,event);
+ S.drag=null;
+ S.snapHit=null;
+ draw();
+ event.preventDefault();
+ event.stopImmediatePropagation()
+},true);
+
 ["imgFile","svgTraceFile","projectFile","jsonFile"].forEach(id=>{
  const input=$(id);
  if(input)input.addEventListener("click",()=>{input.value=""})
@@ -217,6 +365,15 @@ $("saveProject").onclick=saveProject;
 $("clear").onclick=clearTrace;
 $("undo").onclick=undo;
 $("redo").onclick=redo;
+
+if(continueLastControl){
+ continueLastControl.onchange=event=>{
+  S.continueLastPoint=event.target.checked;
+  if(!S.continueLastPoint&&!S.cur)setAnchor(null);
+  S.snapHit=null;
+  sync(false)
+ }
+}
 
 window.addEventListener("keydown",event=>{
  if(event.defaultPrevented||event.isComposing||isKeyboardOwnedByUi(event))return;
@@ -232,4 +389,5 @@ window.addEventListener("beforeunload",event=>{
  event.returnValue=""
 });
 
+syncContinuationControl();
 markWorkspaceProtectionClean(true);
