@@ -4,6 +4,7 @@ MODE: `AI_VIBE_MANDATORY`
 SCOPE: repository root and all descendants
 CANONICAL_GENERAL_POLICY: `AI_VIBE_CODING_RULES.md`
 CANONICAL_REPOSITORY_POLICY: this file
+ORCHESTRATED_WORKFLOW: `AI_VIBE_ORCHESTRATED_WORKFLOW.md`
 
 ## 0. Mandatory bootstrap
 
@@ -12,8 +13,9 @@ Every AI agent that analyzes, edits, reviews, tests, commits, publishes, or repo
 1. read `AI_VIBE_CODING_RULES.md` completely;
 2. read this file completely;
 3. read `EIC.md` and `AI_CODING_DOCTRINE.md`;
-4. inspect the current repository state and the files that own the requested behavior;
-5. classify work level, risk, invariants, direct consumers, and blast radius as required by the canonical policy.
+4. for orchestrated multi-step work, read `AI_VIBE_ORCHESTRATED_WORKFLOW.md` completely;
+5. inspect the current repository state and the files that own the requested behavior;
+6. classify work level, risk, invariants, direct consumers, and blast radius as required by the canonical policy.
 
 This applies regardless of model, vendor, coding assistant, IDE, connector, CLI, task size, or requested output. Tool-specific instruction files may add stricter rules but MUST NOT weaken, bypass, summarize away, or contradict `AI_VIBE_CODING_RULES.md`.
 
@@ -23,10 +25,11 @@ Instruction precedence:
 2. nearest path-scoped `AGENTS.md`, only for additional or stricter local requirements;
 3. this file;
 4. `AI_VIBE_CODING_RULES.md`;
-5. `AI_CODING_DOCTRINE.md` and `EIC.md`;
-6. executable schemas, checks, tests, and build code;
-7. implementation code;
-8. README and historical reports.
+5. `AI_VIBE_ORCHESTRATED_WORKFLOW.md` for role-separated orchestrated work;
+6. `AI_CODING_DOCTRINE.md` and `EIC.md`;
+7. executable schemas, checks, tests, and build code;
+8. implementation code;
+9. README and historical reports.
 
 If two authoritative sources materially conflict, report `BLOCKER`. Never resolve the conflict by inventing a hierarchy not defined here.
 
@@ -124,6 +127,8 @@ Follow `AI_VIBE_CODING_RULES.md` in full. Repository-specific minimum sequence:
 10. perform persistent readback of branch, commit, and changed files;
 11. verify production only through the deployment owner or custom-domain response.
 
+For orchestrated multi-step work, the role ownership, handoff cycle, modular file limits, connector discipline, and review stop points in `AI_VIBE_ORCHESTRATED_WORKFLOW.md` are mandatory.
+
 Do not optimize the workflow for speed, low token use, or minimal analysis. Optimize for correctness, code quality, contract preservation, security, and evidence.
 
 ## 5. Mandatory validation gates
@@ -169,6 +174,7 @@ Never report an unqualified `PASS`.
 
 - `AI_VIBE_CODING_RULES.md` is the complete general execution policy.
 - This file binds that policy to repository-specific architecture and invariants.
+- `AI_VIBE_ORCHESTRATED_WORKFLOW.md` owns the repositoryspecific EIC–Jan-Eric–Hjalmar role model and modular connector workflow.
 - `AI_CODING_DOCTRINE.md` is a compact doctrine, not a competing source.
 - `EIC.md`, `CLAUDE.md`, `GEMINI.md`, `.github/copilot-instructions.md`, and `.agents/skills/ai-vibe-coding/SKILL.md` are bootstrap surfaces and MUST point back to the canonical policy.
 - README describes current developer behavior and mandatory bootstrap.
