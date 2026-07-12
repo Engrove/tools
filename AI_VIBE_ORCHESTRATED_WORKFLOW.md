@@ -1,12 +1,16 @@
 # Orkestrerat AI Vibe-arbetsflöde: EIC–Jan-Eric–Hjalmar
 
-Detta dokument är den repositoryspecifika standarden för orkestrerade flerstegsuppdrag i `Engrove/tools`. Den kompletterar den generella metodiken i `AI_VIBE_CODING_RULES.md` och repositorykontraktet i `AGENTS.md`; den ersätter inte någon av dem.
+Detta dokument är den repositoryspecifika standarden för orkestrerade flerstegsuppdrag i `Engrove/tools`.
+
+Den kompletterar den generella metodiken i `AI_VIBE_CODING_RULES.md` och repositorykontraktet i `AGENTS.md`; den ersätter inte någon av dem.
 
 ## Roller
 
 ### EIC — Orkestrator
 
-EIC bryter ned arbetet i små verifierbara deluppgifter, fastställer krav, icke-mål, invariants, risk, blast radius och acceptanskriterier. EIC granskar varje publicerad commit eller commitserie mot repositoryts auktoritativa källor och utfärdar nästa uppgift först efter egen readback och kontraktsgranskning.
+EIC bryter ned arbetet i små verifierbara deluppgifter och fastställer krav, icke-mål, invariants, risk, blast radius och acceptanskriterier.
+
+EIC granskar varje publicerad commit eller commitserie mot repositoryts auktoritativa källor och utfärdar nästa uppgift först efter egen readback och kontraktsgranskning.
 
 Kodarens rapport är en granskningskandidat och får inte behandlas som tekniskt bevis utan separat verifiering.
 
@@ -47,25 +51,45 @@ Konflikter avgörs mot den auktoritativa källa som äger det aktuella påståen
 
 Stora filer är inte ett kvalitetsmål.
 
-En stor fil ska inte behållas endast för att undvika fler filoperationer. När en fil innehåller flera ansvar ska den delas före publicering. Connectorns payloadbegränsning är en signal att granska arkitekturen, inte ett skäl att minifiera eller behålla en monolit.
+En stor fil ska inte behållas endast för att undvika fler filoperationer.
+
+När en fil innehåller flera ansvar ska den delas före publicering.
+
+Connectorns payloadbegränsning är en signal att granska arkitekturen, inte ett skäl att minifiera eller behålla en monolit.
 
 När en planerad eller befintlig fil innehåller flera ansvar ska den delas längs stabila ansvarsgränser före publicering.
 
-Varje modul ska ha ett tydligt ansvar, definierad input och output, begränsad importyta och riktade tester. Tunna facader, aggregators och runners får koordinera flera moduler men ska inte innehålla den huvudsakliga logiken. Mikrofiler utan eget ansvar är förbjudna.
+Varje modul ska ha ett tydligt ansvar, definierad input och output, begränsad importyta och riktade tester.
 
-För nya eller väsentligt omskrivna moduler är målet 120–350 rader. Hård gräns i detta repositoryflöde är 500 fysiska rader och 16 000 UTF-8-byte. I connectorbaserat arbete ska filer även hållas till en storlek som kan publiceras och läsas tillbaka byteexakt utan truncation.
+Tunna facader, aggregators och runners får koordinera flera moduler men ska inte innehålla den huvudsakliga logiken.
+
+Mikrofiler utan eget ansvar är förbjudna.
+
+För nya eller väsentligt omskrivna moduler är målet 120–350 rader.
+
+Hård gräns i detta repositoryflöde är 500 fysiska rader och 16 000 UTF-8-byte.
+
+I connectorbaserat arbete ska filer även hållas till en storlek som kan publiceras och läsas tillbaka byteexakt utan truncation.
 
 Tunna facader och aggregators är tillåtna. Undantag från modulgränserna kräver EIC:s uttryckliga förhandsgodkännande, dokumenterad ansvarsmotivering och riktade tester. Inget undantag får skapas retroaktivt för att legitimera en monolit.
 
 ## Repositorytransport och branchdisciplin
 
-GitHub-connectorn är den primära repositorytransporten när Kodarens container saknar autentiserad Git- eller nätverksåtkomst. Containerns oförmåga att köra `git clone` är inte en blocker när motsvarande läs- och writeoperationer finns genom connectorn.
+GitHub-connectorn är den primära repositorytransporten när Kodarens container saknar autentiserad Git- eller nätverksåtkomst.
 
-Arbetet sker på en isolerad branch skapad från verifierad aktuell `main`. Varje logiskt steg levereras som en avgränsad commit eller connectorgenererad commitserie. Kodaren publicerar efter varje slutförd deluppgift och Orkestratorn granskar innan nästa deluppgift.
+Containerns oförmåga att köra `git clone` är inte en blocker när motsvarande läs- och writeoperationer finns genom connectorn.
 
-Direkt skrivning till `main`, force-push och autonom merge är förbjudna om inte Jan-Eric uttryckligen fattar ett separat beslut. Orelaterade ändringar får inte blandas i samma deluppgift.
+Arbetet sker på en isolerad branch skapad från verifierad aktuell `main`.
 
-Om en connector-write misslyckas efter att korrekt delarbete publicerats ska den isolerade arbetsbranchen rapporteras som ofullständig. Korrekt delarbete ska inte automatiskt återställas eller döljas genom kompensationscommits. Återställning kräver ett separat beslut från EIC.
+Varje logiskt steg levereras som en avgränsad commit eller connectorgenererad commitserie. Kodaren publicerar efter varje slutförd deluppgift och Orkestratorn granskar innan nästa deluppgift.
+
+Direkt skrivning till `main`, force-push och autonom merge är förbjudna om inte Jan-Eric uttryckligen fattar ett separat beslut.
+
+Orelaterade ändringar får inte blandas i samma deluppgift.
+
+Om en connector-write misslyckas efter att korrekt delarbete publicerats ska den isolerade arbetsbranchen rapporteras som ofullständig.
+
+Korrekt delarbete ska inte automatiskt återställas eller döljas genom kompensationscommits. Återställning kräver ett separat beslut från EIC.
 
 ## Rapportering och stopp
 
