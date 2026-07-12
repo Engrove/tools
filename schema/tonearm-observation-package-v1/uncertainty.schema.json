@@ -1,0 +1,137 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "tonearm-observation-package-v1/uncertainty.schema.json",
+  "$defs": {
+    "UncertaintyEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "uncertainty_id",
+        "target_type",
+        "target_id",
+        "kind",
+        "value",
+        "unit",
+        "lower",
+        "upper",
+        "knowledge_state",
+        "source"
+      ],
+      "properties": {
+        "uncertainty_id": {
+          "$ref": "shared.schema.json#/$defs/Id"
+        },
+        "target_type": {
+          "type": "string",
+          "enum": [
+            "view",
+            "landmark",
+            "observation",
+            "station",
+            "feature",
+            "constraint",
+            "measurement"
+          ]
+        },
+        "target_id": {
+          "$ref": "shared.schema.json#/$defs/Id"
+        },
+        "kind": {
+          "type": "string",
+          "enum": ["absolute", "relative", "confidence", "interval"]
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "number"
+            }
+          ]
+        },
+        "unit": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 32
+        },
+        "lower": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "number"
+            }
+          ]
+        },
+        "upper": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "number"
+            }
+          ]
+        },
+        "knowledge_state": {
+          "$ref": "shared.schema.json#/$defs/KnowledgeState"
+        },
+        "source": {
+          "$ref": "shared.schema.json#/$defs/SourceReference"
+        }
+      }
+    },
+    "UncertaintyModel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "model_id",
+        "method",
+        "default_length_mm",
+        "confidence_level",
+        "entries"
+      ],
+      "properties": {
+        "model_id": {
+          "$ref": "shared.schema.json#/$defs/Id"
+        },
+        "method": {
+          "type": "string",
+          "enum": ["explicit_per_item", "global_plus_item", "unknown"]
+        },
+        "default_length_mm": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "number",
+              "minimum": 0
+            }
+          ]
+        },
+        "confidence_level": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 1
+            }
+          ]
+        },
+        "entries": {
+          "type": "array",
+          "maxItems": 4096,
+          "items": {
+            "$ref": "#/$defs/UncertaintyEntry"
+          }
+        }
+      }
+    }
+  }
+}
