@@ -10,12 +10,14 @@ Manual Trace must transfer multiple orthographic traces of one physical object t
 
 ## Decision
 
-Use a ZIP-based `.engrove-trace-project` container. The root contains `manifest.json` and `project.json`; traces and assets are separate entries. The manifest inventories every payload except itself with path, media type, semantic role, SHA-256, exact byte size, and role-specific identity.
+Use a ZIP-based `.engrove-trace-project` container. The root contains `manifest.json` and `project.json`; traces and assets are separate entries. The manifest inventories every payload except itself with path, media type, semantic role, SHA-256, exact byte size, and role-specific identity. `manifest.json` never appears in `manifest.files[]` and is never processed as an ordinary payload entry.
 
 The contract is exact and fail-closed:
 
+- every trace path is exactly `traces/<traceId>.json` across the manifest, `project.traceFiles[]`, and package entry;
 - trace inventory is bidirectional across manifest, project record, package entry, and trace document;
 - source-image, source-SVG, and sidecar inventory is bidirectional across manifest, project asset, package entry, and trace associations;
+- every project asset names at least one owning trace, and every named owner contains the matching reverse reference;
 - an optional readme is a manifest-only informational payload, has no trace or asset identity, and is not a project asset;
 - package-global and trace-local namespaces are explicit;
 - references resolve to exactly one entity in their documented scope;
@@ -59,6 +61,7 @@ Benefits:
 
 - no manifest trace or asset can be ignored because the project omits it;
 - no extra trace or asset package entry can be silently retained outside project inventory;
+- no asset can survive as a detached project payload without a reciprocal trace association;
 - readme behavior is explicit and identity-free;
 - station verdicts are invariant under manifest, project, and station-array permutations;
 - view placement cannot reference an unknown or trace-local origin datum;
@@ -110,7 +113,7 @@ Rejected because map overwrite, set deduplication, or array-order selection hide
 
 ### Infer view plane or identity from filenames
 
-Rejected because paths are storage locators, not geometric or referential identity.
+Rejected because paths are storage locators, not geometric or referential identity. Version 1 nevertheless derives each trace storage path deterministically from its declared `traceId`; it does not infer the identity from an arbitrary filename.
 
 ### Read Manual Trace editor state directly in Tonearm Profile Designer
 
