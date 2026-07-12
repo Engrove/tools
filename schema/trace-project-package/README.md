@@ -121,7 +121,7 @@ Manual Trace internal project
 
 ## Golden fixtures and tests
 
-Fixtures are deterministic virtual package images in `positive-fixtures.json` and `negative-fixtures.json` under `tools/manual-trace/test/trace-project-package/`. Each positive fixture contains a manifest and a map of exact package entries. JSON entry bytes are canonical two-space UTF-8 JSON with a final newline; text assets use their literal UTF-8 bytes; binary assets use canonical base64 fixture entries decoded before hashing. This representation tests integrity and reference rules without committing ZIP binaries.
+Fixtures are deterministic virtual package images in the `positive/` directory and `negative-fixtures.json` under `tools/manual-trace/test/trace-project-package/`. Each positive fixture contains a manifest and a map of exact package entries. JSON entry bytes are canonical two-space UTF-8 JSON with a final newline; text assets use their literal UTF-8 bytes; binary assets use canonical base64 fixture entries decoded before hashing. This representation tests integrity and reference rules without committing ZIP binaries.
 
 Run:
 
