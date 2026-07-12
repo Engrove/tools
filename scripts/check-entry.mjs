@@ -33,6 +33,7 @@ const registry = await loadRegistry(ROOT);
 async function checkGovernance() {
   const canonicalPath = "AI_VIBE_CODING_RULES.md";
   const workflowPath = "AI_VIBE_ORCHESTRATED_WORKFLOW.md";
+  const ciWorkflowPath = ".github/workflows/seo-integrity.yml";
   const skillPath = ".agents/skills/ai-vibe-coding/SKILL.md";
   const metadataPath = ".agents/skills/ai-vibe-coding/agents/openai.yaml";
   const agentBootstraps = [
@@ -113,6 +114,75 @@ async function checkGovernance() {
     requireContains(workflow, phrase, workflowPath);
   }
 
+  const ciWorkflow = await read(ciWorkflowPath);
+  requireContains(
+    ciWorkflow,
+    "  pull_request:\n    branches: [main]",
+    ciWorkflowPath,
+  );
+  requireContains(
+    ciWorkflow,
+    "  push:\n    branches: [main]",
+    ciWorkflowPath,
+  );
+  requireContains(
+    ciWorkflow,
+    [
+      "      - name: Repository sanitation",
+      "        run: |",
+      "          npm run clean",
+      "          npm run check:sanitation",
+    ].join("\n"),
+    ciWorkflowPath,
+  );
+
+  const ciLines = ciWorkflow.split(/\r?\n/).map((line) => line.trim());
+  requireValue(
+    ciLines.filter((line) => line === "npm run check:sanitation").length === 1,
+    `${ciWorkflowPath}: expected exactly one canonical sanitation command`,
+  );
+  for (const command of [
+    "npm run check",
+    "npm run build",
+    "npm run check:seo",
+    "npm run check:determinism",
+  ]) {
+    requireValue(
+      !ciLines.includes(command),
+      `${ciWorkflowPath}: fragmented workflow command is forbidden: ${command}`,
+    );
+  }
+  for (const stepName of [
+    "- name: Source governance",
+    "- name: Production build",
+    "- name: Generated SEO parity",
+    "- name: Deterministic build",
+  ]) {
+    requireValue(
+      !ciLines.includes(stepName),
+      `${ciWorkflowPath}: fragmented workflow step is forbidden: ${stepName}`,
+    );
+  }
+
+  const rootPackage = JSON.parse(await read("package.json"));
+  const sanitationCommands = String(
+    rootPackage.scripts?.["check:sanitation"] || "",
+  )
+    .split("&&")
+    .map((command) => command.trim());
+  const expectedSanitationCommands = [
+    "npm run check",
+    "npm run build",
+    "npm run check:tools",
+    "npm run check:seo",
+    "npm run check:determinism",
+  ];
+  requireValue(
+    JSON.stringify(sanitationCommands) ===
+      JSON.stringify(expectedSanitationCommands),
+    `package.json: check:sanitation must own the canonical repository gate`,
+  );
+
   const agents = await read("AGENTS.md");
   for (const phrase of [
     "MODE: `AI_VIBE_MANDATORY`",
@@ -171,6 +241,7 @@ if (mode === "source") {
     "schema/site.schema.json",
     "schema/tool.schema.json",
     "functions/_middleware.ts",
+    ".github/workflows/seo-integrity.yml",
     "public/_headers",
   ]) {
     requireValue(
