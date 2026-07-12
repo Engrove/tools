@@ -47,13 +47,6 @@ jobs:
         run: node --test --test-name-pattern='hashes and sizes' tools/manual-trace/test/trace-project-package/package-builder.test.mjs
       - name: Builder merged-contract validation
         run: node --test --test-name-pattern='contract validation' tools/manual-trace/test/trace-project-package/package-builder.test.mjs
-      - name: Upload validator diagnostics
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: package-validation-errors
-          path: package-validation-errors.json
-          if-no-files-found: ignore
       - name: Builder path safety
         run: node --test --test-name-pattern='path traversal|duplicate and normalized' tools/manual-trace/test/trace-project-package/package-builder.test.mjs
       - name: Builder package limits
