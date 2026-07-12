@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "tonearm-observation-package-v1/decision.schema.json",
+  "$defs": {
+    "OperatorAcceptance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "decision_id",
+        "status",
+        "scope",
+        "decided_by_agent_id",
+        "decided_at",
+        "notes",
+        "observation_ids"
+      ],
+      "properties": {
+        "decision_id": {
+          "$ref": "shared.schema.json#/$defs/Id"
+        },
+        "status": {
+          "$ref": "shared.schema.json#/$defs/AcceptanceStatus"
+        },
+        "scope": {
+          "$ref": "shared.schema.json#/$defs/AcceptanceScope"
+        },
+        "decided_by_agent_id": {
+          "$ref": "shared.schema.json#/$defs/Id"
+        },
+        "decided_at": {
+          "$ref": "shared.schema.json#/$defs/DateTime"
+        },
+        "notes": {
+          "$ref": "shared.schema.json#/$defs/ShortText"
+        },
+        "observation_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "shared.schema.json#/$defs/Id"
+          },
+          "maxItems": 4096
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "scope": {
+                "const": "observation_subset"
+              }
+            },
+            "required": ["scope"]
+          },
+          "then": {
+            "properties": {
+              "observation_ids": {
+                "minItems": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "scope": {
+                "const": "package"
+              }
+            },
+            "required": ["scope"]
+          },
+          "then": {
+            "properties": {
+              "observation_ids": {
+                "maxItems": 0
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}
