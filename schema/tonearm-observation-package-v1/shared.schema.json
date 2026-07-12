@@ -94,8 +94,12 @@
       "additionalProperties": false,
       "required": ["x", "y"],
       "properties": {
-        "x": { "type": "number" },
-        "y": { "type": "number" }
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        }
       }
     },
     "Point3": {
@@ -103,17 +107,29 @@
       "additionalProperties": false,
       "required": ["x", "y", "z"],
       "properties": {
-        "x": { "type": "number" },
-        "y": { "type": "number" },
-        "z": { "type": "number" }
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "z": {
+          "type": "number"
+        }
       }
     },
     "Vector3": {
       "type": "array",
       "prefixItems": [
-        { "type": "number" },
-        { "type": "number" },
-        { "type": "number" }
+        {
+          "type": "number"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "number"
+        }
       ],
       "minItems": 3,
       "maxItems": 3
@@ -128,16 +144,28 @@
         "note"
       ],
       "properties": {
-        "provenance_entity_id": { "$ref": "#/$defs/Id" },
-        "provenance_activity_id": { "$ref": "#/$defs/NullableId" },
-        "provenance_agent_id": { "$ref": "#/$defs/NullableId" },
-        "note": { "$ref": "#/$defs/ShortText" }
+        "provenance_entity_id": {
+          "$ref": "#/$defs/Id"
+        },
+        "provenance_activity_id": {
+          "$ref": "#/$defs/NullableId"
+        },
+        "provenance_agent_id": {
+          "$ref": "#/$defs/NullableId"
+        },
+        "note": {
+          "$ref": "#/$defs/ShortText"
+        }
       }
     },
     "NullableSourceReference": {
       "anyOf": [
-        { "type": "null" },
-        { "$ref": "#/$defs/SourceReference" }
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/SourceReference"
+        }
       ]
     },
     "QuantifiedValue": {
@@ -151,15 +179,23 @@
         "uncertainty_id"
       ],
       "properties": {
-        "value": { "type": "number" },
+        "value": {
+          "type": "number"
+        },
         "unit": {
           "type": "string",
           "minLength": 1,
           "maxLength": 32
         },
-        "knowledge_state": { "$ref": "#/$defs/KnowledgeState" },
-        "source": { "$ref": "#/$defs/SourceReference" },
-        "uncertainty_id": { "$ref": "#/$defs/NullableId" }
+        "knowledge_state": {
+          "$ref": "#/$defs/KnowledgeState"
+        },
+        "source": {
+          "$ref": "#/$defs/SourceReference"
+        },
+        "uncertainty_id": {
+          "$ref": "#/$defs/NullableId"
+        }
       }
     },
     "EnvelopeGeometryRole": {
@@ -240,15 +276,33 @@
     "Matrix3x3": {
       "type": "array",
       "prefixItems": [
-        { "type": "number" },
-        { "type": "number" },
-        { "type": "number" },
-        { "type": "number" },
-        { "type": "number" },
-        { "type": "number" },
-        { "type": "number" },
-        { "type": "number" },
-        { "type": "number" }
+        {
+          "type": "number"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "number"
+        }
       ],
       "minItems": 9,
       "maxItems": 9
