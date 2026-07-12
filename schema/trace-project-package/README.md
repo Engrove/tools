@@ -2,131 +2,121 @@
 
 ## Status and scope
 
-This directory owns the interchange contract for the future `.engrove-trace-project` container. Version 1 is a single-object, multi-view contract. It does not implement Manual Trace export, Tonearm Profile Designer import, ZIP parsing, or 3D construction.
+This directory owns the interchange contract for the future `.engrove-trace-project` container. Version 1 is a single-object, multi-view contract. It does not implement Manual Trace export, Tonearm Profile Designer import, ZIP parsing, browser package handling, session persistence, or 3D construction.
 
-The canonical files are:
+Canonical files:
 
-- `manifest.schema.json` — package inventory, integrity metadata, media types, and semantic roles.
+- `manifest.schema.json` — package inventory, integrity metadata, semantic roles, and role-specific identity requirements.
 - `project.schema.json` — shared object, engineering frame, trace inventory, assets, provenance, and field disposition.
-- `trace.schema.json` — one orthographic view, calibration, view-to-engineering mapping, geometry, stations, datums, relations, assets, and provenance.
-- `field-matrix.json` — exact machine-readable disposition for every property declared by the three schemas.
-- `ADR-0001-container-format.md` — container decision and rejected alternatives.
+- `trace.schema.json` — one orthographic view, calibration, view mapping, geometry, stations, datums, relations, assets, and provenance.
+- `field-matrix.json` — exact disposition for every schema property.
+- `ADR-0001-container-format.md` — container and identity-resolution decisions.
 
-## Container layout
+## Container and manifest
+
+The future file is a ZIP-based `.engrove-trace-project` container with `manifest.json`, `project.json`, `traces/`, `assets/`, and an optional readme. The extension is a container marker, not permission to accept arbitrary ZIP content.
+
+`manifest.json` declares every payload entry except itself. Each entry has a normalized relative POSIX path, allow-listed media type, semantic role, lowercase SHA-256, and exact byte size. A `trace` entry requires `traceId`; a `source_image`, `source_svg`, or `sidecar` entry requires `assetId`. The manifest contains exactly one `project` entry matching `projectFile`. Unsafe paths, duplicate paths, undeclared or missing entries, digest/size mismatch, executable content, missing role identity, and identity disagreement are blocking.
+
+## Identity namespaces and exact resolution
+
+Validation retains every declaration for each key and resolves against all candidates. It never silently overwrites a declaration in a `Map`, deduplicates conflicts with a `Set`, selects the first match, or derives cross-trace identity from equal strings.
+
+### Package-global identities
+
+These are unique throughout one package:
+
+- `projectId`;
+- `objectId`;
+- `traceId`;
+- `assetId`;
+- project engineering-frame `datumId`;
+- project engineering-frame `referenceId`.
+
+Repeated package-global identities, including collisions between entity kinds, are blocking.
+
+### Trace-local identities
+
+These are unique inside their owning trace:
+
+- `contourId`;
+- trace datum `datumId`;
+- `relationId`.
+
+A local string may be reused in another trace only because each occurrence remains in its own trace-local namespace. Bare references never search another trace. Allowed local targets are local contours, stations, trace datums, relations where the field permits them, and explicitly allowed project datums. Zero or multiple matches block with stable unknown or ambiguous diagnostics.
+
+### Station identity
+
+A station names a physical position on the common object. `stationId` is unique within one trace. The same ID may occur in multiple traces only when it represents the same physical station. Repeated occurrences must agree, within the maximum relevant calibration or binding tolerance, on engineering-axis identity, engineering position, station usage, and geometric disposition. Conflicts emit `STATION_ID_CONFLICT`.
+
+A section binding containing only `stationId` therefore resolves to one non-conflicting canonical station identity. No occurrence is chosen by array order.
+
+## Trace identity chain
+
+Every trace must satisfy:
 
 ```text
-<project>.engrove-trace-project
-├── manifest.json
-├── project.json
-├── traces/
-│   └── <trace-id>.json
-├── assets/
-│   ├── images/
-│   ├── svg/
-│   └── sidecars/
-└── README.txt                 optional
+manifest trace entry
+    <-> project.traceFiles[] record
+    <-> package entry path
+    <-> trace document
 ```
 
-The extension is a ZIP container marker, not a MIME-level promise that arbitrary ZIP content is accepted. A future reader must reject unsafe or undeclared entries before parsing geometry.
+The manifest role is `trace`; manifest and project paths agree; manifest `traceId`, project `traceId`, and document `traceId` agree; project and document `objectId` equal the shared object; project `geometricUse` equals the document view disposition; and each path and trace identity resolves exactly once. Alias paths are not supported in v1.
 
-## Manifest rules
+## Asset identity chain
 
-`manifest.json` is the package trust boundary. It declares every payload file except itself. Self-hashing the manifest would create a recursive digest and is therefore intentionally excluded. Every declared payload entry has:
+Every project asset must satisfy:
 
-- a normalized relative POSIX path;
-- a media type from the v1 allow-list;
-- a semantic role;
-- a lowercase SHA-256 digest;
-- an exact byte size;
-- optional trace or asset identity.
+```text
+manifest asset entry
+    <-> project.assets[] record
+    <-> package entry
+    <-> associated traceIds
+```
 
-The manifest must contain exactly one `project` entry whose path equals `projectFile`. Duplicate paths, absolute paths, backslashes, `..`, URL paths, undeclared payload entries, missing entries, digest mismatch, size mismatch, and executable content are blocking errors.
+`assetId` and asset path are unique. Manifest and project identity, role, path, media type, digest, and size agree. Every associated trace ID resolves exactly once. Trace-level source image, SVG, sidecar, and contour SVG-source asset IDs resolve to exactly one compatible project asset, and the asset must include the owning trace association. Unknown, contradictory, or ambiguous associations block.
 
-## Shared object and engineering frame
+Imported SVG remains hostile content. Integrity does not make SVG safe; a future implementation must reject or sanitize scripts, event handlers, external links, active content, non-fragment URLs, and unsafe XML/HTML constructs before rendering.
 
-`project.json` owns one `object.objectId`. Every `traceFiles[]` record and every trace document must use that exact identifier. Multi-object projects are not supported by package version 1.
+## Engineering frame and project references
 
-The engineering frame is right-handed and millimetre-based. It declares:
+`project.json` owns one object. Its engineering frame is right-handed and millimetre-based. The origin datum and both object-direction endpoints resolve to unique project datums; direction endpoints are distinct. Project reference IDs are unique identities, not implicit reference targets.
 
-- a 3D origin tied to a stable datum;
-- X, Y, and Z meanings and unit vectors;
-- positive object direction;
-- object-level datums and semantic references.
+Project reference `sourceId` and `targetId` may target the package project, object, trace, asset, or project datum identities. Each target resolves exactly once. Unknown or ambiguous targets are blocking.
 
-For the tonearm use case the intended convention is X along the arm length, Y lateral, and Z vertical. A trace view is never inferred from a file name.
+## Trace geometry and references
 
-## Trace view and placement
+Each trace explicitly declares orthographic view type, geometry disposition, complete view frame, and optional section binding. A front or section trace used for geometry binds to `stationId`, `xMm`, or both. An unbound front/section view can only remain provenance and emits `UNPLACED_VIEW_PRESERVED`.
 
-Each trace declares `viewType`, orthographic projection, geometry disposition, a complete `viewFrame`, and an optional `sectionBinding`. `viewFrame` maps image-plane U and V plus the plane normal to three distinct engineering axes.
+A geometrically used trace has exactly one primary closed outer contour, and `geometry.primaryContourId` resolves exactly once locally. Relations and `references[]` use the documented trace-local scope. Unknown or ambiguous values are not silently converted to provenance.
 
-A `front` or `section` trace marked `used_for_geometry` must bind to `stationId`, `xMm`, or both. An unbound front/section trace remains valid only as `preserved_as_provenance`; validation emits `UNPLACED_VIEW_PRESERVED` and no geometric placement claim is allowed.
-
-## Geometry
-
-Contours have stable identity, operator-facing metadata, explicit geometry, open/closed state, semantic role, feature kind, references, optional SVG source binding, and primary/secondary status. A geometrically used trace must have exactly one primary closed `outer_contour`, and `geometry.primaryContourId` must select it.
-
-Stations distinguish longitudinal loft stations, transverse helpers, section bindings, datums, and annotations. Their image-plane definition and engineering orientation must be mappable through the trace view frame.
-
-## Calibration
-
-Calibration preserves the canonical `unitPerPx`, the source pixel and real lengths, reference measurement identity, method, provenance, and optional tolerance/uncertainty. The contract validator enforces:
+Calibration enforces:
 
 ```text
 unitPerPx == sourceRealLength / sourcePixelLength
 ```
 
-within the declared tolerance or a strict numerical fallback. Contradictory values are blocking even though JSON Schema cannot express cross-field arithmetic by itself; `trace.schema.json` carries the normative `x-consistencyRule` annotation.
-
-## Assets and untrusted content
-
-Canonical package storage uses separate files, never raw `dataUrl` values. Project assets repeat path, media type, digest, size, role, trace association, and optional original file name. Every asset must have a matching manifest entry and every trace asset ID must resolve through the project asset inventory.
-
-A future implementation must treat imported SVG as hostile input. Scripts, event handlers, external links, embedded active content, non-fragment `url(...)`, and unsafe XML/HTML constructs must be rejected or sanitized before rendering. Network URLs are not valid mandatory package assets.
+within declared tolerance or a strict numerical fallback.
 
 ## Provenance and field disposition
 
-Editor state does not drive 3D geometry. Provenance preserves producer/version, original schema, source file names, image dimensions, SVG view box and binding, descriptions, semantic names, AI hints, references, timestamps, and source digest.
+Editor state does not drive 3D geometry. Provenance preserves producer/version, original schema, source names, image dimensions, SVG binding, descriptions, semantic names, AI hints, references, timestamps, and digest.
 
-Every known source field is classified as exactly one of:
-
-- `used_for_geometry`
-- `preserved_as_provenance`
-- `intentionally_ignored`
-- `unsupported_warning`
-- `unsupported_error`
-
-The committed field matrix gives every schema property a default contract disposition. Each project also carries runtime `fieldDisposition[]` records that cover every source path declared by project and trace provenance. Warning dispositions emit diagnostics without invalidating the package; error dispositions block it.
+Every known source field is classified exactly once as `used_for_geometry`, `preserved_as_provenance`, `intentionally_ignored`, `unsupported_warning`, or `unsupported_error`. The field matrix covers every schema property, and project `fieldDisposition[]` covers every declared source path.
 
 ## Versioning and compatibility
 
-`packageVersion` and both model `schemaVersion` values use semantic versioning. Version 1 readers accept major version 1 only and fail closed on unknown majors. Minor/patch evolution must remain backward compatible or be handled by an explicit adapter.
+Version 1 readers accept package major version 1 only and fail closed on unknown majors. This contract is not the Manual Trace editor-session schema or a legacy `engrove_manual_trace_v16` document. Legacy adaptation, export, import, normalized multi-view construction, and 3D generation are later implementation slices.
 
-The new contract is not `engrove_manual_trace_v16`, `engrove_trace_project_v2`, or the Manual Trace editor session schema. Legacy documents remain separate inputs:
+## Tests
 
-```text
-engrove_manual_trace_v16 JSON
-    -> legacy adapter
-    -> current 3D profile construction
-```
-
-The future package path is:
-
-```text
-Manual Trace internal project
-    -> Trace Project Package v1
-    -> package and semantic validation
-    -> normalized multi-view object
-    -> 3D profile construction
-```
-
-## Golden fixtures and tests
-
-Fixtures are deterministic virtual package images in the `positive/` directory and `negative-fixtures.json` under `tools/manual-trace/test/trace-project-package/`. Each positive fixture contains a manifest and a map of exact package entries. JSON entry bytes are canonical two-space UTF-8 JSON with a final newline; text assets use their literal UTF-8 bytes; binary assets use canonical base64 fixture entries decoded before hashing. This representation tests integrity and reference rules without committing ZIP binaries.
+Fixtures are deterministic virtual package images. JSON bytes are canonical two-space UTF-8 JSON with a final newline; text uses literal UTF-8; binary fixtures use canonical base64 decoded before hashing. This tests schema, integrity, identity, reference, and placement rules without claiming ZIP runtime behavior.
 
 Run:
 
 ```bash
-node --test tools/manual-trace/test/trace-project-package/trace-project-package-contract.test.mjs
+node --test tools/manual-trace/test/trace-project-package/*.test.mjs
 ```
 
-Negative fixtures are deterministic JSON Patch descriptors over named positive baselines. The suite accepts positive fixtures, rejects negative fixtures by error class, verifies digest/size integrity, exercises warning emission, checks schema-to-field-matrix exact parity, and contains both allow and block cases so an always-accepting or always-blocking validator cannot pass.
+The suite retains positive and negative geometry cases, malformed-record guards, field-matrix exact parity, hidden Unicode scanning, and genuine accept/block paths. Identity tests add matched positive and negative cases for trace and asset chains, project datums and references, trace-local namespaces, station consistency, and the ten EIC regression probes.
