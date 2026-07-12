@@ -23,6 +23,7 @@ const tests = [
   path.join('test', 'manual-trace-adapter.test.cjs'),
   path.join('test', 'manual-trace-freeform-integration.test.cjs'),
   path.join('test', 'empty-session-contract.test.cjs'),
+  path.join('test', 'observation-package-contract.test.cjs'),
   ...readdirSync(path.join(root, 'tools'))
     .filter(name => name.endsWith('.js') && !unavailable.has(name))
     .sort()
@@ -42,6 +43,7 @@ const summary = {
   executed: tests.length,
   passed: tests.length - failed.length,
   failed: failed.length,
+  executedTests: tests,
   unavailable: [
     { test: 'tools/fas18_ai_vibe_3d_manufacturing_acceptance.js', reason: 'Upstream ZIP omits tonearm_session_2026-07-05T18-53-03.json required by the harness.' },
     { test: 'tools/td051b_schema_reference_cleanup_acceptance.js', reason: 'Harness requires the external Python jsonschema package; equivalent runtime-schema guards remain in the portable suite.' },
