@@ -139,6 +139,32 @@ const ENUMS = Object.freeze({
 const ID_PATTERN = /^[A-Za-z][A-Za-z0-9._:-]{0,127}$/;
 const DATE_TIME_PATTERN =
   /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/;
+const VALIDATION_ERROR_CODE_PATTERN = /^[A-Z][A-Z0-9_]{2,127}$/;
+const VALIDATION_STATUSES = Object.freeze([
+  "not_validated",
+  "valid",
+  "invalid",
+]);
+const UNCERTAINTY_METHODS = Object.freeze([
+  "explicit_per_item",
+  "global_plus_item",
+  "unknown",
+]);
+const UNCERTAINTY_TARGET_TYPES = Object.freeze([
+  "view",
+  "landmark",
+  "observation",
+  "station",
+  "feature",
+  "constraint",
+  "measurement",
+]);
+const UNCERTAINTY_KINDS = Object.freeze([
+  "absolute",
+  "relative",
+  "confidence",
+  "interval",
+]);
 
 module.exports = Object.freeze({
   SCHEMA,
@@ -150,4 +176,9 @@ module.exports = Object.freeze({
   ENUMS,
   ID_PATTERN,
   DATE_TIME_PATTERN,
+  VALIDATION_ERROR_CODE_PATTERN,
+  VALIDATION_STATUSES,
+  UNCERTAINTY_METHODS,
+  UNCERTAINTY_TARGET_TYPES,
+  UNCERTAINTY_KINDS,
 });
