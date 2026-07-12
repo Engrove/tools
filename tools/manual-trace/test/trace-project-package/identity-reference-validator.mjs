@@ -140,6 +140,15 @@ function validateEngineeringFrame(frame, datums, errors) {
 function inventoryMetadataMatches(manifestFile, asset) {
   return manifestFile.role === asset.role && manifestFile.mediaType === asset.mediaType && manifestFile.sha256 === asset.sha256 && manifestFile.sizeBytes === asset.sizeBytes;
 }
+function traceAssetReferences(trace) {
+  const ids = new Set();
+  const add = id => { if (typeof id === 'string' && id) ids.add(id); };
+  add(trace?.assets?.sourceImageAssetId);
+  add(trace?.assets?.sourceSvgAssetId);
+  if (Array.isArray(trace?.assets?.sidecarAssetIds)) trace.assets.sidecarAssetIds.forEach(add);
+  if (Array.isArray(trace?.geometry?.contours)) trace.geometry.contours.forEach(contour => add(contour?.sourceSvgElement?.assetId));
+  return ids;
+}
 
 export function validateIdentityReferences(pkg) {
   const errors = [];
@@ -186,6 +195,8 @@ export function validateIdentityReferences(pkg) {
   const resolvedTraces = [];
   for (const item of traces) {
     const trace = item.record;
+    const expectedPath = `traces/${trace.traceId}.json`;
+    if (trace.path !== expectedPath) errors.push(err('TRACE_PATH_NONCANONICAL', `trace ${trace.traceId} must use ${expectedPath}`, `${item.path}.path`));
     const mf = resolve(manifestTracePaths, trace.path, `${item.path}.path`, 'manifest trace path', 'TRACE_MANIFEST_ENTRY_MISSING', 'TRACE_INVENTORY_MISMATCH', errors);
     if (mf && !mf.record.traceId) errors.push(err('MANIFEST_TRACE_ID_MISSING', `manifest trace ${trace.path} lacks traceId`, `${mf.path}.traceId`));
     else if (mf && mf.record.traceId !== trace.traceId) errors.push(err('MANIFEST_TRACE_ID_MISMATCH', `manifest traceId ${mf.record.traceId} differs from ${trace.traceId}`, `${mf.path}.traceId`));
@@ -197,6 +208,10 @@ export function validateIdentityReferences(pkg) {
     resolvedTraces.push({ item, document, local: null });
   }
   for (const mf of manifestTraces) {
+    if (typeof mf.record.traceId === 'string' && mf.record.traceId) {
+      const expectedPath = `traces/${mf.record.traceId}.json`;
+      if (mf.record.path !== expectedPath) errors.push(err('TRACE_PATH_NONCANONICAL', `manifest trace ${mf.record.traceId} must use ${expectedPath}`, `${mf.path}.path`));
+    }
     const claims = tracePaths.get(mf.record.path) || [];
     if (!claims.length) errors.push(err('ORPHAN_MANIFEST_TRACE', `manifest trace ${mf.record.path} has no project.traceFiles[] record`, mf.path));
     else if (claims.length !== 1) errors.push(err('TRACE_INVENTORY_MISMATCH', `manifest trace ${mf.record.path} is claimed ${claims.length} times`, mf.path));
@@ -229,7 +244,15 @@ export function validateIdentityReferences(pkg) {
       if (!inventoryMetadataMatches(mf, asset)) errors.push(err('ASSET_INVENTORY_MISMATCH', `asset ${asset.assetId} metadata differs from manifest`, item.path));
       if (mf.traceId && !(asset.traceIds || []).includes(mf.traceId)) errors.push(err('ASSET_TRACE_ASSOCIATION_MISMATCH', `manifest traceId ${mf.traceId} contradicts project asset`, `${sameRole[0].path}.traceId`));
     }
-    (asset.traceIds || []).forEach((traceId, i) => resolve(traceIds, traceId, `${item.path}.traceIds[${i}]`, 'asset traceId', 'ASSET_TRACE_UNKNOWN', 'ASSET_REFERENCE_AMBIGUOUS', errors));
+    const owners = Array.isArray(asset.traceIds) ? asset.traceIds : [];
+    if (!owners.length) errors.push(err('ASSET_TRACE_OWNER_REQUIRED', `asset ${asset.assetId} must name at least one owning trace`, `${item.path}.traceIds`));
+    if (new Set(owners).size !== owners.length) errors.push(err('ASSET_TRACE_ASSOCIATION_MISMATCH', `asset ${asset.assetId} contains duplicate trace owners`, `${item.path}.traceIds`));
+    owners.forEach((traceId, i) => {
+      const owner = resolve(traceIds, traceId, `${item.path}.traceIds[${i}]`, 'asset traceId', 'ASSET_TRACE_UNKNOWN', 'ASSET_REFERENCE_AMBIGUOUS', errors);
+      if (!owner) return;
+      const ownerTrace = resolvedTraces.find(candidate => candidate.item === owner);
+      if (ownerTrace && !traceAssetReferences(ownerTrace.document).has(asset.assetId)) errors.push(err('ASSET_TRACE_ASSOCIATION_MISMATCH', `asset ${asset.assetId} names trace ${traceId}, but that trace has no reverse reference`, `${item.path}.traceIds[${i}]`));
+    });
   }
   for (const mf of manifestAssets) {
     const claims = assetPaths.get(mf.record.path) || [];
