@@ -42,7 +42,9 @@ The test schema loader explicitly inventories and registers every file in Ajv 8 
 
 The validator facade delegates to a thin orchestrator.
 
-Immutable vocabularies, validation context, primitive checks, object/frame/view/camera/geometry/observation/relations/provenance/decision validators, and cross-reference rules are separate modules.
+Immutable vocabularies, validation context, primitive checks, object/frame/view/camera/geometry/observation/relations/provenance/decision validators, validation-state validation, and cross-reference rules are separate modules.
+
+The uncertainty validator checks complete model and entry structure, numeric ranges, knowledge state, provenance source, duplicate identities, and typed target resolution.
 
 The semantic validator:
 
@@ -62,7 +64,9 @@ The semantic validator:
 
 `tools/tonearm-profile-designer/test/observation-package-contract.test.cjs` is a thin deterministic runner.
 
-Fixtures, assertions, schema loading, parity, frame, camera/view, geometry, references, decisions, determinism, and module-boundary tests are separate modules.
+Fixtures, assertions, schema loading, parity, frame, camera/view, geometry, references, validation state, uncertainty, decisions, semantic dispatch, determinism, and module-boundary tests are separate modules.
+
+The contract runner is registered explicitly in the Tonearm Profile Designer ordinary `npm test` chain, and the test summary exposes every executed relative test path.
 
 The module-boundary test blocks any contract module over 500 physical lines, over 16 000 UTF-8 bytes, or containing an artificial line over 240 characters. The generated dependency lockfile is outside this source-module rule.
 
