@@ -1,7 +1,7 @@
 <!doctype html>
 <!--
 AI-CODING NOTE:
-Responsibility: Desktop browser-local manual tracing, SVG detection, geometry metadata, project persistence, and JSON/SVG export.
+Responsibility: Desktop browser-local manual tracing, SVG detection, geometry metadata, project persistence, and JSON/SVG/package export.
 Inputs: Operator-selected images, sanitized SVG, trace JSON, Engrove project packages, pointer/keyboard/form actions.
 Outputs: Browser downloads and clipboard data only; no application backend storage.
 Safe edits: Preserve all stable IDs, geometry schemas, project schema, SVG/JSON bindings, undo semantics, and desktop panel behavior.
@@ -42,6 +42,10 @@ Verification: JavaScript syntax, DOM/action parity, Chromium workflow smoke test
     <div class="menu-pop">
      <button id="svg">Download SVG</button>
      <button id="copy">Copy JSON</button>
+     <div class="small">Trace project package</div>
+     <div class="rowline"><label>View <select id="packageViewType"><option value="side">side</option><option value="top">top</option><option value="front">front</option></select></label><button id="storePackageView">Store current view</button></div>
+     <div class="small" id="packageViewStatus">No package views stored</div>
+     <button id="exportTraceProject" class="good">Export trace project package</button>
     </div>
    </details>
    <details class="menu">
@@ -59,134 +63,48 @@ Verification: JavaScript syntax, DOM/action parity, Chromium workflow smoke test
    <button id="sideToggle">Inspector</button>
   </div>
  </header>
-
  <div id="main">
   <aside id="toolRail" aria-label="Tools">
    <div id="tools">
-    <details class="tool-group" open>
-     <summary>Navigate</summary>
-     <div class="tool-buttons">
-      <button data-t="select" class="on" title="Select and edit objects">Select</button>
-      <button data-t="pan" title="Pan canvas">Pan</button>
-     </div>
-    </details>
-    <details class="tool-group" open>
-     <summary>Trace</summary>
-     <div class="tool-buttons">
-      <button data-t="tracepick" title="Point at an SVG surface">Pick SVG</button>
-      <button data-t="nodeadd" title="Add a node to selected trace">Add node</button>
-      <button data-t="nodedelete" title="Delete a node from selected trace">Delete node</button>
-     </div>
-    </details>
-    <details class="tool-group">
-     <summary>Geometry</summary>
-     <div class="tool-buttons">
-      <button data-t="origin">Origin</button>
-      <button data-t="station">Station</button>
-      <button data-t="measure">Measure</button>
-      <button data-t="line">Line</button>
-      <button data-t="pen">Bezier</button>
-      <button data-t="poly">Polyline</button>
-     </div>
-    </details>
-    <details class="tool-group">
-     <summary>Areas</summary>
-     <div class="tool-buttons">
-      <button data-t="zone">Zone</button>
-      <button data-t="rect">Rect</button>
-      <button data-t="circle">Circle</button>
-      <button data-t="mask">Ignore</button>
-     </div>
-    </details>
+    <details class="tool-group" open><summary>Navigate</summary><div class="tool-buttons"><button data-t="select" class="on" title="Select and edit objects">Select</button><button data-t="pan" title="Pan canvas">Pan</button></div></details>
+    <details class="tool-group" open><summary>Trace</summary><div class="tool-buttons"><button data-t="tracepick" title="Point at an SVG surface">Pick SVG</button><button data-t="nodeadd" title="Add a node to selected trace">Add node</button><button data-t="nodedelete" title="Delete a node from selected trace">Delete node</button></div></details>
+    <details class="tool-group"><summary>Geometry</summary><div class="tool-buttons"><button data-t="origin">Origin</button><button data-t="station">Station</button><button data-t="measure">Measure</button><button data-t="line">Line</button><button data-t="pen">Bezier</button><button data-t="poly">Polyline</button></div></details>
+    <details class="tool-group"><summary>Areas</summary><div class="tool-buttons"><button data-t="zone">Zone</button><button data-t="rect">Rect</button><button data-t="circle">Circle</button><button data-t="mask">Ignore</button></div></details>
    </div>
   </aside>
   <div id="leftResizer" class="panel-resizer" role="separator" aria-label="Resize tool panel" aria-orientation="vertical" tabindex="0" title="Drag to resize tools. Double-click to reset."></div>
-
   <section id="workArea">
-   <div id="contextBar">
-    <span class="context-label">Current object</span>
-    <button id="finish">End tool</button>
-    <button id="close">Close path</button>
-    <button id="smooth">Smooth</button>
-    <button id="smartSimplify">Simplify</button>
-    <button id="reverseShape">Reverse</button>
-    <button id="stations">Add stations</button>
-    <button id="del" class="warn danger">Delete</button>
-   </div>
+   <div id="contextBar"><span class="context-label">Current object</span><button id="finish">End tool</button><button id="close">Close path</button><button id="smooth">Smooth</button><button id="smartSimplify">Simplify</button><button id="reverseShape">Reverse</button><button id="stations">Add stations</button><button id="del" class="warn danger">Delete</button></div>
    <div id="stage"><canvas id="cv"></canvas><div id="drop">Drop image, SVG, JSON or Engrove project here</div><div id="hint"></div></div>
   </section>
   <div id="rightResizer" class="panel-resizer" role="separator" aria-label="Resize inspector" aria-orientation="vertical" tabindex="0" title="Drag to resize inspector. Double-click to reset."></div>
-
   <aside id="side" aria-label="Inspector">
-   <div id="inspectorTabs">
-    <button class="on" data-inspector-tab="trace">Trace</button>
-    <button data-inspector-tab="objects">Objects</button>
-    <button data-inspector-tab="properties">Properties</button>
-    <button data-inspector-tab="json">JSON</button>
-   </div>
+   <div id="inspectorTabs"><button class="on" data-inspector-tab="trace">Trace</button><button data-inspector-tab="objects">Objects</button><button data-inspector-tab="properties">Properties</button><button data-inspector-tab="json">JSON</button></div>
    <div id="inspectorBody">
     <section id="panelTrace" class="inspector-panel active">
      <div id="autoTrace">
-      <div class="trace-lead">
-       <b>SVG Auto Trace</b>
-       <div class="traceStatus" id="svgTraceStatus">Load an SVG with clear filled or stroked objects.</div>
-       <button id="svgChoose" class="primary-action">Open / detect SVG</button>
-       <button id="svgTraceIncluded">Create trace from included objects</button>
-      </div>
+      <div class="trace-lead"><b>SVG Auto Trace</b><div class="traceStatus" id="svgTraceStatus">Load an SVG with clear filled or stroked objects.</div><button id="svgChoose" class="primary-action">Open / detect SVG</button><button id="svgTraceIncluded">Create trace from included objects</button></div>
       <div class="threecol"><button id="svgTraceActive">Trace active</button><button id="svgIncludeAll">Include all</button><button id="svgIgnoreAll">Ignore all</button></div>
       <div class="row"><label>Detect</label><select id="svgDetectMode"><option value="filled">filled surfaces</option><option value="stroked">stroked objects</option><option value="all">all geometry</option></select></div>
       <div class="row"><label>Output</label><select id="svgOutputType"><option value="poly">editable polyline</option><option value="path">smooth Bezier path</option></select></div>
-      <details>
-       <summary class="small">Advanced trace settings</summary>
-       <div class="row"><label>Sample px</label><input id="svgSampleStep" type="number" min=".25" max="100" step=".25" value="2.5"></div>
-       <div class="row"><label>Simplify px</label><input id="svgSimplifyTol" type="number" min="0" max="100" step=".1" value="1.5"></div>
-       <div class="row"><label>Min area px²</label><input id="svgMinArea" type="number" min="0" step="1" value="4"></div>
-      </details>
-      <div class="twocol"><label><input id="svgShowCandidates" type="checkbox" checked> candidate overlay</label><button id="svgRedetect">Re-detect</button></div>
-      <div id="svgCandidateList"></div>
-      <div class="twocol"><button id="svgClearCandidates" class="warn">Clear</button><button id="svgFocusActive">Focus active</button></div>
-      <div class="mini">Use Pick SVG to include a surface. Alt-click ignores it. Edit the generated contour with Add node, Delete node and Simplify.</div>
+      <details><summary class="small">Advanced trace settings</summary><div class="row"><label>Sample px</label><input id="svgSampleStep" type="number" min=".25" max="100" step=".25" value="2.5"></div><div class="row"><label>Simplify px</label><input id="svgSimplifyTol" type="number" min="0" max="100" step=".1" value="1.5"></div><div class="row"><label>Min area px²</label><input id="svgMinArea" type="number" min="0" step="1" value="4"></div></details>
+      <div class="twocol"><label><input id="svgShowCandidates" type="checkbox" checked> candidate overlay</label><button id="svgRedetect">Re-detect</button></div><div id="svgCandidateList"></div><div class="twocol"><button id="svgClearCandidates" class="warn">Clear</button><button id="svgFocusActive">Focus active</button></div><div class="mini">Use Pick SVG to include a surface. Alt-click ignores it. Edit the generated contour with Add node, Delete node and Simplify.</div>
      </div>
     </section>
-
-    <section id="panelObjects" class="inspector-panel">
-     <div id="list"></div>
-    </section>
-
+    <section id="panelObjects" class="inspector-panel"><div id="list"></div></section>
     <section id="panelProperties" class="inspector-panel">
-     <div id="props">
-      <b>Selected object</b>
-      <div class="mini" id="propSel">No selected object</div>
-      <div class="row"><label>Name</label><input id="propName" placeholder="system_default_name"></div>
-      <div class="row"><label>Role</label><input id="propRole" placeholder="trace / datum / station / mask / measure"></div>
-      <div class="row"><label>Kind</label><select id="propKind">
-       <option value="">unspecified</option><option value="outer_contour">outer_contour</option><option value="top_edge">top_edge</option><option value="bottom_edge">bottom_edge</option><option value="centerline">centerline</option><option value="baseline">baseline</option><option value="datum">datum</option><option value="origin">origin</option><option value="station">station</option><option value="measurement">measurement</option><option value="ignore_zone">ignore_zone</option><option value="occlusion_zone">occlusion_zone</option><option value="semantic_zone">semantic_zone</option><option value="surface_zone">surface_zone</option><option value="analysis_zone">analysis_zone</option><option value="slot">slot</option><option value="other">other</option>
-      </select></div>
-      <div class="row description-row"><label>Description</label><textarea id="propDesc" placeholder="Describe what this object represents for downstream AI/CAD."></textarea></div>
-      <div class="twocol"><button id="propApply">Apply metadata</button><button id="propOrigin">Origin metadata</button></div>
-      <details>
-       <summary class="small">Reference relations</summary>
-       <div class="twocol"><select id="refType">
-        <option value="parallel_to">parallel_to</option><option value="perpendicular_to">perpendicular_to</option><option value="center_of">center_of</option><option value="centerline_of">centerline_of</option><option value="angle_to">angle_to</option><option value="tangent_to">tangent_to</option><option value="coincident_with">coincident_with</option><option value="aligned_with">aligned_with</option><option value="contains">contains</option><option value="overlaps">overlaps</option><option value="bounds">bounds</option><option value="describes_area">describes_area</option><option value="excluded_from">excluded_from</option><option value="offset_from">offset_from</option><option value="derived_from">derived_from</option><option value="origin_at">origin_at</option><option value="proxy_for">proxy_for</option>
-       </select><select id="refTarget"></select></div>
-       <div class="twocol"><input id="refNote" placeholder="note, e.g. approximate"><button id="refAdd">Add ref</button></div>
-       <div id="propRefs" class="mini"></div>
-      </details>
+     <div id="props"><b>Selected object</b><div class="mini" id="propSel">No selected object</div><div class="row"><label>Name</label><input id="propName" placeholder="system_default_name"></div><div class="row"><label>Role</label><input id="propRole" placeholder="trace / datum / station / mask / measure"></div>
+      <div class="row"><label>Kind</label><select id="propKind"><option value="">unspecified</option><option value="outer_contour">outer_contour</option><option value="top_edge">top_edge</option><option value="bottom_edge">bottom_edge</option><option value="centerline">centerline</option><option value="baseline">baseline</option><option value="datum">datum</option><option value="origin">origin</option><option value="station">station</option><option value="measurement">measurement</option><option value="ignore_zone">ignore_zone</option><option value="occlusion_zone">occlusion_zone</option><option value="semantic_zone">semantic_zone</option><option value="surface_zone">surface_zone</option><option value="analysis_zone">analysis_zone</option><option value="slot">slot</option><option value="other">other</option></select></div>
+      <div class="row description-row"><label>Description</label><textarea id="propDesc" placeholder="Describe what this object represents for downstream AI/CAD."></textarea></div><div class="twocol"><button id="propApply">Apply metadata</button><button id="propOrigin">Origin metadata</button></div>
+      <details><summary class="small">Reference relations</summary><div class="twocol"><select id="refType"><option value="parallel_to">parallel_to</option><option value="perpendicular_to">perpendicular_to</option><option value="center_of">center_of</option><option value="centerline_of">centerline_of</option><option value="angle_to">angle_to</option><option value="tangent_to">tangent_to</option><option value="coincident_with">coincident_with</option><option value="aligned_with">aligned_with</option><option value="contains">contains</option><option value="overlaps">overlaps</option><option value="bounds">bounds</option><option value="describes_area">describes_area</option><option value="excluded_from">excluded_from</option><option value="offset_from">offset_from</option><option value="derived_from">derived_from</option><option value="origin_at">origin_at</option><option value="proxy_for">proxy_for</option></select><select id="refTarget"></select></div><div class="twocol"><input id="refNote" placeholder="note, e.g. approximate"><button id="refAdd">Add ref</button></div><div id="propRefs" class="mini"></div></details>
      </div>
     </section>
-
-    <section id="panelJson" class="inspector-panel">
-     <div id="sideHead"><div><b>Editable JSON</b><br><span class="small">Coordinate space: image pixels, top-left origin.</span></div><button id="apply">Apply</button></div>
-     <textarea id="json" spellcheck="false"></textarea>
-     <div id="foot"><label><input id="incImg" type="checkbox"> include image data in download</label></div>
-    </section>
+    <section id="panelJson" class="inspector-panel"><div id="sideHead"><div><b>Editable JSON</b><br><span class="small">Coordinate space: image pixels, top-left origin.</span></div><button id="apply">Apply</button></div><textarea id="json" spellcheck="false"></textarea><div id="foot"><label><input id="incImg" type="checkbox"> include image data in download</label></div></section>
    </div>
   </aside>
  </div>
-
  <div id="stat"><span class="badge" id="toolS">tool: select</span><span id="imgS">no image</span><span id="curS">x:- y:-</span><span id="selS">selection:none</span><span class="small helptext">Space pan · Esc cancel · Del delete · Ctrl+Z undo · right-drag zoom</span></div>
 </div>
-
 <script src="app-00.js"></script>
 <script src="app-01.js"></script>
 <script src="app-02.js"></script>
@@ -195,4 +113,6 @@ Verification: JavaScript syntax, DOM/action parity, Chromium workflow smoke test
 <script src="app-05.js"></script>
 <script src="app-06.js"></script>
 <script src="app-07.js"></script>
+<script src="trace-project-package.js"></script>
+<script src="app-08.js"></script>
 </body></html>
