@@ -2,82 +2,116 @@
 
 - Status: Accepted for interchange contract v1
 - Date: 2026-07-12
-- Decision scope: Contract only; no exporter, importer, browser ZIP reader, or 3D behavior
+- Decision scope: Contract only; no exporter, importer, browser ZIP reader, production package handling, or 3D behavior
 
 ## Context
 
-Manual Trace must group multiple orthographic traces of one physical object and transfer calibration, coordinate systems, semantic geometry, source assets, checksums, and provenance without silent loss. A portable container is insufficient when identities can repeat, paths can alias documents, or references resolve by array order.
+Manual Trace must transfer multiple orthographic traces of one physical object together with calibration, coordinate systems, semantic geometry, source assets, checksums, and provenance. A container alone is insufficient when inventories disagree, identities alias, stations depend on array order, bindings are contradictory, or the claimed engineering basis is geometrically invalid.
 
 ## Decision
 
-Use a ZIP-based `.engrove-trace-project` container. `manifest.json` and `project.json` are at the root; trace documents and assets remain separate entries. The manifest enumerates every other payload with path, media type, role, SHA-256, byte size, and role-specific identity. The manifest does not hash itself because a stable self-digest is recursive.
+Use a ZIP-based `.engrove-trace-project` container. The root contains `manifest.json` and `project.json`; traces and assets are separate entries. The manifest inventories every payload except itself with path, media type, semantic role, SHA-256, exact byte size, and role-specific identity.
 
-Identity resolution is exact and fail-closed:
+The contract is exact and fail-closed:
 
-- project, object, trace, asset, project-datum, and project-reference identities are package-global;
-- contour, trace-datum, and relation identities are local to one trace;
-- trace-local strings never imply cross-trace linkage;
-- a station is a physical package-level identity that may occur in multiple views only with consistent engineering axis, engineering position, usage, and geometric disposition;
-- each trace and asset follows a complete manifest-project-entry-document or association chain;
-- every reference resolves to exactly one entity in its documented scope;
-- duplicate, unknown, or ambiguous identities block;
-- array order, first-match selection, `Map` overwrite, and silent `Set` deduplication have no contract meaning.
+- trace inventory is bidirectional across manifest, project record, package entry, and trace document;
+- source-image, source-SVG, and sidecar inventory is bidirectional across manifest, project asset, package entry, and trace associations;
+- an optional readme is a manifest-only informational payload, has no trace or asset identity, and is not a project asset;
+- package-global and trace-local namespaces are explicit;
+- references resolve to exactly one entity in their documented scope;
+- view-frame origins resolve only to project engineering datums;
+- station consistency is evaluated pairwise and independently of package order;
+- section bindings use a strict method discriminator;
+- the engineering basis is finite, orthonormal, non-degenerate, and right-handed when declared right-handed.
 
-JSON Schema owns structural requirements, including role-specific manifest identities. The semantic validator owns uniqueness by property, cross-file agreement, reference resolution, and station consistency.
+JSON Schema owns structural discrimination. The semantic validator owns uniqueness by property, reverse inventory joins, cross-file agreement, exact reference resolution, station consistency, and coordinate-frame arithmetic.
+
+## Numerical decisions
+
+Engineering-basis validation uses a fixed absolute tolerance of `1e-9` for norm, dot-product, determinant, and cross-product comparisons. This tolerance is independent of trace calibration.
+
+For two occurrences of one station:
+
+```text
+pairToleranceMm = max(
+  traceA.calibration.toleranceMm,
+  traceB.calibration.toleranceMm,
+  1e-9 mm
+)
+```
+
+Every pair must agree. This prevents a non-transitive A-B-C chain from becoming valid through insertion order.
+
+A station binding with `xMm` is checked against every station occurrence using the maximum of the binding tolerance, the occurrence's trace calibration tolerance, and `1e-9 mm`.
+
+## Binding methods
+
+Version 1 retains:
+
+- `explicit_station`: requires `stationId`; optional `xMm` must agree with the complete station group.
+- `explicit_x`: requires `xMm`; forbids `stationId`; no station lookup occurs.
+
+`derived_station` is excluded from v1 because the existing model does not contain a dedicated derivation-provenance object. Keeping the enum without such provenance would leave ownership of the derived coordinate undefined.
 
 ## Consequences
 
 Benefits:
 
-- views and assets remain portable in one file;
-- each payload can be integrity-checked before geometry use;
-- schemas and assets evolve under explicit versions;
-- provenance remains separate from geometry-driving data;
-- trace, asset, datum, station, and local geometry joins are deterministic;
-- conflicting station descriptions cannot be silently selected.
+- no manifest trace or asset can be ignored because the project omits it;
+- no extra trace or asset package entry can be silently retained outside project inventory;
+- readme behavior is explicit and identity-free;
+- station verdicts are invariant under manifest, project, and station-array permutations;
+- view placement cannot reference an unknown or trace-local origin datum;
+- contradictory binding methods fail structurally and semantically;
+- a project cannot claim a right-handed engineering frame while supplying a degenerate, non-orthogonal, non-unit, left-handed, or non-finite basis;
+- the contract is deterministic enough to serve as the source specification for later exporter and importer work.
 
 Costs and constraints:
 
-- a browser ZIP implementation and decompression limits remain future work;
-- validators retain all declarations until uniqueness is proven;
-- SVG remains untrusted after digest verification;
-- deterministic generation requires stable JSON, entry ordering, timestamps, and ZIP metadata;
-- unknown major versions fail closed.
+- JSON Schema cannot express all reverse joins or numerical invariants, so semantic validation remains mandatory;
+- all declarations must be retained until exact-one resolution is proven;
+- producers must emit complete inventories and explicit binding ownership;
+- a future `derived_station` design requires a contract revision and provenance schema;
+- browser ZIP handling, decompression limits, SVG sanitization, runtime adapters, and 3D construction remain future work.
 
 ## Security boundaries for future implementation
 
-Reject unsafe paths, duplicate normalized paths, undeclared entries, executable media, excessive archive sizes, unresolved identities, and ambiguous references before geometry is consumed. Do not fetch missing assets from network URLs. Sanitize SVG before DOM use.
+Reject unsafe paths, duplicate normalized paths, undeclared entries, executable media, excessive archive sizes, orphaned inventory records, unresolved identities, ambiguous references, invalid coordinate frames, and contradictory bindings before any package data mutates product state. Integrity does not make SVG safe; sanitize it before DOM use. Do not fetch missing assets from network URLs.
 
 ## Rejected alternatives
 
-### One JSON document with base64 assets
+### Forward-only inventory validation
 
-Rejected because it inflates files, increases memory pressure, complicates selective integrity checks, and promotes transient editor state into the interchange contract.
+Rejected because a project can omit a manifest or package entry and make valid data invisible to consumers. Both directions must be complete.
 
-### Multiple loose files
+### Treat readme as an ordinary project asset
 
-Rejected because browsers cannot reliably preserve grouping and operators can omit or mismatch files.
+Rejected because readme content is informational, does not participate in trace geometry, and needs no package-global asset identity.
 
-### Names or paths as identity
+### First-occurrence or canonical-by-order station resolution
 
-Rejected because names are mutable and paths are storage locators. Stable IDs and an exact manifest/project/document chain are required.
+Rejected because the verdict changes when manifest, project, or station arrays are permuted. Pairwise consistency is order-independent.
+
+### Transitive station tolerance
+
+Rejected because A≈B and B≈C does not imply A≈C. Every pair must meet its own declared tolerance.
+
+### Undefined `derived_station`
+
+Rejected because an enum value without required derivation provenance permits contradictory ownership of `stationId` and `xMm`.
+
+### Trust schema declarations of a right-handed frame
+
+Rejected because constants such as `handedness: right` do not prove that supplied vectors are finite, unit, orthogonal, non-degenerate, or right-handed.
 
 ### First match or last write wins
 
-Rejected because overwrite or array-order resolution hides conflicting declarations and makes interpretation producer-order dependent.
+Rejected because map overwrite, set deduplication, or array-order selection hides conflicting declarations.
 
-### Package-global namespace for every geometry feature
+### Infer view plane or identity from filenames
 
-Rejected because contours, trace datums, and relations are owned by a trace. Their strings may repeat in another trace, but bare references remain local.
+Rejected because paths are storage locators, not geometric or referential identity.
 
-### Infer stations from position alone
+### Read Manual Trace editor state directly in Tonearm Profile Designer
 
-Rejected because approximate position cannot establish semantic identity. Shared station IDs explicitly claim one physical station and must pass consistency checks.
-
-### Infer view plane from file name
-
-Rejected because file names are presentation metadata. `viewType`, projection, and `viewFrame` own geometry interpretation.
-
-### Read editor session state directly in Tonearm Profile Designer
-
-Rejected because transient UI/history state couples products, prevents independent versioning, and risks geometry use of unintended fields.
+Rejected because transient UI/history state couples products and risks geometry use of unintended fields.

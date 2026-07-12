@@ -154,26 +154,86 @@
       "oneOf": [
         {
           "x-field-matrix-skip": true,
-          "properties": { "role": { "const": "project" } },
-          "required": ["role"],
-          "not": { "anyOf": [{ "required": ["traceId"] }, { "required": ["assetId"] }] }
+          "properties": {
+            "role": {
+              "const": "project"
+            }
+          },
+          "required": [
+            "role"
+          ],
+          "not": {
+            "anyOf": [
+              {
+                "required": [
+                  "traceId"
+                ]
+              },
+              {
+                "required": [
+                  "assetId"
+                ]
+              }
+            ]
+          }
         },
         {
           "x-field-matrix-skip": true,
-          "properties": { "role": { "const": "trace" } },
-          "required": ["role", "traceId"],
-          "not": { "required": ["assetId"] }
+          "properties": {
+            "role": {
+              "const": "trace"
+            }
+          },
+          "required": [
+            "role",
+            "traceId"
+          ],
+          "not": {
+            "required": [
+              "assetId"
+            ]
+          }
         },
         {
           "x-field-matrix-skip": true,
-          "properties": { "role": { "enum": ["source_image", "source_svg", "sidecar"] } },
-          "required": ["role", "assetId"]
+          "properties": {
+            "role": {
+              "enum": [
+                "source_image",
+                "source_svg",
+                "sidecar"
+              ]
+            }
+          },
+          "required": [
+            "role",
+            "assetId"
+          ]
         },
         {
           "x-field-matrix-skip": true,
-          "properties": { "role": { "const": "readme" } },
-          "required": ["role"],
-          "not": { "required": ["traceId"] }
+          "properties": {
+            "role": {
+              "const": "readme"
+            }
+          },
+          "required": [
+            "role"
+          ],
+          "not": {
+            "anyOf": [
+              {
+                "required": [
+                  "traceId"
+                ]
+              },
+              {
+                "required": [
+                  "assetId"
+                ]
+              }
+            ]
+          }
         }
       ],
       "x-disposition": "preserved_as_provenance"
