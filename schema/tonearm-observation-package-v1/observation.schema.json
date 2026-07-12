@@ -9,4 +9,199 @@
         "observation_id",
         "view_id",
         "component_id",
-        "station_id
+        "station_id",
+        "landmark_ids",
+        "geometry_role",
+        "material_side",
+        "visibility",
+        "knowledge_state",
+        "completeness",
+        "contributes_to_envelope",
+        "geometry",
+        "measurements",
+        "uncertainty_id",
+        "source"
+      ],
+      "properties": {
+        "observation_id": {
+          "$ref": "shared.schema.json#/$defs/Id"
+        },
+        "view_id": {
+          "$ref": "shared.schema.json#/$defs/Id"
+        },
+        "component_id": {
+          "$ref": "shared.schema.json#/$defs/NullableId"
+        },
+        "station_id": {
+          "$ref": "shared.schema.json#/$defs/NullableId"
+        },
+        "landmark_ids": {
+          "type": "array",
+          "maxItems": 256,
+          "items": {
+            "$ref": "shared.schema.json#/$defs/Id"
+          }
+        },
+        "geometry_role": {
+          "$ref": "shared.schema.json#/$defs/GeometryRole"
+        },
+        "material_side": {
+          "$ref": "shared.schema.json#/$defs/MaterialSide"
+        },
+        "visibility": {
+          "$ref": "shared.schema.json#/$defs/Visibility"
+        },
+        "knowledge_state": {
+          "$ref": "shared.schema.json#/$defs/KnowledgeState"
+        },
+        "completeness": {
+          "$ref": "geometry.schema.json#/$defs/Completeness"
+        },
+        "contributes_to_envelope": {
+          "type": "boolean"
+        },
+        "geometry": {
+          "$ref": "geometry.schema.json#/$defs/ObservationGeometry"
+        },
+        "measurements": {
+          "type": "array",
+          "maxItems": 256,
+          "items": {
+            "$ref": "geometry.schema.json#/$defs/ObservationMeasurement"
+          }
+        },
+        "uncertainty_id": {
+          "$ref": "shared.schema.json#/$defs/NullableId"
+        },
+        "source": {
+          "$ref": "shared.schema.json#/$defs/SourceReference"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "geometry_role": {
+                "const": "section_loop"
+              }
+            },
+            "required": ["geometry_role"]
+          },
+          "then": {
+            "properties": {
+              "station_id": {
+                "$ref": "shared.schema.json#/$defs/Id"
+              },
+              "geometry": {
+                "properties": {
+                  "type": {
+                    "const": "section_loop_3d"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "contributes_to_envelope": {
+                "const": true
+              }
+            },
+            "required": ["contributes_to_envelope"]
+          },
+          "then": {
+            "properties": {
+              "component_id": {
+                "$ref": "shared.schema.json#/$defs/Id"
+              },
+              "geometry_role": {
+                "$ref": "shared.schema.json#/$defs/EnvelopeGeometryRole"
+              },
+              "visibility": {
+                "const": "visible"
+              },
+              "knowledge_state": {
+                "enum": [
+                  "observed",
+                  "measured",
+                  "calculated",
+                  "derived",
+                  "operator_defined"
+                ]
+              },
+              "completeness": {
+                "properties": {
+                  "state": {
+                    "const": "complete"
+                  },
+                  "negative_state": {
+                    "type": "null"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "contributes_to_envelope": {
+                "const": true
+              },
+              "geometry_role": {
+                "const": "outer_silhouette"
+              }
+            },
+            "required": ["contributes_to_envelope", "geometry_role"]
+          },
+          "then": {
+            "properties": {
+              "geometry": {
+                "properties": {
+                  "type": {
+                    "const": "polygon_2d"
+                  },
+                  "closed": {
+                    "const": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "contributes_to_envelope": {
+                "const": true
+              },
+              "geometry_role": {
+                "const": "section_loop"
+              }
+            },
+            "required": ["contributes_to_envelope", "geometry_role"]
+          },
+          "then": {
+            "properties": {
+              "station_id": {
+                "$ref": "shared.schema.json#/$defs/Id"
+              },
+              "geometry": {
+                "properties": {
+                  "type": {
+                    "const": "section_loop_3d"
+                  },
+                  "closed": {
+                    "const": true
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}
