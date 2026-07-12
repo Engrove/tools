@@ -20,6 +20,7 @@ function createValidator({ context, checks, constants }) {
     controlled,
     point3,
     vector,
+    source,
     nullableId,
   } = checks;
   const add = context.add;
