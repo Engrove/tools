@@ -1,6 +1,7 @@
 /** AI-CODING NOTE: Focused production package/ZIP determinism, integrity, contract, and limit regressions. */
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
+import { writeFileSync } from 'node:fs';
 import test from 'node:test';
 import '../../trace-project-package.js';
 import { canonicalJsonBytes as contractBytes, loadSchemas, validatePackage } from './contract-validator.mjs';
@@ -15,7 +16,7 @@ test('repeated logical input is byte-identical',async()=>{const a=model(),b=mode
 test('multiple traces share one object',async()=>{const r=await build();assert.equal(r.project.traceFiles.length,2);assert.ok(r.project.traceFiles.every(x=>x.objectId==='object-shared-001'))});
 test('canonical JSON sorts keys and ends newline',()=>assert.equal(new TextDecoder().decode(api.canonicalJsonBytes({z:1,a:{y:2,b:3}})),'{\n  "a": {\n    "b": 3,\n    "y": 2\n  },\n  "z": 1\n}\n'));
 test('hashes and sizes cover payloads',async()=>{const r=await build();for(const f of r.manifest.files){const e=r.entries[f.path],b=e.kind==='json'?contractBytes(e.content):Buffer.from(e.content,e.kind==='base64'?'base64':'utf8');assert.equal(f.sizeBytes,b.length);assert.equal(f.sha256,createHash('sha256').update(b).digest('hex'))}});
-test('contract validation and asset integrity',async()=>{const r=await build();const v=validatePackage({manifest:r.manifest,entries:r.entries},schemas);assert.equal(v.ok,true,JSON.stringify(v,null,2));assert.equal(r.project.assets[0].sha256,r.manifest.files.find(x=>x.assetId==='asset-image-001').sha256)});
+test('contract validation and asset integrity',async()=>{const r=await build();const v=validatePackage({manifest:r.manifest,entries:r.entries},schemas);if(!v.ok)writeFileSync('package-validation-errors.json',JSON.stringify(v,null,2));assert.equal(v.ok,true,JSON.stringify(v,null,2));assert.equal(r.project.assets[0].sha256,r.manifest.files.find(x=>x.assetId==='asset-image-001').sha256)});
 test('path traversal and absolute paths rejected',async()=>{for(const p of ['../x','/x','C:\\x','assets/../x']){const m=model();m.assets[0].path=p;await assert.rejects(api.buildVirtualPackage(m),e=>e.code==='UNSAFE_PATH')}});
 test('duplicate and normalized collision rejected',async()=>{const m=model();m.assets.push({...m.assets[0],assetId:'asset-image-002'});m.traces[0].assets.sidecarAssetIds.push('asset-image-002');await assert.rejects(api.buildVirtualPackage(m),e=>e.code==='DUPLICATE_ENTRY');assert.throws(()=>api.createDeterministicZip([{path:'A.txt',bytes:new Uint8Array(1)},{path:'a.txt',bytes:new Uint8Array(1)}]),e=>e.code==='NORMALIZED_PATH_COLLISION')});
 test('file count limit',async()=>assert.rejects(build({limits:{maxFileCount:2}}),e=>e.code==='FILE_COUNT_LIMIT'));
