@@ -1,8 +1,8 @@
 /**
  * AI-CODING NOTE:
- * Responsibility: Top-bar menu coordination, unsaved-work detection, and destructive-action protection, chunk 8 of 8.
+ * Responsibility: Top-bar menu coordination, unsaved-work detection, destructive-action protection, and transient geometry-state protection, chunk 8 of 8.
  * Dependency: Loads after all core Manual Trace state, persistence, and event-binding scripts.
- * Safe edits: Preserve native <details> behavior, browser-native beforeunload semantics, and normal object-level editing.
+ * Safe edits: Preserve native <details> behavior, browser-native beforeunload semantics, normal object-level editing, and visible geometry continuation state.
  */
 "use strict";
 
@@ -171,6 +171,43 @@ clearTrace=function(){
  return true
 };
 
+function clearStaleGeometryAnchor(){
+ if(S.cur||!S.anchor)return false;
+ setAnchor(null);
+ S.snapHit=null;
+ sync(false);
+ return true
+}
+
+const undoActivePointWithoutAnchorProtection=undoActivePoint;
+undoActivePoint=function(...args){
+ if(S.cur?.type==="zone"){
+  if(S.cur.points.length)S.cur.points.pop();
+  if(!S.cur.points.length){S.cur=null;setAnchor(null)}
+  else setAnchor(lastPoint(S.cur));
+  S.snapHit=null;
+  sync();
+  return true
+ }
+ const result=undoActivePointWithoutAnchorProtection.apply(this,args);
+ if(result&&!S.cur)clearStaleGeometryAnchor();
+ return result
+};
+
+const undoWithoutAnchorProtection=undo;
+undo=function(...args){
+ const result=undoWithoutAnchorProtection.apply(this,args);
+ clearStaleGeometryAnchor();
+ return result
+};
+
+const redoWithoutAnchorProtection=redo;
+redo=function(...args){
+ const result=redoWithoutAnchorProtection.apply(this,args);
+ clearStaleGeometryAnchor();
+ return result
+};
+
 ["imgFile","svgTraceFile","projectFile","jsonFile"].forEach(id=>{
  const input=$(id);
  if(input)input.addEventListener("click",()=>{input.value=""})
@@ -178,6 +215,16 @@ clearTrace=function(){
 
 $("saveProject").onclick=saveProject;
 $("clear").onclick=clearTrace;
+$("undo").onclick=undo;
+$("redo").onclick=redo;
+
+window.addEventListener("keydown",event=>{
+ if(event.defaultPrevented||event.isComposing||isKeyboardOwnedByUi(event))return;
+ if(event.key!=="Escape")return;
+ setAnchor(null);
+ S.snapHit=null;
+ sync(false)
+});
 
 window.addEventListener("beforeunload",event=>{
  if(!workspaceHasUnsavedChanges())return;
