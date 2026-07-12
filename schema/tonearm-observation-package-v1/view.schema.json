@@ -1,0 +1,245 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "tonearm-observation-package-v1/view.schema.json",
+  "$defs": {
+    "ImageSize": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["width_px", "height_px"],
+      "properties": {
+        "width_px": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100000
+        },
+        "height_px": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100000
+        }
+      }
+    },
+    "ViewMapping": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["horizontal_axis", "vertical_axis", "depth_axis"],
+      "properties": {
+        "horizontal_axis": {
+          "type": "string",
+          "enum": ["+x", "-x", "+y", "-y", "+z", "-z"]
+        },
+        "vertical_axis": {
+          "type": "string",
+          "enum": ["+x", "-x", "+y", "-y", "+z", "-z"]
+        },
+        "depth_axis": {
+          "type": "string",
+          "enum": ["+x", "-x", "+y", "-y", "+z", "-z"]
+        }
+      }
+    },
+    "Calibration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "length_unit",
+        "scale",
+        "origin_px",
+        "knowledge_state",
+        "source"
+      ],
+      "properties": {
+        "length_unit": {
+          "const": "mm"
+        },
+        "scale": {
+          "$ref": "shared.schema.json#/$defs/QuantifiedValue"
+        },
+        "origin_px": {
+          "$ref": "shared.schema.json#/$defs/Point2"
+        },
+        "knowledge_state": {
+          "$ref": "shared.schema.json#/$defs/KnowledgeState"
+        },
+        "source": {
+          "$ref": "shared.schema.json#/$defs/SourceReference"
+        }
+      }
+    },
+    "View": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "view_id",
+        "capture_set_id",
+        "name",
+        "view_role",
+        "projection_type",
+        "dimension_source",
+        "image_size",
+        "object_to_view",
+        "calibration",
+        "perspective_model",
+        "component_ids",
+        "knowledge_state",
+        "source"
+      ],
+      "properties": {
+        "view_id": {
+          "$ref": "shared.schema.json#/$defs/Id"
+        },
+        "capture_set_id": {
+          "$ref": "shared.schema.json#/$defs/Id"
+        },
+        "name": {
+          "$ref": "shared.schema.json#/$defs/Name"
+        },
+        "view_role": {
+          "type": "string",
+          "enum": ["top", "side", "front", "oblique", "detail", "unknown"]
+        },
+        "projection_type": {
+          "$ref": "shared.schema.json#/$defs/ProjectionType"
+        },
+        "dimension_source": {
+          "$ref": "shared.schema.json#/$defs/DimensionSource"
+        },
+        "image_size": {
+          "$ref": "#/$defs/ImageSize"
+        },
+        "object_to_view": {
+          "$ref": "#/$defs/ViewMapping"
+        },
+        "calibration": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/Calibration"
+            }
+          ]
+        },
+        "perspective_model": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "camera.schema.json#/$defs/PerspectiveModel"
+            }
+          ]
+        },
+        "component_ids": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 256,
+          "items": {
+            "$ref": "shared.schema.json#/$defs/Id"
+          }
+        },
+        "knowledge_state": {
+          "$ref": "shared.schema.json#/$defs/KnowledgeState"
+        },
+        "source": {
+          "$ref": "shared.schema.json#/$defs/SourceReference"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "projection_type": {
+                "const": "raw_perspective"
+              }
+            },
+            "required": ["projection_type"]
+          },
+          "then": {
+            "properties": {
+              "dimension_source": {
+                "const": "forbidden"
+              },
+              "perspective_model": {
+                "allOf": [
+                  {
+                    "$ref": "camera.schema.json#/$defs/PerspectiveModel"
+                  },
+                  {
+                    "properties": {
+                      "rectification_required": {
+                        "const": true
+                      },
+                      "rectification": {
+                        "properties": {
+                          "status": {
+                            "enum": ["not_rectified", "rectification_candidate"]
+                          },
+                          "dimensional_use": {
+                            "const": "forbidden"
+                          }
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "projection_type": {
+                "const": "rectified_perspective"
+              }
+            },
+            "required": ["projection_type"]
+          },
+          "then": {
+            "properties": {
+              "perspective_model": {
+                "allOf": [
+                  {
+                    "$ref": "camera.schema.json#/$defs/PerspectiveModel"
+                  },
+                  {
+                    "properties": {
+                      "rectification_required": {
+                        "const": false
+                      },
+                      "rectification": {
+                        "properties": {
+                          "status": {
+                            "const": "rectified"
+                          }
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "dimension_source": {
+                "const": "eligible"
+              }
+            },
+            "required": ["dimension_source"]
+          },
+          "then": {
+            "properties": {
+              "calibration": {
+                "$ref": "#/$defs/Calibration"
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}
