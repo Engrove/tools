@@ -1,0 +1,287 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "tonearm-observation-package-v1/relations.schema.json",
+  "$defs": {
+    "Landmark": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "landmark_id",
+        "name",
+        "kind",
+        "component_id",
+        "view_id",
+        "station_id",
+        "position_2d",
+        "position_3d",
+        "knowledge_state",
+        "source",
+        "uncertainty_id"
+      ],
+      "properties": {
+        "landmark_id": {
+          "$ref": "shared.schema.json#/$defs/Id"
+        },
+        "name": {
+          "$ref": "shared.schema.json#/$defs/Name"
+        },
+        "kind": {
+          "$ref": "shared.schema.json#/$defs/LandmarkKind"
+        },
+        "component_id": {
+          "$ref": "shared.schema.json#/$defs/NullableId"
+        },
+        "view_id": {
+          "$ref": "shared.schema.json#/$defs/NullableId"
+        },
+        "station_id": {
+          "$ref": "shared.schema.json#/$defs/NullableId"
+        },
+        "position_2d": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "shared.schema.json#/$defs/Point2"
+            }
+          ]
+        },
+        "position_3d": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "shared.schema.json#/$defs/Point3"
+            }
+          ]
+        },
+        "knowledge_state": {
+          "$ref": "shared.schema.json#/$defs/KnowledgeState"
+        },
+        "source": {
+          "$ref": "shared.schema.json#/$defs/SourceReference"
+        },
+        "uncertainty_id": {
+          "$ref": "shared.schema.json#/$defs/NullableId"
+        }
+      }
+    },
+    "Station": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "station_id",
+        "name",
+        "component_id",
+        "longitudinal_position",
+        "view_ids",
+        "observation_ids",
+        "knowledge_state",
+        "source"
+      ],
+      "properties": {
+        "station_id": {
+          "$ref": "shared.schema.json#/$defs/Id"
+        },
+        "name": {
+          "$ref": "shared.schema.json#/$defs/Name"
+        },
+        "component_id": {
+          "$ref": "shared.schema.json#/$defs/Id"
+        },
+        "longitudinal_position": {
+          "$ref": "shared.schema.json#/$defs/QuantifiedValue"
+        },
+        "view_ids": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "items": {
+            "$ref": "shared.schema.json#/$defs/Id"
+          }
+        },
+        "observation_ids": {
+          "type": "array",
+          "maxItems": 4096,
+          "items": {
+            "$ref": "shared.schema.json#/$defs/Id"
+          }
+        },
+        "knowledge_state": {
+          "$ref": "shared.schema.json#/$defs/KnowledgeState"
+        },
+        "source": {
+          "$ref": "shared.schema.json#/$defs/SourceReference"
+        }
+      }
+    },
+    "Feature": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "feature_id",
+        "name",
+        "feature_type",
+        "status",
+        "component_id",
+        "observation_ids",
+        "landmark_ids",
+        "knowledge_state",
+        "source"
+      ],
+      "properties": {
+        "feature_id": {
+          "$ref": "shared.schema.json#/$defs/Id"
+        },
+        "name": {
+          "$ref": "shared.schema.json#/$defs/Name"
+        },
+        "feature_type": {
+          "type": "string",
+          "enum": [
+            "slot",
+            "inner_void",
+            "surface_zone",
+            "separate_component",
+            "material_interface",
+            "attachment",
+            "other"
+          ]
+        },
+        "status": {
+          "type": "string",
+          "enum": ["candidate", "confirmed", "rejected"]
+        },
+        "component_id": {
+          "$ref": "shared.schema.json#/$defs/Id"
+        },
+        "observation_ids": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4096,
+          "items": {
+            "$ref": "shared.schema.json#/$defs/Id"
+          }
+        },
+        "landmark_ids": {
+          "type": "array",
+          "maxItems": 256,
+          "items": {
+            "$ref": "shared.schema.json#/$defs/Id"
+          }
+        },
+        "knowledge_state": {
+          "$ref": "shared.schema.json#/$defs/KnowledgeState"
+        },
+        "source": {
+          "$ref": "shared.schema.json#/$defs/SourceReference"
+        }
+      }
+    },
+    "ConstraintReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["target_type", "target_id", "role"],
+      "properties": {
+        "target_type": {
+          "type": "string",
+          "enum": [
+            "component",
+            "station",
+            "landmark",
+            "observation",
+            "feature",
+            "view"
+          ]
+        },
+        "target_id": {
+          "$ref": "shared.schema.json#/$defs/Id"
+        },
+        "role": {
+          "type": "string",
+          "enum": [
+            "subject",
+            "reference",
+            "mechanical_datum",
+            "parallel_to",
+            "perpendicular_to",
+            "center_of",
+            "tangent_to",
+            "aligned_with",
+            "offset_from",
+            "origin_at",
+            "proxy_for"
+          ]
+        }
+      }
+    },
+    "Constraint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "constraint_id",
+        "name",
+        "constraint_type",
+        "knowledge_state",
+        "references",
+        "expression",
+        "source",
+        "uncertainty_id"
+      ],
+      "properties": {
+        "constraint_id": {
+          "$ref": "shared.schema.json#/$defs/Id"
+        },
+        "name": {
+          "$ref": "shared.schema.json#/$defs/Name"
+        },
+        "constraint_type": {
+          "type": "string",
+          "enum": [
+            "relation",
+            "dimension",
+            "datum",
+            "alignment",
+            "parallelism",
+            "perpendicularity",
+            "tangency",
+            "center",
+            "offset",
+            "other"
+          ]
+        },
+        "knowledge_state": {
+          "$ref": "shared.schema.json#/$defs/KnowledgeState"
+        },
+        "references": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "items": {
+            "$ref": "#/$defs/ConstraintReference"
+          }
+        },
+        "expression": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512
+            }
+          ]
+        },
+        "source": {
+          "$ref": "shared.schema.json#/$defs/SourceReference"
+        },
+        "uncertainty_id": {
+          "$ref": "shared.schema.json#/$defs/NullableId"
+        }
+      }
+    }
+  }
+}
