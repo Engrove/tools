@@ -17,6 +17,13 @@ jobs:
       PUPPETEER_SKIP_DOWNLOAD: 'true'
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+      - name: Git tree identity
+        run: |
+          echo "HEAD_COMMIT=$(git rev-parse HEAD)"
+          echo "HEAD_TREE=$(git rev-parse 'HEAD^{tree}')"
       - uses: actions/setup-node@v4
         with:
           node-version: '22.16.0'
