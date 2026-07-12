@@ -36,6 +36,9 @@ jobs:
           node --check tools/manual-trace/app-04.js
           node --check tools/manual-trace/app-05.js
           node --check tools/manual-trace/app-06.js
+          node --check tools/manual-trace/app-07.js
+      - name: Manual Trace snap regression
+        run: node --test test/manual-trace-snap-policy.test.mjs
       - name: Schema and registry
         run: npm run check:schema
       - name: Source governance
