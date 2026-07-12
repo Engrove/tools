@@ -36,8 +36,15 @@ jobs:
           node --check tools/manual-trace/test/trace-project-package/final-contract-closure.test.mjs
           node --check tools/manual-trace/test/trace-project-package/package-builder.test.mjs
           node --check tools/manual-trace/test/trace-project-package/package-adapter.test.mjs
-      - name: Contract, builder and adapter regressions
-        run: node --test tools/manual-trace/test/trace-project-package/*.test.mjs
+      - name: Merged contract regressions
+        run: |
+          node --test tools/manual-trace/test/trace-project-package/trace-project-package-contract.test.mjs
+          node --test tools/manual-trace/test/trace-project-package/identity-reference-integrity.test.mjs
+          node --test tools/manual-trace/test/trace-project-package/final-contract-closure.test.mjs
+      - name: Production package builder regressions
+        run: node --test tools/manual-trace/test/trace-project-package/package-builder.test.mjs
+      - name: Manual Trace package adapter regression
+        run: node --test tools/manual-trace/test/trace-project-package/package-adapter.test.mjs
 
   tonearm-regression:
     runs-on: ubuntu-latest
