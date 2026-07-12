@@ -45,6 +45,9 @@ const {
   createValidator: createUncertaintyValidator,
 } = require("./validate-uncertainty.cjs");
 const {
+  createValidator: createValidationStateValidator,
+} = require("./validate-validation-state.cjs");
+const {
   createValidator: createProvenanceValidator,
 } = require("./validate-provenance.cjs");
 const {
@@ -70,6 +73,7 @@ function validateObservationPackage(value) {
   const validateFeature = createFeatureValidator(dependencies);
   const validateConstraint = createConstraintValidator(dependencies);
   const validateUncertainty = createUncertaintyValidator(dependencies);
+  const validateValidationState = createValidationStateValidator(dependencies);
   const validateProvenance = createProvenanceValidator(dependencies);
   const validateDecision = createDecisionValidator(dependencies);
 
@@ -132,6 +136,7 @@ function validateObservationPackage(value) {
     );
     validateUncertainty(value.uncertainty_model, "$.uncertainty_model");
     validateProvenance(value.provenance, "$.provenance");
+    validateValidationState(value.validation, "$.validation");
     validateDecision(value.operator_acceptance, "$.operator_acceptance");
 
     registerDomains(value, context);
