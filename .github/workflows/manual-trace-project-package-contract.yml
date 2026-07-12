@@ -23,10 +23,13 @@ jobs:
           node-version: '22.16.0'
       - name: Contract syntax
         run: |
+          node --check tools/manual-trace/test/trace-project-package/contract-validator-core.mjs
+          node --check tools/manual-trace/test/trace-project-package/identity-reference-validator.mjs
           node --check tools/manual-trace/test/trace-project-package/contract-validator.mjs
           node --check tools/manual-trace/test/trace-project-package/trace-project-package-contract.test.mjs
+          node --check tools/manual-trace/test/trace-project-package/identity-reference-integrity.test.mjs
       - name: Contract and golden fixtures
-        run: node --test tools/manual-trace/test/trace-project-package/trace-project-package-contract.test.mjs
+        run: node --test tools/manual-trace/test/trace-project-package/*.test.mjs
 
   tonearm-regression:
     runs-on: ubuntu-latest
