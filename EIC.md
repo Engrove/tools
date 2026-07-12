@@ -10,7 +10,9 @@ Every coding, analysis, review, test, commit, publication, and reporting task MU
 2. root `AGENTS.md` — repository architecture, invariants, gates, and reporting integration;
 3. `AI_CODING_DOCTRINE.md` — compact doctrine and cross-reference.
 
-Orchestrated multi-step work using EIC, Jan-Eric, and Hjalmar MUST also read `AI_VIBE_ORCHESTRATED_WORKFLOW.md`. That document owns the repository-specific role model, handoff cycle, modularity limits, connector discipline, and review stop points; this boundary document does not duplicate its full text.
+Orchestrated multi-step work using EIC, Jan-Eric, and Hjalmar MUST also read `AI_VIBE_ORCHESTRATED_WORKFLOW.md`.
+
+That document owns the repository-specific role model, handoff cycle, modularity limits, connector discipline, and review stop points. This boundary document does not duplicate its full text.
 
 Tool-specific bootstrap files and skills may add stricter requirements but may not weaken or replace these sources.
 
