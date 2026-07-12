@@ -15,6 +15,7 @@ function createValidator({ context, checks, constants }) {
   const {
     shape,
     id,
+    finite,
     controlled,
     constant,
     point3,
