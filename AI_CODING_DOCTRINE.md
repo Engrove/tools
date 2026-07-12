@@ -5,7 +5,11 @@ CANONICAL_POLICY: `AI_VIBE_CODING_RULES.md`
 REPOSITORY_CONTRACT: `AGENTS.md`
 ORCHESTRATED_WORKFLOW: `AI_VIBE_ORCHESTRATED_WORKFLOW.md`
 
-Every AI agent working with `Engrove/tools` MUST read and follow both canonical files before analysis, implementation, testing, review, commit, publication, or status reporting. This compact doctrine does not replace or summarize away either source. Orchestrated multi-step work must additionally follow the repository-specific role and modularity contract in `AI_VIBE_ORCHESTRATED_WORKFLOW.md`.
+Every AI agent working with `Engrove/tools` MUST read and follow both canonical files before analysis, implementation, testing, review, commit, publication, or status reporting.
+
+This compact doctrine does not replace or summarize away either source.
+
+Orchestrated multi-step work must additionally follow the repository-specific role and modularity contract in `AI_VIBE_ORCHESTRATED_WORKFLOW.md`.
 
 - Correctness and code quality outrank speed, response latency, token use, and token optimization.
 - Never code from guesses when the authoritative source can be read.
