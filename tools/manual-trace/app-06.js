@@ -6,6 +6,13 @@
  * Do not: Load independently, reorder scripts, or weaken SVG sanitization.
  */
 "use strict";
+
+function isKeyboardOwnedByUi(event){
+ const target=event.target;
+ if(!target||typeof target.closest!=="function")return false;
+ return !!target.closest("input, textarea, select, button, a[href], summary, [contenteditable]:not([contenteditable='false']), [role='textbox'], [role='combobox'], [role='button']")
+}
+
 addEventListener("resize",syncLayout);
 
 cv.oncontextmenu=e=>{e.preventDefault();return false};
@@ -216,11 +223,18 @@ $("msnap").onchange=e=>{S.measureSnap=e.target.checked;S.snapHit=null;draw()};
 
 document.querySelectorAll("#tools button").forEach(b=>b.onclick=()=>setTool(b.dataset.t));
 
-window.addEventListener("keydown",e=>{if(e.code==="Space"){S.space=true;e.preventDefault()}if(e.key==="Escape"){S.cur=null;S.drag=null;draw()}if((e.key==="Delete"||e.key==="Backspace")&&document.activeElement!==json)del();if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="z"){e.preventDefault();undo()}if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="y"){e.preventDefault();redo()}});
+window.addEventListener("keydown",e=>{
+ if(e.defaultPrevented||e.isComposing||isKeyboardOwnedByUi(e))return;
+ if(e.code==="Space"){S.space=true;e.preventDefault()}
+ if(e.key==="Escape"){S.cur=null;S.drag=null;draw()}
+ if(e.key==="Delete"||e.key==="Backspace"){e.preventDefault();del()}
+ if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="z"){e.preventDefault();undo()}
+ if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="y"){e.preventDefault();redo()}
+});
 
 window.addEventListener("keyup",e=>{if(e.code==="Space")S.space=false});
 
-window.addEventListener("paste",e=>{if(document.activeElement===json)return;if(!e.clipboardData)return;for(let it of e.clipboardData.items)if(it.type.startsWith("image/")){loadImg(it.getAsFile());e.preventDefault();break}});
+window.addEventListener("paste",e=>{if(isKeyboardOwnedByUi(e))return;if(!e.clipboardData)return;for(let it of e.clipboardData.items)if(it.type.startsWith("image/")){loadImg(it.getAsFile());e.preventDefault();break}});
 
 ["dragenter","dragover"].forEach(ev=>stage.addEventListener(ev,e=>{e.preventDefault();$("drop").style.display="flex"}));
 
