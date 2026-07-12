@@ -1,0 +1,61 @@
+name: Manual Trace project package contract
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'schema/trace-project-package/**'
+      - 'tools/manual-trace/test/trace-project-package/**'
+      - 'tools/tonearm-profile-designer/test/**'
+      - '.github/workflows/manual-trace-project-package-contract.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.16.0'
+      - name: Contract syntax
+        run: |
+          node --check tools/manual-trace/test/trace-project-package/contract-validator.mjs
+          node --check tools/manual-trace/test/trace-project-package/trace-project-package-contract.test.mjs
+      - name: Contract and golden fixtures
+        run: node --test tools/manual-trace/test/trace-project-package/trace-project-package-contract.test.mjs
+
+  tonearm-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.16.0'
+      - name: Tonearm Profile Designer portable regression
+        run: npm --prefix tools/tonearm-profile-designer test
+
+  root-gates:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      PUPPETEER_SKIP_DOWNLOAD: 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.16.0'
+      - name: Clean generated output
+        run: npm run clean
+      - name: Production build
+        run: npm run build
+      - name: Generated SEO parity
+        run: npm run check:seo
+      - name: Deterministic build
+        run: npm run check:determinism
+      - name: Full sanitation gate
+        run: npm run check:sanitation

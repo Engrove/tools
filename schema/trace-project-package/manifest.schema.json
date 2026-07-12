@@ -1,0 +1,157 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tools.engroveaudio.com/schema/trace-project-package/manifest.schema.json",
+  "title": "Engrove Trace Project Package manifest v1",
+  "description": "Canonical manifest for every payload entry in an .engrove-trace-project ZIP container. The manifest does not hash itself because self-hashing is not stable.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "packageFormat",
+    "packageVersion",
+    "projectFile",
+    "createdAt",
+    "producer",
+    "files"
+  ],
+  "properties": {
+    "packageFormat": {
+      "type": "string",
+      "const": "engrove_trace_project_package",
+      "x-disposition": "preserved_as_provenance"
+    },
+    "packageVersion": {
+      "type": "string",
+      "const": "1.0.0",
+      "x-disposition": "preserved_as_provenance"
+    },
+    "projectFile": {
+      "type": "string",
+      "const": "project.json",
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?![A-Za-z]:[\\\\/])(?!https?://)(?:[A-Za-z0-9._-]+/)*[A-Za-z0-9._-]+$",
+      "x-disposition": "preserved_as_provenance"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time",
+      "x-disposition": "preserved_as_provenance"
+    },
+    "producer": {
+      "$ref": "#/$defs/producer",
+      "x-disposition": "preserved_as_provenance"
+    },
+    "files": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/fileEntry"
+      },
+      "minItems": 1,
+      "contains": {
+        "type": "object",
+        "required": [
+          "role"
+        ],
+        "properties": {
+          "role": {
+            "const": "project",
+            "x-disposition": "preserved_as_provenance"
+          }
+        }
+      },
+      "minContains": 1,
+      "maxContains": 1,
+      "x-disposition": "preserved_as_provenance"
+    }
+  },
+  "$defs": {
+    "producer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "version"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "x-disposition": "preserved_as_provenance"
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?$",
+          "x-disposition": "preserved_as_provenance"
+        },
+        "buildCommit": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{7,64}$",
+          "x-disposition": "preserved_as_provenance"
+        }
+      },
+      "x-disposition": "preserved_as_provenance"
+    },
+    "fileEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "mediaType",
+        "role",
+        "sha256",
+        "sizeBytes"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?![A-Za-z]:[\\\\/])(?!https?://)(?:[A-Za-z0-9._-]+/)*[A-Za-z0-9._-]+$",
+          "x-disposition": "preserved_as_provenance"
+        },
+        "mediaType": {
+          "type": "string",
+          "enum": [
+            "application/json",
+            "image/png",
+            "image/jpeg",
+            "image/webp",
+            "image/svg+xml",
+            "text/plain",
+            "text/markdown"
+          ],
+          "x-disposition": "preserved_as_provenance"
+        },
+        "role": {
+          "type": "string",
+          "enum": [
+            "project",
+            "trace",
+            "source_image",
+            "source_svg",
+            "sidecar",
+            "readme"
+          ],
+          "x-disposition": "preserved_as_provenance"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "x-disposition": "preserved_as_provenance"
+        },
+        "sizeBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "x-disposition": "preserved_as_provenance"
+        },
+        "traceId": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9._:-]{2,127}$",
+          "x-disposition": "preserved_as_provenance"
+        },
+        "assetId": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9._:-]{2,127}$",
+          "x-disposition": "preserved_as_provenance"
+        }
+      },
+      "x-disposition": "preserved_as_provenance"
+    }
+  }
+}
