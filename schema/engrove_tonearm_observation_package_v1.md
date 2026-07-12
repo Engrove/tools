@@ -17,7 +17,9 @@
 }
 ```
 
-The package is not the editable Engrove Manual Trace project format. It does not replace `engrove_manual_trace_v16`, `.engrove-trace` persistence, tool working state, accepted manufacturing geometry, a valid loft, or an active Tonearm Profile Designer design.
+The package is not the editable Engrove Manual Trace project format.
+
+It does not replace `engrove_manual_trace_v16`, `.engrove-trace` persistence, tool working state, accepted manufacturing geometry, a valid loft, or an active Tonearm Profile Designer design.
 
 ## Schema modules
 
@@ -32,11 +34,15 @@ The package is not the editable Engrove Manual Trace project format. It does not
 - `uncertainty.schema.json`, `provenance.schema.json`, and `decision.schema.json` own their named domains.
 - `package.schema.json` owns only package composition and validation-state records.
 
-All schema IDs and references are repository-local. The test schema loader explicitly inventories and registers every file in Ajv 8 before compiling the root aggregator. Missing schemas, duplicate IDs, unresolved references, and unused schema modules are blocking test failures.
+All schema IDs and references are repository-local.
+
+The test schema loader explicitly inventories and registers every file in Ajv 8 before compiling the root aggregator. Missing schemas, duplicate IDs, unresolved references, and unused schema modules are blocking test failures.
 
 ## Semantic validator modules
 
-The validator facade delegates to a thin orchestrator. Immutable vocabularies, validation context, primitive checks, object/frame/view/camera/geometry/observation/relations/provenance/decision validators, and cross-reference rules are separate modules.
+The validator facade delegates to a thin orchestrator.
+
+Immutable vocabularies, validation context, primitive checks, object/frame/view/camera/geometry/observation/relations/provenance/decision validators, and cross-reference rules are separate modules.
 
 The semantic validator:
 
@@ -54,10 +60,14 @@ The semantic validator:
 
 ## Test architecture
 
-`tools/tonearm-profile-designer/test/observation-package-contract.test.cjs` is a thin deterministic runner. Fixtures, assertions, schema loading, parity, frame, camera/view, geometry, references, decisions, determinism, and module-boundary tests are separate modules.
+`tools/tonearm-profile-designer/test/observation-package-contract.test.cjs` is a thin deterministic runner.
+
+Fixtures, assertions, schema loading, parity, frame, camera/view, geometry, references, decisions, determinism, and module-boundary tests are separate modules.
 
 The module-boundary test blocks any contract module over 500 physical lines, over 16 000 UTF-8 bytes, or containing an artificial line over 240 characters. The generated dependency lockfile is outside this source-module rule.
 
 ## Non-goals
 
-This contract infrastructure does not add Manual Trace export, Tonearm Profile Designer import UI, design-session activation, reconstruction, loft generation, datum inference, station synthesis, centerline generation, rings, wall thickness, or manufacturing acceptance.
+This contract infrastructure does not add Manual Trace export, Tonearm Profile Designer import UI, design-session activation, reconstruction, or loft generation.
+
+It also does not add datum inference, station synthesis, centerline generation, rings, wall thickness, or manufacturing acceptance.
