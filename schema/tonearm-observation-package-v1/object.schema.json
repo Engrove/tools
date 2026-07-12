@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "tonearm-observation-package-v1/object.schema.json",
+  "$defs": {
+    "Component": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "component_id",
+        "name",
+        "role",
+        "parent_component_id",
+        "knowledge_state",
+        "description"
+      ],
+      "properties": {
+        "component_id": {
+          "$ref": "shared.schema.json#/$defs/Id"
+        },
+        "name": {
+          "$ref": "shared.schema.json#/$defs/Name"
+        },
+        "role": {
+          "type": "string",
+          "enum": [
+            "main_body",
+            "separate_component",
+            "reference_fixture",
+            "unknown"
+          ]
+        },
+        "parent_component_id": {
+          "$ref": "shared.schema.json#/$defs/NullableId"
+        },
+        "knowledge_state": {
+          "$ref": "shared.schema.json#/$defs/KnowledgeState"
+        },
+        "description": {
+          "$ref": "shared.schema.json#/$defs/ShortText"
+        }
+      }
+    },
+    "Configuration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "assembly_state", "description"],
+      "properties": {
+        "id": {
+          "$ref": "shared.schema.json#/$defs/Id"
+        },
+        "assembly_state": {
+          "$ref": "shared.schema.json#/$defs/AssemblyState"
+        },
+        "description": {
+          "$ref": "shared.schema.json#/$defs/ShortText"
+        }
+      }
+    },
+    "ObjectRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "revision", "configuration", "units", "components"],
+      "properties": {
+        "id": {
+          "$ref": "shared.schema.json#/$defs/Id"
+        },
+        "revision": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "configuration": {
+          "$ref": "#/$defs/Configuration"
+        },
+        "units": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["length", "angle", "mass"],
+          "properties": {
+            "length": {
+              "const": "mm"
+            },
+            "angle": {
+              "const": "deg"
+            },
+            "mass": {
+              "const": "g"
+            }
+          }
+        },
+        "components": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 256,
+          "items": {
+            "$ref": "#/$defs/Component"
+          }
+        }
+      }
+    },
+    "TargetConsumer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["application", "contract"],
+      "properties": {
+        "application": {
+          "const": "engrove_tonearm_profile_designer"
+        },
+        "contract": {
+          "const": "engrove_tonearm_observation_consumer_v1"
+        }
+      }
+    }
+  }
+}
