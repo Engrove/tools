@@ -75,10 +75,17 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          cat .github/closure-payload/part-* | base64 -d | tar -xz
-          rm -rf .github/closure-payload .github/workflows/final-contract-closure-bootstrap.yml
+          mkdir -p /tmp/closure
+          cat .github/closure-payload/part-* | base64 -d | tar -xz -C /tmp/closure
+          cp /tmp/closure/schema/trace-project-package/ADR-0001-container-format.md schema/trace-project-package/
+          cp /tmp/closure/schema/trace-project-package/README.md schema/trace-project-package/
+          cp /tmp/closure/schema/trace-project-package/manifest.schema.json schema/trace-project-package/
+          cp /tmp/closure/schema/trace-project-package/project.schema.json schema/trace-project-package/
+          cp /tmp/closure/schema/trace-project-package/trace.schema.json schema/trace-project-package/
+          cp /tmp/closure/tools/manual-trace/test/trace-project-package/identity-reference-validator.mjs tools/manual-trace/test/trace-project-package/
+          cp /tmp/closure/tools/manual-trace/test/trace-project-package/final-contract-closure.test.mjs tools/manual-trace/test/trace-project-package/
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -A
+          git add schema/trace-project-package tools/manual-trace/test/trace-project-package
           git commit -m 'fix: close Manual Trace package contract'
           git push origin HEAD:${GITHUB_HEAD_REF}
