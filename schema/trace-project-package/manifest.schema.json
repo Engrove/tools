@@ -151,6 +151,31 @@
           "x-disposition": "preserved_as_provenance"
         }
       },
+      "oneOf": [
+        {
+          "x-field-matrix-skip": true,
+          "properties": { "role": { "const": "project" } },
+          "required": ["role"],
+          "not": { "anyOf": [{ "required": ["traceId"] }, { "required": ["assetId"] }] }
+        },
+        {
+          "x-field-matrix-skip": true,
+          "properties": { "role": { "const": "trace" } },
+          "required": ["role", "traceId"],
+          "not": { "required": ["assetId"] }
+        },
+        {
+          "x-field-matrix-skip": true,
+          "properties": { "role": { "enum": ["source_image", "source_svg", "sidecar"] } },
+          "required": ["role", "assetId"]
+        },
+        {
+          "x-field-matrix-skip": true,
+          "properties": { "role": { "const": "readme" } },
+          "required": ["role"],
+          "not": { "required": ["traceId"] }
+        }
+      ],
       "x-disposition": "preserved_as_provenance"
     }
   }
