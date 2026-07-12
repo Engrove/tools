@@ -17,7 +17,9 @@ Every AI agent that analyzes, edits, reviews, tests, commits, publishes, or repo
 5. inspect the current repository state and the files that own the requested behavior;
 6. classify work level, risk, invariants, direct consumers, and blast radius as required by the canonical policy.
 
-This applies regardless of model, vendor, coding assistant, IDE, connector, CLI, task size, or requested output. Tool-specific instruction files may add stricter rules but MUST NOT weaken, bypass, summarize away, or contradict `AI_VIBE_CODING_RULES.md`.
+This applies regardless of model, vendor, coding assistant, IDE, connector, CLI, task size, or requested output.
+
+Tool-specific instruction files may add stricter rules but MUST NOT weaken, bypass, summarize away, or contradict `AI_VIBE_CODING_RULES.md`.
 
 Instruction precedence:
 
@@ -145,7 +147,9 @@ npm run check:sanitation
 
 `npm run check` validates source governance and mandatory AI-policy integration.
 
-Browser smoke testing is mandatory when changing runtime loading, UI state, persistence, routing, generated assets, or browser-visible behavior. Open the built hub, launch each affected tool through its generated hub route, and inspect console, network, initialization, persistence, and relevant export/import workflows.
+Browser smoke testing is mandatory when changing runtime loading, UI state, persistence, routing, generated assets, or browser-visible behavior.
+
+Open the built hub, launch each affected tool through its generated hub route, and inspect console, network, initialization, persistence, and relevant export/import workflows.
 
 Use only scoped statuses from the canonical policy:
 
