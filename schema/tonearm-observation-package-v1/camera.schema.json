@@ -1,0 +1,276 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "tonearm-observation-package-v1/camera.schema.json",
+  "$defs": {
+    "CameraIntrinsics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fx_px", "fy_px", "cx_px", "cy_px"],
+      "properties": {
+        "fx_px": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "number"
+            }
+          ]
+        },
+        "fy_px": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "number"
+            }
+          ]
+        },
+        "cx_px": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "number"
+            }
+          ]
+        },
+        "cy_px": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "number"
+            }
+          ]
+        }
+      }
+    },
+    "CameraDistortion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["model", "k1", "k2", "p1", "p2", "k3"],
+      "properties": {
+        "model": {
+          "$ref": "shared.schema.json#/$defs/DistortionModel"
+        },
+        "k1": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "number"
+            }
+          ]
+        },
+        "k2": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "number"
+            }
+          ]
+        },
+        "p1": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "number"
+            }
+          ]
+        },
+        "p2": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "number"
+            }
+          ]
+        },
+        "k3": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "number"
+            }
+          ]
+        }
+      }
+    },
+    "ObjectToCamera": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rotation", "translation_mm"],
+      "properties": {
+        "rotation": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "shared.schema.json#/$defs/Matrix3x3"
+            }
+          ]
+        },
+        "translation_mm": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "shared.schema.json#/$defs/Point3"
+            }
+          ]
+        }
+      }
+    },
+    "Rectification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "transform",
+        "residual_px",
+        "dimensional_use",
+        "source_view_id",
+        "source_entity_id",
+        "activity_id"
+      ],
+      "properties": {
+        "status": {
+          "$ref": "shared.schema.json#/$defs/RectificationStatus"
+        },
+        "transform": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "shared.schema.json#/$defs/Matrix3x3"
+            }
+          ]
+        },
+        "residual_px": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "number",
+              "minimum": 0
+            }
+          ]
+        },
+        "dimensional_use": {
+          "$ref": "shared.schema.json#/$defs/DimensionSource"
+        },
+        "source_view_id": {
+          "$ref": "shared.schema.json#/$defs/NullableId"
+        },
+        "source_entity_id": {
+          "$ref": "shared.schema.json#/$defs/NullableId"
+        },
+        "activity_id": {
+          "$ref": "shared.schema.json#/$defs/NullableId"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "rectified"
+              }
+            },
+            "required": ["status"]
+          },
+          "then": {
+            "properties": {
+              "transform": {
+                "$ref": "shared.schema.json#/$defs/Matrix3x3"
+              },
+              "source_view_id": {
+                "$ref": "shared.schema.json#/$defs/Id"
+              },
+              "source_entity_id": {
+                "$ref": "shared.schema.json#/$defs/Id"
+              },
+              "activity_id": {
+                "$ref": "shared.schema.json#/$defs/Id"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "enum": ["not_rectified", "rectification_candidate"]
+              }
+            },
+            "required": ["status"]
+          },
+          "then": {
+            "properties": {
+              "dimensional_use": {
+                "const": "forbidden"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "PerspectiveModel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "camera_model",
+        "calibration_state",
+        "intrinsics",
+        "distortion",
+        "object_to_camera",
+        "rectification_required",
+        "rectification",
+        "notes"
+      ],
+      "properties": {
+        "camera_model": {
+          "$ref": "shared.schema.json#/$defs/CameraModel"
+        },
+        "calibration_state": {
+          "$ref": "shared.schema.json#/$defs/CameraCalibrationState"
+        },
+        "intrinsics": {
+          "$ref": "#/$defs/CameraIntrinsics"
+        },
+        "distortion": {
+          "$ref": "#/$defs/CameraDistortion"
+        },
+        "object_to_camera": {
+          "$ref": "#/$defs/ObjectToCamera"
+        },
+        "rectification_required": {
+          "type": "boolean"
+        },
+        "rectification": {
+          "$ref": "#/$defs/Rectification"
+        },
+        "notes": {
+          "$ref": "shared.schema.json#/$defs/ShortText"
+        }
+      }
+    }
+  }
+}
