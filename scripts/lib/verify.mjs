@@ -14,6 +14,7 @@ import { exists } from './registry.mjs';
 
 const SKIP=new Set(['node_modules','test','tests','src','.git','.vite','coverage','package.json','package-lock.json','tool.json']);
 const EXT=new Set(['.map','.zip','.tgz','.tar','.bak','.tmp']);
+const ANALYTICS_TAG='<script data-cfasync="false" defer src="/analytics.js"></script>';
 const assert=(value,message)=>{if(!value)throw new Error(message)};
 const sorted=(items)=>[...new Set(items)].sort();
 const exactSet=(actual,expected,label)=>assert(JSON.stringify(sorted(actual))===JSON.stringify(sorted(expected)),`${label} parity failure`);
@@ -37,21 +38,21 @@ export async function checkOutput(root,out,registry){
   assert(analytics.includes('https://www.clarity.ms/tag/'),'Microsoft Clarity loader missing');
   const generatedHtml=(await listFiles(out)).filter((file)=>path.extname(file).toLowerCase()==='.html');
   assert(generatedHtml.length>0,'generated HTML surfaces missing');
-  for(const file of generatedHtml)assert((await fs.readFile(file,'utf8')).includes('<script defer src="/analytics.js"></script>'),`generated HTML analytics bootstrap missing: ${path.relative(out,file)}`);
+  for(const file of generatedHtml){const html=await fs.readFile(file,'utf8');assert(html.includes(ANALYTICS_TAG),`generated HTML Rocket Loader-safe analytics bootstrap missing: ${path.relative(out,file)}`);assert(!html.includes('<script defer src="/analytics.js"></script>'),`generated HTML contains unprotected analytics bootstrap: ${path.relative(out,file)}`)}
   const hub=await fs.readFile(path.join(out,'index.html'),'utf8');
   assert((hub.match(/<h1[ >]/g)||[]).length===1,'hub H1 failure');
-  assert(hub.includes('<script defer src="/analytics.js"></script>'),'hub analytics bootstrap missing');
+  assert(hub.includes(ANALYTICS_TAG),'hub Rocket Loader-safe analytics bootstrap missing');
   for(const requiredMeta of ['twitter:title','twitter:description','twitter:image','og:title','og:description','og:image'])assert(hub.includes(`name="${requiredMeta}"`)||hub.includes(`property="${requiredMeta}"`),`hub metadata missing: ${requiredMeta}`);
   for(const tool of registry.publicTools){
     assert(hub.includes(`href="${tool.canonicalPath}"`),`hub route missing: ${tool.slug}`);
     const page=await fs.readFile(path.join(out,'tools',tool.slug,'index.html'),'utf8');
     assert(page.includes(`<link rel="canonical" href="${tool.canonicalUrl}">`),`canonical missing: ${tool.slug}`);
-    assert(page.includes('<script defer src="/analytics.js"></script>'),`landing analytics bootstrap missing: ${tool.slug}`);
+    assert(page.includes(ANALYTICS_TAG),`landing Rocket Loader-safe analytics bootstrap missing: ${tool.slug}`);
     for(const requiredMeta of ['twitter:title','twitter:description','twitter:image','og:title','og:description','og:image'])assert(page.includes(`name="${requiredMeta}"`)||page.includes(`property="${requiredMeta}"`),`${tool.slug} metadata missing: ${requiredMeta}`);
     const scripts=[...page.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)];assert(scripts.length===1,`JSON-LD missing: ${tool.slug}`);const graph=JSON.parse(scripts[0][1]);const faqNode=graph['@graph']?.find((node)=>node['@type']==='FAQPage');assert(Boolean(faqNode)===Boolean(tool.faq.length),`FAQ JSON-LD polarity failure: ${tool.slug}`);for(const faq of tool.faq)assert(page.includes(faq.question)&&page.includes(faq.answer),`FAQ parity failure: ${tool.slug}`);
     for(const related of tool.relatedTools){const target=registry.tools.find((candidate)=>candidate.slug===related);assert(page.includes(`href="${target.canonicalPath}"`),`related-tool link missing: ${tool.slug}->${related}`)}
     const launchIndex=page.indexOf('<h2>Launch tool</h2>');const evidenceIndex=page.indexOf('<h2>Evidence and source links</h2>');assert(launchIndex>evidenceIndex&&launchIndex>0,`launch section ordering failure: ${tool.slug}`);
-    const appEntry=path.join(out,'tools',tool.slug,'app',tool.entry);assert(await exists(appEntry),`runtime entry missing: ${tool.slug}`);assert((await fs.readFile(appEntry,'utf8')).includes('<script defer src="/analytics.js"></script>'),`runtime analytics bootstrap missing: ${tool.slug}`);
+    const appEntry=path.join(out,'tools',tool.slug,'app',tool.entry);assert(await exists(appEntry),`runtime entry missing: ${tool.slug}`);assert((await fs.readFile(appEntry,'utf8')).includes(ANALYTICS_TAG),`runtime Rocket Loader-safe analytics bootstrap missing: ${tool.slug}`);
     assert(await exists(path.join(out,'tools',tool.slug,'tool.ai.json')),`tool.ai.json missing: ${tool.slug}`);assert(await exists(path.join(out,'tools',tool.slug,'tool.md')),`tool.md missing: ${tool.slug}`);
   }
   const sitemap=JSON.parse(await fs.readFile(path.join(out,'sitemap.json'),'utf8'));const urls=[`${registry.site.canonicalOrigin}/`,...registry.publicTools.map((tool)=>tool.canonicalUrl)].sort();assert(JSON.stringify([...sitemap.urls].sort())===JSON.stringify(urls),'sitemap parity failure');
