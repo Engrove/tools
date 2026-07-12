@@ -10,7 +10,7 @@ on:
       - '.github/workflows/manual-trace-project-package-contract.yml'
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   contract:
@@ -63,29 +63,3 @@ jobs:
         run: npm run check:determinism
       - name: Full sanitation gate
         run: npm run check:sanitation
-
-  apply-closure:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          ref: feat/manual-trace-project-package-contract
-      - name: Apply verified closure payload
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p /tmp/closure
-          cat .github/closure-payload/part-* | base64 -d | tar -xz -C /tmp/closure
-          cp /tmp/closure/schema/trace-project-package/ADR-0001-container-format.md schema/trace-project-package/
-          cp /tmp/closure/schema/trace-project-package/README.md schema/trace-project-package/
-          cp /tmp/closure/schema/trace-project-package/manifest.schema.json schema/trace-project-package/
-          cp /tmp/closure/schema/trace-project-package/project.schema.json schema/trace-project-package/
-          cp /tmp/closure/schema/trace-project-package/trace.schema.json schema/trace-project-package/
-          cp /tmp/closure/tools/manual-trace/test/trace-project-package/identity-reference-validator.mjs tools/manual-trace/test/trace-project-package/
-          cp /tmp/closure/tools/manual-trace/test/trace-project-package/final-contract-closure.test.mjs tools/manual-trace/test/trace-project-package/
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add schema/trace-project-package tools/manual-trace/test/trace-project-package
-          git commit -m 'fix: close Manual Trace package contract'
-          git push origin HEAD:${GITHUB_HEAD_REF}
