@@ -23,7 +23,10 @@ const SUITES = Object.freeze([
   "camera-view.test.cjs",
   "geometry.test.cjs",
   "references.test.cjs",
+  "validation-state.test.cjs",
+  "uncertainty.test.cjs",
   "decision.test.cjs",
+  "semantic-dispatch.test.cjs",
   "determinism.test.cjs",
   "module-boundaries.test.cjs",
 ]);
