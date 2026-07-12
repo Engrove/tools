@@ -41,11 +41,7 @@ jobs:
         run: node --test test/manual-trace-snap-policy.test.mjs
       - name: Schema and registry
         run: npm run check:schema
-      - name: Source governance
-        run: npm run check
-      - name: Production build
-        run: npm run build
-      - name: Generated SEO parity
-        run: npm run check:seo
-      - name: Deterministic build
-        run: npm run check:determinism
+      - name: Repository sanitation
+        run: |
+          npm run clean
+          npm run check:sanitation
