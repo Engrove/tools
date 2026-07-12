@@ -1,0 +1,5 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "engrove_tonearm_observation_package_v1.schema.json",
+  "$ref": "tonearm-observation-package-v1/package.schema.json"
+}
