@@ -1,0 +1,236 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "tonearm-observation-package-v1/geometry.schema.json",
+  "$defs": {
+    "Completeness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "negative_state"],
+      "properties": {
+        "state": {
+          "type": "string",
+          "enum": ["complete", "partial", "negative"]
+        },
+        "negative_state": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "shared.schema.json#/$defs/NegativeState"
+            }
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "negative"
+              }
+            },
+            "required": ["state"]
+          },
+          "then": {
+            "properties": {
+              "negative_state": {
+                "$ref": "shared.schema.json#/$defs/NegativeState"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "negative_state": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "ObservationGeometry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "closed",
+        "coordinate_space",
+        "points_2d",
+        "points_3d"
+      ],
+      "properties": {
+        "type": {
+          "$ref": "shared.schema.json#/$defs/GeometryType"
+        },
+        "closed": {
+          "type": "boolean"
+        },
+        "coordinate_space": {
+          "$ref": "shared.schema.json#/$defs/CoordinateSpace"
+        },
+        "points_2d": {
+          "type": "array",
+          "items": {
+            "$ref": "shared.schema.json#/$defs/Point2"
+          },
+          "maxItems": 10000
+        },
+        "points_3d": {
+          "type": "array",
+          "items": {
+            "$ref": "shared.schema.json#/$defs/Point3"
+          },
+          "maxItems": 10000
+        }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "type": {
+              "const": "point_2d"
+            },
+            "closed": {
+              "const": false
+            },
+            "coordinate_space": {
+              "enum": ["image_pixels", "view_metric"]
+            },
+            "points_2d": {
+              "minItems": 1,
+              "maxItems": 1
+            },
+            "points_3d": {
+              "maxItems": 0
+            }
+          }
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "line_2d"
+            },
+            "closed": {
+              "const": false
+            },
+            "coordinate_space": {
+              "enum": ["image_pixels", "view_metric"]
+            },
+            "points_2d": {
+              "minItems": 2,
+              "maxItems": 2
+            },
+            "points_3d": {
+              "maxItems": 0
+            }
+          }
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "polyline_2d"
+            },
+            "closed": {
+              "const": false
+            },
+            "coordinate_space": {
+              "enum": ["image_pixels", "view_metric"]
+            },
+            "points_2d": {
+              "minItems": 2
+            },
+            "points_3d": {
+              "maxItems": 0
+            }
+          }
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "polygon_2d"
+            },
+            "closed": {
+              "const": true
+            },
+            "coordinate_space": {
+              "enum": ["image_pixels", "view_metric"]
+            },
+            "points_2d": {
+              "minItems": 3
+            },
+            "points_3d": {
+              "maxItems": 0
+            }
+          }
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "section_loop_3d"
+            },
+            "closed": {
+              "const": true
+            },
+            "coordinate_space": {
+              "const": "object_frame"
+            },
+            "points_2d": {
+              "maxItems": 0
+            },
+            "points_3d": {
+              "minItems": 3
+            }
+          }
+        }
+      ]
+    },
+    "ObservationMeasurement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "measurement_id",
+        "quantity",
+        "value",
+        "unit",
+        "knowledge_state",
+        "source",
+        "uncertainty_id"
+      ],
+      "properties": {
+        "measurement_id": {
+          "$ref": "shared.schema.json#/$defs/Id"
+        },
+        "quantity": {
+          "type": "string",
+          "enum": [
+            "length",
+            "width",
+            "height",
+            "diameter",
+            "angle",
+            "area",
+            "scale",
+            "other"
+          ]
+        },
+        "value": {
+          "type": "number"
+        },
+        "unit": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 32
+        },
+        "knowledge_state": {
+          "$ref": "shared.schema.json#/$defs/KnowledgeState"
+        },
+        "source": {
+          "$ref": "shared.schema.json#/$defs/SourceReference"
+        },
+        "uncertainty_id": {
+          "$ref": "shared.schema.json#/$defs/NullableId"
+        }
+      }
+    }
+  }
+}
