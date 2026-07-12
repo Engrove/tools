@@ -1,0 +1,257 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "tonearm-observation-package-v1/shared.schema.json",
+  "$defs": {
+    "Id": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9._:-]{0,127}$"
+    },
+    "NullableId": {
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9._:-]{0,127}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "ShortText": {
+      "type": "string",
+      "maxLength": 2048
+    },
+    "Name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 160
+    },
+    "KnowledgeState": {
+      "type": "string",
+      "enum": [
+        "observed",
+        "measured",
+        "calculated",
+        "derived",
+        "operator_defined",
+        "design_default",
+        "model_assumption",
+        "ai_inferred",
+        "unknown",
+        "not_applicable",
+        "rejected"
+      ]
+    },
+    "NegativeState": {
+      "type": "string",
+      "enum": [
+        "not_visible",
+        "occluded",
+        "unknown",
+        "not_measured",
+        "not_present",
+        "outside_scope",
+        "rejected_interpretation"
+      ]
+    },
+    "GeometryRole": {
+      "type": "string",
+      "enum": [
+        "outer_silhouette",
+        "inner_void",
+        "section_loop",
+        "feature_boundary",
+        "visible_edge",
+        "occlusion_boundary",
+        "datum_line",
+        "centerline",
+        "construction_geometry",
+        "ignore_region",
+        "separate_component_outline"
+      ]
+    },
+    "MaterialSide": {
+      "type": "string",
+      "enum": ["inside", "outside", "unknown"]
+    },
+    "Visibility": {
+      "type": "string",
+      "enum": ["visible", "occluded", "inferred", "unknown"]
+    },
+    "ProjectionType": {
+      "type": "string",
+      "enum": [
+        "orthographic_drawing",
+        "orthographic_render",
+        "telecentric_capture",
+        "rectified_perspective",
+        "raw_perspective",
+        "unknown_projection"
+      ]
+    },
+    "Point2": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y"],
+      "properties": {
+        "x": { "type": "number" },
+        "y": { "type": "number" }
+      }
+    },
+    "Point3": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "z"],
+      "properties": {
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "z": { "type": "number" }
+      }
+    },
+    "Vector3": {
+      "type": "array",
+      "prefixItems": [
+        { "type": "number" },
+        { "type": "number" },
+        { "type": "number" }
+      ],
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "SourceReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "provenance_entity_id",
+        "provenance_activity_id",
+        "provenance_agent_id",
+        "note"
+      ],
+      "properties": {
+        "provenance_entity_id": { "$ref": "#/$defs/Id" },
+        "provenance_activity_id": { "$ref": "#/$defs/NullableId" },
+        "provenance_agent_id": { "$ref": "#/$defs/NullableId" },
+        "note": { "$ref": "#/$defs/ShortText" }
+      }
+    },
+    "NullableSourceReference": {
+      "anyOf": [
+        { "type": "null" },
+        { "$ref": "#/$defs/SourceReference" }
+      ]
+    },
+    "QuantifiedValue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value",
+        "unit",
+        "knowledge_state",
+        "source",
+        "uncertainty_id"
+      ],
+      "properties": {
+        "value": { "type": "number" },
+        "unit": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 32
+        },
+        "knowledge_state": { "$ref": "#/$defs/KnowledgeState" },
+        "source": { "$ref": "#/$defs/SourceReference" },
+        "uncertainty_id": { "$ref": "#/$defs/NullableId" }
+      }
+    },
+    "EnvelopeGeometryRole": {
+      "type": "string",
+      "enum": ["outer_silhouette", "section_loop"]
+    },
+    "DimensionSource": {
+      "type": "string",
+      "enum": ["eligible", "conditional", "forbidden"]
+    },
+    "AssemblyState": {
+      "type": "string",
+      "enum": [
+        "as_captured",
+        "assembled",
+        "disassembled",
+        "subassembly",
+        "unknown"
+      ]
+    },
+    "GeometryType": {
+      "type": "string",
+      "enum": [
+        "polyline_2d",
+        "polygon_2d",
+        "line_2d",
+        "point_2d",
+        "section_loop_3d"
+      ]
+    },
+    "CoordinateSpace": {
+      "type": "string",
+      "enum": ["image_pixels", "view_metric", "object_frame"]
+    },
+    "AgentType": {
+      "type": "string",
+      "enum": ["operator", "software", "ai_system", "organization", "unknown"]
+    },
+    "AcceptanceStatus": {
+      "type": "string",
+      "enum": ["accepted", "rejected"]
+    },
+    "AcceptanceScope": {
+      "type": "string",
+      "enum": ["package", "observation_subset"]
+    },
+    "LandmarkKind": {
+      "type": "string",
+      "enum": [
+        "mechanical_datum",
+        "visual_landmark",
+        "reference_point",
+        "reference_line",
+        "reference_plane",
+        "unknown"
+      ]
+    },
+    "CameraModel": {
+      "type": "string",
+      "enum": ["unknown", "pinhole", "fisheye", "other"]
+    },
+    "CameraCalibrationState": {
+      "type": "string",
+      "enum": ["not_calibrated", "partially_calibrated", "calibrated"]
+    },
+    "DistortionModel": {
+      "type": "string",
+      "enum": ["unknown", "none", "brown_conrady", "fisheye"]
+    },
+    "RectificationStatus": {
+      "type": "string",
+      "enum": ["not_rectified", "rectification_candidate", "rectified"]
+    },
+    "DateTime": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2})$"
+    },
+    "Matrix3x3": {
+      "type": "array",
+      "prefixItems": [
+        { "type": "number" },
+        { "type": "number" },
+        { "type": "number" },
+        { "type": "number" },
+        { "type": "number" },
+        { "type": "number" },
+        { "type": "number" },
+        { "type": "number" },
+        { "type": "number" }
+      ],
+      "minItems": 9,
+      "maxItems": 9
+    }
+  }
+}
