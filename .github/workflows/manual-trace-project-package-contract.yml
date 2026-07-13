@@ -6,7 +6,9 @@ on:
     paths:
       - 'schema/trace-project-package/**'
       - 'tools/manual-trace/trace-project-package.js'
+      - 'tools/manual-trace/trace-project-package-production.js'
       - 'tools/manual-trace/app-08.js'
+      - 'tools/manual-trace/app-09.js'
       - 'tools/manual-trace/index.html'
       - 'tools/manual-trace/test/trace-project-package/**'
       - 'tools/tonearm-profile-designer/test/**'
@@ -18,7 +20,7 @@ permissions:
 jobs:
   contract:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -27,7 +29,9 @@ jobs:
       - name: Production and contract syntax
         run: |
           node --check tools/manual-trace/trace-project-package.js
+          node --check tools/manual-trace/trace-project-package-production.js
           node --check tools/manual-trace/app-08.js
+          node --check tools/manual-trace/app-09.js
           node --check tools/manual-trace/test/trace-project-package/contract-validator-core.mjs
           node --check tools/manual-trace/test/trace-project-package/identity-reference-validator.mjs
           node --check tools/manual-trace/test/trace-project-package/contract-validator.mjs
@@ -36,23 +40,21 @@ jobs:
           node --check tools/manual-trace/test/trace-project-package/final-contract-closure.test.mjs
           node --check tools/manual-trace/test/trace-project-package/package-builder.test.mjs
           node --check tools/manual-trace/test/trace-project-package/package-adapter.test.mjs
+          node --check tools/manual-trace/test/trace-project-package/package-production-contract.test.mjs
+          node --check tools/manual-trace/test/trace-project-package/browser-export-smoke.mjs
       - name: Merged contract regressions
         run: |
           node --test tools/manual-trace/test/trace-project-package/trace-project-package-contract.test.mjs
           node --test tools/manual-trace/test/trace-project-package/identity-reference-integrity.test.mjs
           node --test tools/manual-trace/test/trace-project-package/final-contract-closure.test.mjs
-      - name: Builder deterministic behavior
-        run: node --test --test-name-pattern='round trip|repeated logical|multiple traces|canonical JSON' tools/manual-trace/test/trace-project-package/package-builder.test.mjs
-      - name: Builder hashes and byte sizes
-        run: node --test --test-name-pattern='hashes and sizes' tools/manual-trace/test/trace-project-package/package-builder.test.mjs
-      - name: Builder merged-contract validation
-        run: node --test --test-name-pattern='contract validation' tools/manual-trace/test/trace-project-package/package-builder.test.mjs
-      - name: Builder path safety
-        run: node --test --test-name-pattern='path traversal|duplicate and normalized' tools/manual-trace/test/trace-project-package/package-builder.test.mjs
-      - name: Builder package limits
-        run: node --test --test-name-pattern='file count|total size|individual size|compression ratio' tools/manual-trace/test/trace-project-package/package-builder.test.mjs
+      - name: Builder regressions
+        run: node --test tools/manual-trace/test/trace-project-package/package-builder.test.mjs
+      - name: Production contract and canonical-order regressions
+        run: node --test tools/manual-trace/test/trace-project-package/package-production-contract.test.mjs
       - name: Manual Trace package adapter regression
         run: node --test tools/manual-trace/test/trace-project-package/package-adapter.test.mjs
+      - name: Chromium multi-view export smoke
+        run: node tools/manual-trace/test/trace-project-package/browser-export-smoke.mjs
 
   tonearm-regression:
     runs-on: ubuntu-latest
