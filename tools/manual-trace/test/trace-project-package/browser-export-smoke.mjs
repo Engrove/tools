@@ -31,7 +31,7 @@ function unzipStore(bytes){const entries=new Map();let offset=0;while(offset+4<=
 try{
  const version=await pollJson(`http://127.0.0.1:${debugPort}/json/version`);
  const browser=socket(version.webSocketDebuggerUrl);await browser.call('Browser.setDownloadBehavior',{behavior:'allow',downloadPath:downloads,eventsEnabled:true});
- const target=await pollJson(`http://127.0.0.1:${debugPort}/json/new?http://127.0.0.1:${port}/tools/manual-trace/test/trace-project-package/browser-export-smoke.html`,{method:'PUT'});
+ const target=await pollJson(`http://127.0.0.1:${debugPort}/json/new?${encodeURIComponent(`http://127.0.0.1:${port}/tools/manual-trace/test/trace-project-package/browser-export-smoke.html`)}`,{method:'PUT'});
  const page=socket(target.webSocketDebuggerUrl);await page.call('Runtime.enable');
  const deadline=Date.now()+30000;let state;
  while(Date.now()<deadline){state=await page.call('Runtime.evaluate',{expression:'({done:Boolean(window.__smokeDone),error:window.__smokeError||null,status:document.getElementById("packageViewStatus")?.textContent||""})',returnByValue:true});const value=state.result.value;if(value.error)throw new Error(value.error);if(value.done)break;await new Promise(resolveWait=>setTimeout(resolveWait,100))}
@@ -44,7 +44,10 @@ try{
  assert.ok(entries.has('manifest.json'));assert.ok(entries.has('project.json'));
  const manifest=JSON.parse(entries.get('manifest.json').toString('utf8'));
  const project=JSON.parse(entries.get('project.json').toString('utf8'));
- assert.equal(project.traceFiles.length,2);assert.deepEqual(project.traceFiles.map(item=>item.path),['traces/trace-side-000000000000400080000000.json','traces/trace-top-000000000000400080000000.json']);
+ assert.equal(project.traceFiles.length,2);
+ const traceDocuments=project.traceFiles.map(item=>JSON.parse(entries.get(item.path).toString('utf8')));
+ assert.deepEqual(traceDocuments.map(trace=>trace.view.viewType).sort(),['side','top']);
+ assert.equal(new Set(traceDocuments.map(trace=>trace.objectId)).size,1);
  for(const file of manifest.files){assert.ok(entries.has(file.path),`manifest entry missing from ZIP: ${file.path}`);const payload=entries.get(file.path);assert.equal(payload.byteLength,file.sizeBytes,`size mismatch: ${file.path}`);assert.equal(createHash('sha256').update(payload).digest('hex'),file.sha256,`hash mismatch: ${file.path}`)}
  assert.deepEqual([...entries.keys()],['manifest.json',...manifest.files.map(file=>file.path)]);
  console.log(`Chromium smoke PASS: ${files[0]} with ${project.traceFiles.length} views and ${manifest.files.length} inventoried files.`);
