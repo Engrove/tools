@@ -5,6 +5,11 @@ on:
     branches: [main]
     paths:
       - 'schema/trace-project-package/**'
+      - 'tools/manual-trace/trace-project-package.js'
+      - 'tools/manual-trace/trace-project-package-production.js'
+      - 'tools/manual-trace/app-08.js'
+      - 'tools/manual-trace/app-09.js'
+      - 'tools/manual-trace/index.html'
       - 'tools/manual-trace/test/trace-project-package/**'
       - 'tools/tonearm-profile-designer/test/**'
       - '.github/workflows/manual-trace-project-package-contract.yml'
@@ -15,22 +20,51 @@ permissions:
 jobs:
   contract:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22.16.0'
-      - name: Contract syntax
+      - name: Production and contract syntax
         run: |
+          node --check tools/manual-trace/trace-project-package.js
+          node --check tools/manual-trace/trace-project-package-production.js
+          node --check tools/manual-trace/app-08.js
+          node --check tools/manual-trace/app-09.js
           node --check tools/manual-trace/test/trace-project-package/contract-validator-core.mjs
           node --check tools/manual-trace/test/trace-project-package/identity-reference-validator.mjs
           node --check tools/manual-trace/test/trace-project-package/contract-validator.mjs
           node --check tools/manual-trace/test/trace-project-package/trace-project-package-contract.test.mjs
           node --check tools/manual-trace/test/trace-project-package/identity-reference-integrity.test.mjs
           node --check tools/manual-trace/test/trace-project-package/final-contract-closure.test.mjs
-      - name: Contract and golden fixtures
-        run: node --test tools/manual-trace/test/trace-project-package/*.test.mjs
+          node --check tools/manual-trace/test/trace-project-package/package-builder.test.mjs
+          node --check tools/manual-trace/test/trace-project-package/package-adapter.test.mjs
+          node --check tools/manual-trace/test/trace-project-package/package-production-contract.test.mjs
+          node --check tools/manual-trace/test/trace-project-package/browser-export-smoke.mjs
+      - name: Merged contract regressions
+        run: |
+          node --test tools/manual-trace/test/trace-project-package/trace-project-package-contract.test.mjs
+          node --test tools/manual-trace/test/trace-project-package/identity-reference-integrity.test.mjs
+          node --test tools/manual-trace/test/trace-project-package/final-contract-closure.test.mjs
+      - name: Builder regressions
+        run: node --test tools/manual-trace/test/trace-project-package/package-builder.test.mjs
+      - name: Production contract and canonical-order regressions
+        run: node --test tools/manual-trace/test/trace-project-package/package-production-contract.test.mjs
+      - name: Manual Trace package adapter regression
+        run: node --test tools/manual-trace/test/trace-project-package/package-adapter.test.mjs
+      - name: Chromium multi-view export smoke
+        run: |
+          set -o pipefail
+          node tools/manual-trace/test/trace-project-package/browser-export-smoke.mjs 2>&1 | tee browser-smoke.log
+      - name: Upload Chromium smoke diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: manual-trace-browser-smoke-${{ github.sha }}
+          path: browser-smoke.log
+          if-no-files-found: error
+          retention-days: 3
 
   tonearm-regression:
     runs-on: ubuntu-latest
@@ -53,6 +87,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22.16.0'
+      - name: Manual Trace regression
+        run: node --test test/manual-trace-snap-policy.test.mjs
       - name: Clean generated output
         run: npm run clean
       - name: Production build
