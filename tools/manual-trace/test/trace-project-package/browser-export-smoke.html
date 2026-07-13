@@ -1,0 +1,41 @@
+<!doctype html>
+<meta charset="utf-8">
+<base href="/tools/manual-trace/">
+<title>Manual Trace package Chromium smoke</title>
+<select id="packageViewType"><option value="side">side</option><option value="top">top</option></select>
+<div id="packageViewStatus"></div>
+<button id="storePackageView">Store</button>
+<button id="exportTraceProject">Export</button>
+<script>
+const elements=new Map([...document.querySelectorAll('[id]')].map(element=>[element.id,element]));
+function $(id){return elements.get(id)||null}
+function clone(value){return JSON.parse(JSON.stringify(value))}
+function ensureAllMeta(){}
+function safeFileBase(value){return String(value||'project').replace(/[^A-Za-z0-9._-]+/g,'_')}
+const PROJECT_SCHEMA='engrove_trace_project_v2';
+let S={schema_version:'engrove_manual_trace_v16',project_meta:{name:'Chromium smoke'},img:{name:'side.png',width:400,height:200,dataUrl:'data:image/png;base64,iVBORw0KGgo='},shapes:[{id:'side-outline',type:'poly',name:'Side',role:'trace',description:'Side contour',closed:true,points:[{x:0,y:0},{x:100,y:0},{x:100,y:20},{x:0,y:20}],semantic:{feature_kind:'outer_contour'},references:[]}],frame:{origin:{x:10,y:20},origin_metadata:{description:'Origin.'},axes:{x:'+image_x',y:'+out_of_screen',z:'-image_y'},scale:{unit_per_px:.5,source_length_px:200,source_real_length:100,reference_measure_id:'measure-reference'}},svgTrace:{}};
+function outObj(){return{schema_version:S.schema_version,description:{en:'Chromium smoke trace.'},image:S.img,trace_frame:S.frame,shapes:S.shapes,auto_trace:{enabled:false}}}
+window.alert=message=>{window.__smokeError=String(message)};
+</script>
+<script src="trace-project-package.js"></script>
+<script src="trace-project-package-production.js"></script>
+<script src="app-08.js"></script>
+<script src="app-09.js"></script>
+<script>
+(async()=>{try{
+ await captureCurrentPackageView();
+ packageViewType.value='top';
+ S.img={...S.img,name:'top.png'};
+ S.shapes=[{...S.shapes[0],id:'top-outline',name:'Top',description:'Top contour'}];
+ S.frame.axes={x:'+image_x',y:'+image_y',z:'+out_of_screen'};
+ await captureCurrentPackageView();
+ exportTraceProject.click();
+ const deadline=Date.now()+20000;
+ while(!packageViewStatus.textContent.includes('contract-validated')){
+  if(window.__smokeError)throw new Error(window.__smokeError);
+  if(Date.now()>deadline)throw new Error('Validated export did not complete.');
+  await new Promise(resolve=>setTimeout(resolve,50));
+ }
+ window.__smokeDone=true;
+}catch(error){window.__smokeError=error.stack||error.message||String(error)}})();
+</script>
