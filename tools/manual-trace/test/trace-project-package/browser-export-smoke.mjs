@@ -53,5 +53,10 @@ try{
  console.log(`Chromium smoke PASS: ${files[0]} with ${project.traceFiles.length} views and ${manifest.files.length} inventoried files.`);
  page.close();browser.close();
 } finally {
- child.kill('SIGTERM');server.close();await rm(temporary,{recursive:true,force:true});
+ const exited=new Promise(resolveExit=>{if(child.exitCode!==null)resolveExit();else child.once('exit',resolveExit)});
+ child.kill('SIGTERM');
+ await Promise.race([exited,new Promise(resolveWait=>setTimeout(resolveWait,5000))]);
+ if(child.exitCode===null)child.kill('SIGKILL');
+ await new Promise(resolveClose=>server.close(resolveClose));
+ for(let attempt=0;attempt<3;attempt+=1){try{await rm(temporary,{recursive:true,force:true});break}catch(error){if(attempt===2)throw error;await new Promise(resolveWait=>setTimeout(resolveWait,100))}}
 }
