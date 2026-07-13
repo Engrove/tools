@@ -1,0 +1,61 @@
+name: PR17 locale sort repair
+
+on:
+  push:
+    branches:
+      - feat/manual-trace-project-package-export
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Restore verified source and apply exact code-unit patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git show 2cc26ab4f2530a087a922617ad6aead9fdf269b4:tools/manual-trace/app-08.js > tools/manual-trace/app-08.js
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('tools/manual-trace/app-08.js')
+          text = path.read_text()
+          anchor = 'const uid=p=>`${p}-${(crypto.randomUUID?.().replace(/-/g,"")||Date.now().toString(36)+Math.random().toString(36).slice(2)).slice(0,24)}`;\n'
+          comparator = 'function codeUnitCompare(a,b){const x=String(a),y=String(b);return x<y?-1:x>y?1:0}\n'
+          if comparator not in text:
+              text = text.replace(anchor, anchor + comparator, 1)
+          replacements = {
+              'const uniq=a=>[...new Set(a)].sort((x,y)=>x.localeCompare(y));': 'const uniq=a=>[...new Set(a)].sort(codeUnitCompare);',
+              'String(a.id).localeCompare(String(b.id))': 'codeUnitCompare(a.id,b.id)',
+              '.sort(([a],[b])=>a.localeCompare(b))': '.sort(([a],[b])=>codeUnitCompare(a,b))',
+          }
+          for old, new in replacements.items():
+              if old not in text:
+                  raise SystemExit(f'missing expected source pattern: {old}')
+              text = text.replace(old, new, 1)
+          if 'localeCompare' in text:
+              raise SystemExit('localeCompare remains in app-08.js')
+          path.write_text(text)
+          PY
+          rm .github/workflows/pr17-locale-sort-repair.yml
+          node --check tools/manual-trace/app-08.js
+          node --check tools/manual-trace/test/trace-project-package/package-adapter.test.mjs
+          node --test tools/manual-trace/test/trace-project-package/package-adapter.test.mjs
+          git diff --check
+      - name: Commit repaired exact source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add tools/manual-trace/app-08.js tools/manual-trace/test/trace-project-package/package-adapter.test.mjs .github/workflows/pr17-locale-sort-repair.yml
+          git commit -m "fix(manual-trace): enforce code-unit adapter ordering"
+          git push origin HEAD:feat/manual-trace-project-package-export
