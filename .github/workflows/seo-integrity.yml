@@ -17,6 +17,24 @@ jobs:
       PUPPETEER_SKIP_DOWNLOAD: 'true'
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+      - name: Capture branch tree and source
+        run: |
+          git rev-parse HEAD > head-commit.txt
+          git rev-parse 'HEAD^{tree}' > head-tree.txt
+          git archive --format=tar.gz --output=branch-source.tgz HEAD
+      - name: Publish branch tree identity
+        uses: actions/upload-artifact@v4
+        with:
+          name: contract-bootstrap-tree
+          path: |
+            head-commit.txt
+            head-tree.txt
+            branch-source.tgz
+          if-no-files-found: error
+          retention-days: 1
       - uses: actions/setup-node@v4
         with:
           node-version: '22.16.0'
