@@ -77,8 +77,8 @@ Verification: npm test, repository build gates, and desktop browser smoke tests.
             </div>
             <div class="manual-trace-import">
                 <strong>Engrove Manual Trace → 3D</strong>
-                <div class="info-text">Add calibrated top and side JSON, project or paired SVG exports. Plane is read from engineering axes and can be corrected below.</div>
-                <input id="manualTraceFiles" type="file" multiple accept=".json,.engrove-trace,.engrove-project,.svg,application/json,image/svg+xml" hidden>
+                <div class="info-text">Add a validated <code>.engrove-trace-project</code> package, or calibrated top and side JSON, project or paired SVG exports. A package declares its own views; legacy files read the plane from engineering axes and can be corrected below.</div>
+                <input id="manualTraceFiles" type="file" multiple accept=".json,.engrove-trace,.engrove-project,.engrove-trace-project,.svg,application/json,image/svg+xml" hidden>
                 <div class="manual-trace-actions">
                     <button id="manualTraceAddBtn" type="button">Add trace files…</button>
                     <button id="manualTraceClearBtn" type="button">Clear inputs</button>
@@ -2596,6 +2596,10 @@ TD051 is a package-level runtime/schema/spec/test contract. It does not prove br
 </script>
 <script src="js/config.js"></script>
 <script src="js/manual-trace-3d-adapter.js"></script>
+<script src="js/trace-project-package-reader.js"></script>
+<script src="js/trace-project-package-semantics.js"></script>
+<script src="js/trace-project-package-validator.js"></script>
+<script src="js/trace-project-package-adapter.js"></script>
 <script src="js/kinematics.js"></script>
 <script src="js/physics.js"></script>
 <script src="js/math.js"></script>

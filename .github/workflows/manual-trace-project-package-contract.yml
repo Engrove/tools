@@ -11,6 +11,15 @@ on:
       - 'tools/manual-trace/app-09.js'
       - 'tools/manual-trace/index.html'
       - 'tools/manual-trace/test/trace-project-package/**'
+      - 'tools/tonearm-profile-designer/js/trace-project-package-reader.js'
+      - 'tools/tonearm-profile-designer/js/trace-project-package-semantics.js'
+      - 'tools/tonearm-profile-designer/js/trace-project-package-validator.js'
+      - 'tools/tonearm-profile-designer/js/trace-project-package-adapter.js'
+      - 'tools/tonearm-profile-designer/js/manual-trace-3d-adapter.js'
+      - 'tools/tonearm-profile-designer/js/design-session.js'
+      - 'tools/tonearm-profile-designer/js/session.js'
+      - 'tools/tonearm-profile-designer/index.html'
+      - 'tools/tonearm-profile-designer/scripts/**'
       - 'tools/tonearm-profile-designer/test/**'
       - '.github/workflows/manual-trace-project-package-contract.yml'
 
@@ -68,14 +77,45 @@ jobs:
 
   tonearm-regression:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22.16.0'
+      - name: Tonearm package import syntax
+        run: |
+          node --check tools/tonearm-profile-designer/js/trace-project-package-reader.js
+          node --check tools/tonearm-profile-designer/js/trace-project-package-semantics.js
+          node --check tools/tonearm-profile-designer/js/trace-project-package-validator.js
+          node --check tools/tonearm-profile-designer/js/trace-project-package-adapter.js
+          node --check tools/tonearm-profile-designer/test/trace-project-package-fixtures.cjs
+          node --check tools/tonearm-profile-designer/test/trace-project-package-model.cjs
+          node --check tools/tonearm-profile-designer/test/trace-project-package-browser-smoke.mjs
+      - name: Tonearm bounded package reader
+        run: node tools/tonearm-profile-designer/test/trace-project-package-reader.test.cjs
+      - name: Tonearm package contract validator parity
+        run: node tools/tonearm-profile-designer/test/trace-project-package-validator.test.cjs
+      - name: Tonearm package geometry adapter
+        run: node tools/tonearm-profile-designer/test/trace-project-package-adapter.test.cjs
+      - name: Tonearm export-to-import roundtrip
+        run: node tools/tonearm-profile-designer/test/trace-project-package-roundtrip.test.cjs
       - name: Tonearm Profile Designer portable regression
         run: npm --prefix tools/tonearm-profile-designer test
+      - name: Tonearm built runtime
+        run: npm --prefix tools/tonearm-profile-designer run build
+      - name: Chromium package import smoke
+        run: |
+          set -o pipefail
+          node tools/tonearm-profile-designer/test/trace-project-package-browser-smoke.mjs 2>&1 | tee tonearm-import-smoke.log
+      - name: Upload Chromium import smoke diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tonearm-package-import-smoke-${{ github.sha }}
+          path: tonearm-import-smoke.log
+          if-no-files-found: error
+          retention-days: 3
 
   root-gates:
     runs-on: ubuntu-latest

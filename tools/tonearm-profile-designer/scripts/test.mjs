@@ -23,6 +23,10 @@ const tests = [
   path.join('test', 'manual-trace-adapter.test.cjs'),
   path.join('test', 'manual-trace-freeform-integration.test.cjs'),
   path.join('test', 'empty-session-contract.test.cjs'),
+  path.join('test', 'trace-project-package-reader.test.cjs'),
+  path.join('test', 'trace-project-package-validator.test.cjs'),
+  path.join('test', 'trace-project-package-adapter.test.cjs'),
+  path.join('test', 'trace-project-package-roundtrip.test.cjs'),
   ...readdirSync(path.join(root, 'tools'))
     .filter(name => name.endsWith('.js') && !unavailable.has(name))
     .sort()

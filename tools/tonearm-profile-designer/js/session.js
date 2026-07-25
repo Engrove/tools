@@ -66,6 +66,7 @@ const Session = {
             designLoaded: !!(state && state.designLoaded === true),
             designSource: state && state.designSource ? String(state.designSource) : null,
             manualTraceImport: (state && state.manualTraceImport) ? JSON.parse(JSON.stringify(state.manualTraceImport)) : null,
+            traceProjectPackageImport: (state && state.traceProjectPackageImport) ? JSON.parse(JSON.stringify(state.traceProjectPackageImport)) : null,
             geometryMode: (state && state.geometryMode === 'freeform') ? 'freeform' : 'parametric',
             // TD053F: these fields are overwritten immediately below by the canonical live-state snapshot.
             freeformLoft: (state && state.freeformLoft) ? JSON.parse(JSON.stringify(state.freeformLoft)) : null,
@@ -178,6 +179,9 @@ const Session = {
         state.designSource = state.designLoaded ? String(data.designSource || 'opened_session') : null;
         state.manualTraceImport = data.manualTraceImport && typeof data.manualTraceImport === 'object'
             ? JSON.parse(JSON.stringify(data.manualTraceImport))
+            : null;
+        state.traceProjectPackageImport = data.traceProjectPackageImport && typeof data.traceProjectPackageImport === 'object'
+            ? JSON.parse(JSON.stringify(data.traceProjectPackageImport))
             : null;
 
         const clampToElement = (el, v) => {
