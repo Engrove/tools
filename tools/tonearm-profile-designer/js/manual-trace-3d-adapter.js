@@ -460,17 +460,33 @@
             fail('TRACE_LENGTH_LIMIT', 'Common trace length ' + round(length, 3) + ' mm is outside ' + DIMENSION_LIMITS.length.join('–') + ' mm.');
         }
         const stations = buildStations(top, side, minX, maxX, options && options.stationCount);
-        const samples = stations.map(x => {
+        // The station grid always contains the exact longitudinal extremes, where a closed silhouette
+        // has zero transverse extent by construction. A below-minimum section there is geometric
+        // degeneracy, not an out-of-range design, so the station is dropped and reported instead of
+        // aborting the conversion. Interior violations and any above-maximum section still fail closed.
+        const droppedEndStations = [];
+        const samples = stations.map((x, index) => {
+            const isEnd = index === 0 || index === stations.length - 1;
             const topBounds = boundsAtX(top, x);
             const sideBounds = boundsAtX(side, x);
             if (!topBounds || !sideBounds) return null;
             const width = topBounds.max - topBounds.min;
             const height = sideBounds.max - sideBounds.min;
-            if (width < DIMENSION_LIMITS.width[0] || width > DIMENSION_LIMITS.width[1]) {
+            if (width > DIMENSION_LIMITS.width[1]) {
                 fail('TRACE_WIDTH_LIMIT', 'Trace width ' + round(width, 3) + ' mm at X=' + round(x, 3) + ' is outside ' + DIMENSION_LIMITS.width.join('–') + ' mm.');
             }
-            if (height < DIMENSION_LIMITS.height[0] || height > DIMENSION_LIMITS.height[1]) {
+            if (height > DIMENSION_LIMITS.height[1]) {
                 fail('TRACE_HEIGHT_LIMIT', 'Trace height ' + round(height, 3) + ' mm at X=' + round(x, 3) + ' is outside ' + DIMENSION_LIMITS.height.join('–') + ' mm.');
+            }
+            const belowWidth = width < DIMENSION_LIMITS.width[0];
+            const belowHeight = height < DIMENSION_LIMITS.height[0];
+            if ((belowWidth || belowHeight) && !isEnd) {
+                if (belowWidth) fail('TRACE_WIDTH_LIMIT', 'Trace width ' + round(width, 3) + ' mm at X=' + round(x, 3) + ' is outside ' + DIMENSION_LIMITS.width.join('–') + ' mm.');
+                fail('TRACE_HEIGHT_LIMIT', 'Trace height ' + round(height, 3) + ' mm at X=' + round(x, 3) + ' is outside ' + DIMENSION_LIMITS.height.join('–') + ' mm.');
+            }
+            if (belowWidth || belowHeight) {
+                droppedEndStations.push({ sourceXMm: round(x, 6), widthMm: round(width, 6), heightMm: round(height, 6), reason: 'degenerate_silhouette_at_longitudinal_extreme' });
+                return null;
             }
             return {
                 sourceX: x,
@@ -533,6 +549,7 @@
                 files: list.map(trace => ({ fileName: trace.fileName, packageType: trace.packageType, geometrySchema: trace.geometrySchema, plane: trace.plane, detectedPlane: trace.detectedPlane, contourCount: trace.contourCount, unitPerPixel: trace.unitPerPixel, originRole: trace.originRole })),
                 commonLongitudinalSourceRangeMm: { min: round(minX, 6), max: round(maxX, 6), translatedLength: round(length, 6) },
                 stationCount: samples.length,
+                droppedEndStations: droppedEndStations,
                 sectionAssumption: 'superellipse_2_6_from_orthographic_width_height_bounds',
                 svgRole: 'visual_pair_and_geometry_carrier_when_json_is_absent; JSON remains authoritative when paired'
             },

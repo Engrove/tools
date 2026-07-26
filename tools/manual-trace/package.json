@@ -1,0 +1,12 @@
+{
+  "name": "engrove-manual-trace",
+  "version": "18.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Desktop browser engineering trace editor with validated Engrove trace project package export.",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "node --test test/trace-project-package/*.test.mjs"
+  },
+  "license": "Unlicense"
+}

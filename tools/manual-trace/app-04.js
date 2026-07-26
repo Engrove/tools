@@ -214,6 +214,9 @@ function loadJ(f){
 
 function loadProject(f){
  if(!f)return;
+ // The multi-view .engrove-trace-project container is a ZIP written for Tonearm Profile Designer.
+ // Manual Trace has no reader for it, so say that instead of failing inside the JSON parser.
+ if(f.name.toLowerCase().endsWith(".engrove-trace-project")){alert(`"${f.name}" is a multi-view trace project package. Manual Trace exports this container for Tonearm Profile Designer but cannot reopen it. Open the matching .engrove-trace project file to resume editing.`);return}
  let r=new FileReader();
  r.onload=e=>{try{let o=JSON.parse(e.target.result);applyProjectPackage(o,f.name)}catch(err){alert("Project open error: "+err.message)}};
  r.readAsText(f)

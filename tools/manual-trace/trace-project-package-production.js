@@ -109,15 +109,21 @@
   async function loadSchemas(options = {}) {
     if (options.schemas) return options.schemas;
     const node = typeof process !== "undefined" && process.versions?.node;
-    const key = node ? `node:${options.schemaDirectory || "schema/trace-project-package"}` : options.schemaBaseUrl || "browser-default";
+    const key = node ? `node:${options.schemaDirectory || "module-relative"}` : options.schemaBaseUrl || "browser-default";
     if (!schemaCache.has(key)) schemaCache.set(key, (async () => {
       if (node) {
         const [{ readFile }, path] = await Promise.all([import("node:fs/promises"), import("node:path")]);
-        const directory = path.resolve(process.cwd(), options.schemaDirectory || "schema/trace-project-package");
+        // Module-relative by default: process.cwd() differs between a repository-root test run and a
+        // per-tool `npm test`, and a cwd-dependent contract path fails in exactly one of them.
+        const fallback = typeof __dirname === "string" ? path.resolve(__dirname, "..", "..", "schema", "trace-project-package") : path.resolve(process.cwd(), "schema/trace-project-package");
+        const directory = options.schemaDirectory ? path.resolve(process.cwd(), options.schemaDirectory) : fallback;
         const read = async name => JSON.parse(await readFile(path.join(directory, `${name}.schema.json`), "utf8"));
         return { manifest: await read("manifest"), project: await read("project"), trace: await read("trace") };
       }
-      const baseUrl = options.schemaBaseUrl || new URL("../../schema/trace-project-package/", document.baseURI).href;
+      // Resolved beside the application entry, because the deployed hub serves this tool from
+      // /tools/manual-trace/app/ and does not expose repository paths. The build publishes the
+      // schemas there; a repository-relative path only resolves in the source tree.
+      const baseUrl = options.schemaBaseUrl || new URL("schema/trace-project-package/", document.baseURI).href;
       const read = async name => {
         const response = await fetch(new URL(`${name}.schema.json`, baseUrl), { cache: "no-cache", credentials: "same-origin" });
         if (!response.ok) throw new Error(`Could not load ${name} contract schema (${response.status}).`);

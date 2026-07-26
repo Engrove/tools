@@ -10,7 +10,7 @@
   "tags": ["tracing", "SVG", "geometry", "metrology", "CAD preparation"],
   "keywords": ["manual vector trace tool", "SVG auto trace editor", "engineering contour digitizer", "image measurement calibration", "AI readable geometry JSON", "Engrove trace project"],
   "entry": "index.html",
-  "buildOutputDir": ".",
+  "buildOutputDir": "dist",
   "public": true,
   "hidden": false,
   "language": "en",
@@ -27,7 +27,8 @@
     "Assign names, roles, feature kinds, descriptions, semantic metadata, and explicit reference relations to traced objects.",
     "Calibrate pixel measurements against a real length and preserve the engineering coordinate-frame definition.",
     "Save and reopen resumable Engrove project packages containing geometry, application state, source image data, SVG trace provenance, and panel layout settings.",
-    "Export paired JSON and SVG representations with stable object IDs, geometry summaries, source bindings, and 64-point sampled polylines."
+    "Export paired JSON and SVG representations with stable object IDs, geometry summaries, source bindings, and 64-point sampled polylines.",
+    "Store calibrated top, side and front views and export a contract-validated multi-view Engrove trace project package for downstream 3D reconstruction."
   ],
   "inputs": [
     {"name": "reference_image", "type": "raster image file or clipboard image", "required": false, "description": "A browser-supported raster image used as the visual tracing reference."},
@@ -38,7 +39,8 @@
   "outputs": [
     {"name": "trace_json", "type": "JSON file or clipboard text", "description": "Structured trace geometry, engineering frame, metadata, relations, provenance and optional embedded image data."},
     {"name": "bound_svg", "type": "SVG file", "description": "Visual vector export whose groups retain stable JSON object identifiers and JSON paths."},
-    {"name": "engrove_trace_project", "type": ".engrove-trace JSON package", "description": "Resumable browser project containing workspace state, geometry, source data and project metadata."}
+    {"name": "engrove_trace_project", "type": ".engrove-trace JSON package", "description": "Resumable browser project containing workspace state, geometry, source data and project metadata."},
+    {"name": "engrove_trace_project_package", "type": ".engrove-trace-project ZIP package", "description": "Contract-validated multi-view package holding one shared object, per-view calibrated geometry and stations, a SHA-256 file manifest, and the complete workspace retained as sidecars."}
   ],
   "whenToUse": [
     "Use it to digitize a technical silhouette or reference drawing before downstream CAD or AI-assisted geometric interpretation.",

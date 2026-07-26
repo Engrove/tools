@@ -27,6 +27,7 @@
     // Mirrors the legacy adapter's contour selection: silhouette-bearing roles participate, annotation
     // roles do not. Excluded contours are reported as intentionally_ignored rather than dropped.
     const GEOMETRY_ROLES = Object.freeze(['outer_contour', 'inner_contour', 'centerline', 'slot', 'hole']);
+    const VIEW_TRANSVERSE_AXIS = Object.freeze({ top: 'Y', side: 'Z' });
     const BEZIER_SAMPLES = 64;
     const CIRCLE_SAMPLES = 64;
 
@@ -138,6 +139,14 @@
         const axes = viewAxes(document, longitudinalAxis);
         if (!axes) {
             errors.push(diagnostic('PACKAGE_VIEW_AXIS_UNMAPPABLE', 'View ' + view.viewType + ' does not place the longitudinal axis ' + longitudinalAxis + ' in its plane.', at + '.view.viewFrame'));
+            return null;
+        }
+        // The silhouette is projected onto the engineering axis implied by viewType, so a declared
+        // viewType that contradicts the declared transverse axis would relabel a lateral measurement
+        // as a vertical one. The contract does not couple the two fields, so the importer must.
+        const expectedTransverse = VIEW_TRANSVERSE_AXIS[view.viewType];
+        if (expectedTransverse && axes.transverse.engineeringAxis !== expectedTransverse) {
+            errors.push(diagnostic('PACKAGE_VIEW_AXIS_ROLE_CONTRADICTION', 'View ' + view.viewType + ' must measure its silhouette along engineering ' + expectedTransverse + ', but the view frame declares ' + String(axes.transverse.engineeringAxis) + '.', at + '.view.viewFrame'));
             return null;
         }
         const origin = datumPosition(project, frame.engineeringOriginDatumId);

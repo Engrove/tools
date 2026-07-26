@@ -246,7 +246,7 @@ stage.addEventListener("drop",e=>{
  let n=f.name.toLowerCase();
  if(n.endsWith(".svg")||f.type==="image/svg+xml")loadSvgTraceFile(f);
  else if(f.type.startsWith("image/"))loadImg(f);
- else if(n.endsWith(".engrove-trace")||n.endsWith(".engrove-project"))loadProject(f);
+ else if(n.endsWith(".engrove-trace-project")||n.endsWith(".engrove-trace")||n.endsWith(".engrove-project"))loadProject(f);
  else if(n.endsWith(".json"))loadJ(f)
 });
 

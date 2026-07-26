@@ -56,6 +56,7 @@ Every object receives a stable ID and default name. The operator can set name, r
 ### Project persistence and export
 
 - Resumable `.engrove-trace` project package
+- Contract-validated `.engrove-trace-project` multi-view package for Tonearm Profile Designer. It is an export container only; reopen the `.engrove-trace` project to resume editing.
 - Structured JSON export
 - Paired SVG overlay export
 - Clipboard JSON

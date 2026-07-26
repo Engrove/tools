@@ -10,6 +10,8 @@ on:
       - 'tools/manual-trace/app-08.js'
       - 'tools/manual-trace/app-09.js'
       - 'tools/manual-trace/index.html'
+      - 'tools/manual-trace/scripts/**'
+      - 'tools/manual-trace/package.json'
       - 'tools/manual-trace/test/trace-project-package/**'
       - 'tools/tonearm-profile-designer/js/trace-project-package-reader.js'
       - 'tools/tonearm-profile-designer/js/trace-project-package-semantics.js'
@@ -41,6 +43,7 @@ jobs:
           node --check tools/manual-trace/trace-project-package-production.js
           node --check tools/manual-trace/app-08.js
           node --check tools/manual-trace/app-09.js
+          node --check tools/manual-trace/scripts/build.mjs
           node --check tools/manual-trace/test/trace-project-package/contract-validator-core.mjs
           node --check tools/manual-trace/test/trace-project-package/identity-reference-validator.mjs
           node --check tools/manual-trace/test/trace-project-package/contract-validator.mjs
@@ -62,6 +65,8 @@ jobs:
         run: node --test tools/manual-trace/test/trace-project-package/package-production-contract.test.mjs
       - name: Manual Trace package adapter regression
         run: node --test tools/manual-trace/test/trace-project-package/package-adapter.test.mjs
+      - name: Manual Trace built runtime
+        run: npm --prefix tools/manual-trace run build
       - name: Chromium multi-view export smoke
         run: |
           set -o pipefail

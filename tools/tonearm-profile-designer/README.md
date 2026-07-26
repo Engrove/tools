@@ -16,6 +16,7 @@ Accepted input:
 
 - `engrove_manual_trace.json`;
 - `.engrove-trace` and `.engrove-project` project packages;
+- `.engrove-trace-project` multi-view packages, whose declared view types and engineering axes are authoritative for plane assignment;
 - paired `engrove_manual_trace.svg` exports containing `engrove_trace_json_binding` metadata.
 
 The importer validates file size, schema identity, finite coordinates, scale, origin, unique engineering axes, supported geometry and point-count limits. JSON coordinates remain authoritative. SVG input is parsed as inert XML and only the Manual Trace metadata and supported geometry elements are read.
