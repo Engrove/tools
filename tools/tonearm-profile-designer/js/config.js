@@ -162,6 +162,7 @@ const state = {
     splitBase: 'solid',
     splitClearance: 0.0,
     plugCrossSectionScalePercent: 0,
+    plugSplitPositionPercent: 50,
     meshSegments: 60,
     meshStepX: 1.0,
     draftMinDeg: 1.0,

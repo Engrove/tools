@@ -474,6 +474,67 @@
         }, [['Export validation', 'error']]);
     }
 
+    /**
+     * Casting-pattern and trace-provenance rows. These record the operator decisions and the recovery
+     * actions that change the exported geometry - the section assumption, the pattern allowance, any end
+     * station moved inward, and the mould-release verdict - so a printed pattern can be traced back to
+     * the choices that produced it.
+     */
+    function buildPatternProvenanceRows(st) {
+        return safeCall('casting pattern provenance', function() {
+            const rows = [];
+            const active = st.freeformLoftActive || st.freeformLoft || null;
+            const provenance = (active && active.sourceProvenance) || st.manualTraceImport || null;
+            const compensation = active && active.plugCompensation;
+
+            rows.push(['Cross-section allowance [%]', fmt(st.plugCrossSectionScalePercent, 3)]);
+            rows.push(['Recorded pattern scale', compensation ? fmt(compensation.crossSectionScale, 6) : 'none applied']);
+            rows.push(['Length preserved by allowance', compensation ? fmtCompact(compensation.lengthPreserved) : '—']);
+            rows.push(['Split position [% of length]', fmt(st.plugSplitPositionPercent, 2)]);
+            rows.push(['Split clearance [mm]', fmt(st.splitClearance, 3)]);
+
+            if (provenance) {
+                rows.push(['Section exponent', fmtCompact(provenance.sectionExponent)]);
+                rows.push(['Section exponent source', fmtCompact(provenance.sectionExponentSource)]);
+                rows.push(['Section assumption', fmtCompact(provenance.sectionAssumption)]);
+                const traced = provenance.commonLongitudinalSourceRangeMm;
+                const lofted = provenance.loftedLongitudinalRangeMm;
+                if (traced) rows.push(['Traced length [mm]', fmt(traced.translatedLength, 3)]);
+                if (lofted) rows.push(['Lofted length [mm]', fmt(lofted.loftedLength, 3)]);
+                const insets = provenance.endStationInsets;
+                rows.push(['End stations moved inward', Array.isArray(insets) ? String(insets.length) : '—']);
+                if (Array.isArray(insets)) {
+                    insets.forEach((inset, index) => {
+                        rows.push(['End inset ' + (index + 1), 'X ' + fmt(inset.sourceXMm, 3) + ' mm to ' + fmt(inset.resolvedXMm, 3) + ' mm (' + fmt(inset.insetMm, 4) + ' mm)']);
+                    });
+                }
+            } else {
+                rows.push(['Trace provenance', 'not a trace-derived design']);
+            }
+
+            const audit = (typeof LAST_PLUG_MOULD_AUDIT !== 'undefined') ? LAST_PLUG_MOULD_AUDIT : null;
+            if (audit) {
+                rows.push(['Mould release checked along', fmtCompact(audit.pullAxis)]);
+                rows.push(['Two-part mouldable', fmtCompact(audit.twoPartMouldable)]);
+                rows.push(['Undercut samples', fmtCompact(audit.undercutRayCount)]);
+                rows.push(['Max surface crossings', fmtCompact(audit.maxSurfaceCrossings)]);
+                rows.push(['Near-vertical surface area fraction', fmt(audit.lowDraftAreaFraction, 6)]);
+                rows.push(['Parting line stations', fmtCompact(audit.partingLineStations)]);
+                rows.push(['Mould release claim boundary', fmtCompact(audit.claimBoundary)]);
+            } else {
+                rows.push(['Mould release', 'not checked in this session']);
+            }
+
+            const analysis = st.freeformLastAcceptedAnalysis || st.freeformLastAnalysis || null;
+            const core = analysis && (analysis.analysis || analysis);
+            if (core && core.effectiveLengthMm !== undefined) {
+                rows.push(['Effective length [mm]', fmt(core.effectiveLengthMm, 3)]);
+                rows.push(['Effective length source', fmtCompact(core.effectiveLengthSource)]);
+            }
+            return rows;
+        }, [['Casting pattern provenance', 'error']]);
+    }
+
     function buildCobraRows(st) {
         const rows = [];
         const manifest = safeCall('getCobraCapabilityManifest', function() {
@@ -1132,6 +1193,11 @@ function buildPhysicsObjectRows(phys) {
         lines.push(table(['Metric', 'Value'], buildExportRows(st, exportValidation)));
 
         lines.push('');
+        lines.push('## 8b. Casting pattern and trace provenance');
+        lines.push('');
+        lines.push(table(['Metric', 'Value'], buildPatternProvenanceRows(st)));
+        lines.push('');
+
         lines.push('## 9. Cobra-class feature state');
         lines.push('');
         lines.push(table(['Feature / field', 'Value'], buildCobraRows(st)));

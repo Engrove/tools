@@ -103,6 +103,7 @@ jobs:
           node --check tools/tonearm-profile-designer/test/trace-project-package-fixtures.cjs
           node --check tools/tonearm-profile-designer/test/trace-project-package-model.cjs
           node --check tools/tonearm-profile-designer/test/trace-project-package-browser-smoke.mjs
+          node --check tools/tonearm-profile-designer/test/pattern-panel-browser-smoke.mjs
       - name: Tonearm bounded package reader
         run: node tools/tonearm-profile-designer/test/trace-project-package-reader.test.cjs
       - name: Tonearm package contract validator parity
@@ -119,12 +120,18 @@ jobs:
         run: |
           set -o pipefail
           node tools/tonearm-profile-designer/test/trace-project-package-browser-smoke.mjs 2>&1 | tee tonearm-import-smoke.log
+      - name: Chromium casting pattern panel smoke
+        run: |
+          set -o pipefail
+          node tools/tonearm-profile-designer/test/pattern-panel-browser-smoke.mjs 2>&1 | tee pattern-panel-smoke.log
       - name: Upload Chromium import smoke diagnostics
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: tonearm-package-import-smoke-${{ github.sha }}
-          path: tonearm-import-smoke.log
+          path: |
+            tonearm-import-smoke.log
+            pattern-panel-smoke.log
           if-no-files-found: error
           retention-days: 3
 

@@ -769,6 +769,11 @@
     </table>
     <h3>Casting pattern allowance</h3>
     <p>The cross-section scale in the export panel multiplies every section of a freeform pattern by a percentage and leaves the traced length unchanged, so a printed pattern can allow for the shrinkage of a mould taken off it and of the part later laid up inside. Negative values shrink the sections. A factor that would drive any section outside the supported ring range is refused rather than clamped, since clamping would silently change the pattern's shape on the stations that hit the limit. The Onshape 1:1 export refuses a non-zero allowance, because it is defined as an exact reference whose sidecar states that no shrinkage compensation was applied.</p>
+    <p>The <strong>Check mould release</strong> button in the export panel runs this test on the pattern as it would be
+    exported, allowance included, at the same mesh density the STL will use. Choose the pull axis first: Z splits the
+    mould top and bottom, Y left and right. The verdict, the parting-line station count and the near-vertical surface
+    fraction are also written into the technical report. <strong>Pattern split position</strong> sets where the
+    across-length cut falls, as a percentage of the pattern's own length.</p>
     <p>Whether a pattern can leave a two-part mould is a geometric question the tool can answer: along the chosen pull axis a releasable shape presents exactly one up-facing and one down-facing surface everywhere. Surfaces within the draft threshold of the pull direction are near-vertical walls, reported as a draft area fraction rather than counted as undercuts, because every closed pattern has a silhouette band at exactly zero draft. This is a ray-sampled check on the exported mesh, not a mould-flow or tooling simulation.</p>
 
     <h3>Export Format</h3>

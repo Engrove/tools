@@ -508,6 +508,21 @@ Verification: npm test, repository build gates, and desktop browser smoke tests.
                     <input type="number" id="plugCrossSectionScalePercent" min="-5" max="10" value="0" step="0.05">
                 </div>
                 <div class="info-text">Freeform/trace geometry only. Scales every section by this percentage and leaves the traced length unchanged, to allow for mould and laminate shrinkage. Ignored by the Onshape 1:1 export, which is defined as an exact reference with no compensation.</div>
+                <div class="control-group">
+                    <label for="plugSplitPositionPercent">Pattern split position [% of length] <span id="val_plugSplitPositionPercent">50.00</span></label>
+                    <input type="number" id="plugSplitPositionPercent" min="5" max="95" value="50" step="1">
+                </div>
+                <div class="info-text">Where the pattern is cut when the split export type is selected. The cut runs across the length; the clearance slider above opens a gap between the halves.</div>
+                <div class="control-group">
+                    <label for="plugMouldPullAxis">Two-part mould pull axis</label>
+                    <select id="plugMouldPullAxis">
+                        <option value="Z" selected>Z — mould splits top/bottom</option>
+                        <option value="Y">Y — mould splits left/right</option>
+                        <option value="X">X — mould splits front/back</option>
+                    </select>
+                </div>
+                <button id="plugMouldAuditBtn" type="button">Check mould release</button>
+                <div id="plugMouldAuditResult" class="manual-trace-status info" aria-live="polite">Not checked. Run this on the pattern you intend to print.</div>
             </div>
 
             <div id="splitOptions" class="sub-options" style="display:none; margin-top:8px; border-left:3px solid #e74c3c; padding-left:8px;">

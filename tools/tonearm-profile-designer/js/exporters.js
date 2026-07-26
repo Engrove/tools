@@ -7,6 +7,9 @@
 // from a freeform/trace loft.
 const FREEFORM_UNSUPPORTED_EXPORT_TYPES = ['hollow', 'split_vertical', 'split_horizontal'];
 
+// Last mould-release verdict, so the technical report can state what the operator actually saw.
+let LAST_PLUG_MOULD_AUDIT = null;
+
 function getCobraEggshellExportGeometry() {
     if (typeof isCobraEggshellRuntimeGeometryDebugEnabled !== 'function' ||
         !isCobraEggshellRuntimeGeometryDebugEnabled(state)) {
@@ -64,6 +67,71 @@ function resolvePlugCrossSectionScale() {
         return { factor: 1, percent: 0, refusedReason: 'onshape_1to1_is_an_exact_reference' };
     }
     return { factor: 1 + percent / 100, percent };
+}
+
+/**
+ * Builds the freeform state exactly as an export would, allowance included, so anything measured on it
+ * describes the pattern that will actually be written rather than the unscaled design.
+ */
+function resolvePlugPatternState() {
+    if (!state || state.geometryMode !== 'freeform') return { error: 'Switch geometryMode to freeform: this applies to trace-derived patterns.' };
+    if (!state.freeformLoftActive) return { error: 'No accepted active freeform geometry exists yet. Build a loft first.' };
+    if (!window.FreeformLoftKernel || typeof window.FreeformLoftKernel.buildFreeformGeometry !== 'function') {
+        return { error: 'FreeformLoftKernel is unavailable.' };
+    }
+    const plugScale = resolvePlugCrossSectionScale();
+    let patternState = state.freeformLoftActive;
+    if (plugScale.factor !== 1 && typeof window.FreeformLoftKernel.scaleCrossSection === 'function') {
+        try {
+            patternState = window.FreeformLoftKernel.scaleCrossSection(state.freeformLoftActive, plugScale.factor);
+        } catch (error) {
+            return { error: error && error.message ? error.message : String(error) };
+        }
+    }
+    return { patternState, appliedScale: plugScale.factor };
+}
+
+/**
+ * Runs the two-part mould release audit from the export panel and renders the verdict. The audit is
+ * read-only: it never alters geometry, it only reports whether the pattern can leave the mould.
+ */
+function runPlugMouldReleaseAudit() {
+    const target = document.getElementById('plugMouldAuditResult');
+    const render = (text, cls) => {
+        if (!target) return;
+        target.textContent = text;
+        target.className = 'manual-trace-status ' + cls;
+    };
+    if (!window.FreeformPlugMouldAudit || typeof window.FreeformPlugMouldAudit.auditDemouldability !== 'function') {
+        render('FreeformPlugMouldAudit is unavailable.', 'error');
+        return;
+    }
+    const resolved = resolvePlugPatternState();
+    if (resolved.error) { render(resolved.error, 'error'); return; }
+
+    const pullAxis = (document.getElementById('plugMouldPullAxis') || {}).value || 'Z';
+    const segments = typeof getMeshSegments === 'function' ? Math.min(64, Math.max(24, Math.round(getMeshSegments() / 2))) : 48;
+    const geometry = window.FreeformLoftKernel.buildFreeformGeometry(resolved.patternState, { stationCount: 24, segmentCount: segments });
+    const audit = window.FreeformPlugMouldAudit.auditDemouldability(geometry.mesh, { pullAxis });
+    const line = typeof window.FreeformPlugMouldAudit.partingLine === 'function'
+        ? window.FreeformPlugMouldAudit.partingLine(geometry.mesh, { pullAxis, stations: 24 })
+        : [];
+    LAST_PLUG_MOULD_AUDIT = Object.assign({}, audit, {
+        partingLineStations: line.length,
+        appliedCrossSectionScale: resolved.appliedScale
+    });
+
+    const scaleNote = resolved.appliedScale === 1 ? 'no allowance' : 'allowance ' + ((resolved.appliedScale - 1) * 100).toFixed(2) + '%';
+    if (audit.status === 'BLOCKER') {
+        render('Does NOT release along ' + pullAxis + ': ' + audit.undercutRayCount + ' undercut sample(s), up to '
+            + audit.maxSurfaceCrossings + ' surface crossings. The mould would lock. (' + scaleNote + ')', 'error');
+        return;
+    }
+    const draft = (audit.lowDraftAreaFraction * 100).toFixed(2);
+    render('Releases from a two-part mould along ' + pullAxis + '. Parting line: ' + line.length
+        + ' stations. Near-vertical surface: ' + draft + '% of area'
+        + (audit.findings.length ? ' (' + audit.findings.join(', ') + ')' : '') + '. (' + scaleNote + ')',
+        audit.findings.length ? 'warn' : 'ok');
 }
 
 function getFreeformLoftExportGeometry() {
@@ -125,8 +193,15 @@ function getFreeformPatternSplitGeometries(sourceGeometry) {
     }
     const mesh = sourceGeometry && sourceGeometry.userData ? sourceGeometry.userData.sourceMesh : null;
     if (!mesh) return { error: 'Export blocked: the freeform export did not carry a source mesh to split.' };
+    // The cut position is given as a percentage of the pattern's own length so the control stays valid
+    // whatever the traced arm measures; the splitter itself takes an absolute coordinate.
+    let minX = Infinity, maxX = -Infinity;
+    (mesh.vertices || []).forEach(vertex => { minX = Math.min(minX, vertex.x); maxX = Math.max(maxX, vertex.x); });
+    const positionPercent = Number(state.plugSplitPositionPercent);
+    const fraction = Number.isFinite(positionPercent) ? Math.min(95, Math.max(5, positionPercent)) / 100 : 0.5;
     const result = window.FreeformPatternSplit.splitPattern(mesh, {
         axis: 'X',
+        at: minX + (maxX - minX) * fraction,
         clearanceMm: Number(state.splitClearance) || 0
     });
     if (!result.ok) return { error: 'Export blocked: ' + result.error };
@@ -148,7 +223,8 @@ function getFreeformPatternSplitGeometries(sourceGeometry) {
             patternSplitAxis: result.axis,
             patternSplitAtMm: result.atMm,
             patternSplitClearanceMm: result.clearanceMm,
-            patternSplitHalf: key
+            patternSplitHalf: key,
+            patternSplitPositionPercent: Math.round(fraction * 10000) / 100
         });
         parts[key] = geometry;
     }

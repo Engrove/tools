@@ -12,7 +12,7 @@ let activePanelDrag = null;
 let validationBannerCollapsed = true;
 
 const EXTRA_NUMERIC_INPUT_IDS = [
-    'meshSegments', 'meshStepX', 'draftMinDeg', 'plugCrossSectionScalePercent',
+    'meshSegments', 'meshStepX', 'draftMinDeg', 'plugCrossSectionScalePercent', 'plugSplitPositionPercent',
     'rearSupportBridgeLength', 'rearSupportBridgeRadius', 'rearSupportBridgeOverlap',
     'canopyRidgeHeight', 'canopyRidgeWidthFraction', 'canopyRidgeSharpness',
     'wireRouteRadius', 'wireRouteYOffset', 'wireRouteZOffset',
@@ -918,6 +918,9 @@ inputs.forEach(id => bindIfExists(id, 'input', updateState));
 EXTRA_NUMERIC_INPUT_IDS.forEach(id => bindIfExists(id, 'input', updateState));
 bindIfExists('syncAlignment', 'click', syncAlignmentTarget);
 bindIfExists('exportType', 'change', updateState);
+bindIfExists('plugMouldAuditBtn', 'click', runPlugMouldReleaseAudit);
+bindIfExists('plugSplitPositionPercent', 'change', updateState);
+bindIfExists('plugSplitPositionPercent', 'input', updateState);
 bindIfExists('plugCrossSectionScalePercent', 'change', updateState);
 bindIfExists('plugCrossSectionScalePercent', 'input', updateState);
 bindIfExists('exportFormat', 'change', () => { state.exportFormat = document.getElementById('exportFormat').value; });
