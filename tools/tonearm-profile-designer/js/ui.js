@@ -13,6 +13,7 @@ let validationBannerCollapsed = true;
 
 const EXTRA_NUMERIC_INPUT_IDS = [
     'meshSegments', 'meshStepX', 'draftMinDeg', 'plugCrossSectionScalePercent', 'plugSplitPositionPercent',
+    'patternSplitPinRadius', 'patternSplitPinDepth', 'patternSplitPinClearance',
     'rearSupportBridgeLength', 'rearSupportBridgeRadius', 'rearSupportBridgeOverlap',
     'canopyRidgeHeight', 'canopyRidgeWidthFraction', 'canopyRidgeSharpness',
     'wireRouteRadius', 'wireRouteYOffset', 'wireRouteZOffset',
@@ -811,6 +812,7 @@ function updateState() {
     });
 
     [
+        'patternSplitRegistration',
         'showRearCG', 'showNeutralLine', 'showTowerClearance', 'includeRearWeightDiscsInExport',
         'showRearWeights', 'showFineTrimScrew', 'showVerticalPivot', 'showTotalCOM', 'showRearCOM',
         'showCounterweightCOM', 'showCartridgeCOM', 'showInertiaAxes', 'showMeasureLines', 'showForce', 'showMass', 'showLpTopPlane', 'stylusLockedToLP',
@@ -919,6 +921,10 @@ EXTRA_NUMERIC_INPUT_IDS.forEach(id => bindIfExists(id, 'input', updateState));
 bindIfExists('syncAlignment', 'click', syncAlignmentTarget);
 bindIfExists('exportType', 'change', updateState);
 bindIfExists('plugMouldAuditBtn', 'click', runPlugMouldReleaseAudit);
+bindIfExists('patternSplitRegistration', 'change', updateState);
+bindIfExists('patternSplitPinRadius', 'change', updateState);
+bindIfExists('patternSplitPinDepth', 'change', updateState);
+bindIfExists('patternSplitPinClearance', 'change', updateState);
 bindIfExists('plugSplitPositionPercent', 'change', updateState);
 bindIfExists('plugSplitPositionPercent', 'input', updateState);
 bindIfExists('plugCrossSectionScalePercent', 'change', updateState);

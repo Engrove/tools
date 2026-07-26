@@ -33,6 +33,7 @@ const Session = {
     SELECT_IDS: ['exportType', 'exportFormat', 'rearMode', 'material', 'cartMode', 'alignmentPreset', 'renderMode', 'manufacturingMode'],
 
     CHECKBOX_IDS: [
+        'patternSplitRegistration',
         'showRearCG', 'showNeutralLine', 'showTowerClearance', 'includeRearWeightDiscsInExport',
         'showRearWeights', 'showFineTrimScrew', 'showVerticalPivot', 'showTotalCOM', 'showRearCOM',
         'showCounterweightCOM', 'showCartridgeCOM', 'showInertiaAxes', 'showMeasureLines',
@@ -41,7 +42,7 @@ const Session = {
     ],
 
     EXTRA_INPUT_IDS: ['splitClearance', 'targetEffectiveMass', 'targetLFResonance', 'targetVTF', 'targetFirstBendingMode', 'targetSlendernessMin', 'targetSlendernessMax',
-        'meshSegments', 'meshStepX', 'draftMinDeg', 'plugCrossSectionScalePercent', 'plugSplitPositionPercent', 'rearSupportBridgeLength', 'rearSupportBridgeRadius',
+        'meshSegments', 'meshStepX', 'draftMinDeg', 'plugCrossSectionScalePercent', 'plugSplitPositionPercent', 'patternSplitPinRadius', 'patternSplitPinDepth', 'patternSplitPinClearance', 'rearSupportBridgeLength', 'rearSupportBridgeRadius',
         'rearSupportBridgeOverlap', 'canopyRidgeHeight', 'canopyRidgeWidthFraction', 'canopyRidgeSharpness',
         'wireRouteRadius', 'wireRouteYOffset', 'wireRouteZOffset',
         'titaniumPlateLength', 'titaniumPlateWidth', 'titaniumPlateThickness', 'titaniumPlateMass',

@@ -514,6 +514,22 @@ Verification: npm test, repository build gates, and desktop browser smoke tests.
                 </div>
                 <div class="info-text">Where the pattern is cut when the split export type is selected. The cut runs across the length; the clearance slider above opens a gap between the halves.</div>
                 <div class="control-group">
+                    <label><input type="checkbox" id="patternSplitRegistration" checked> Registration pin on the cut face</label>
+                </div>
+                <div class="control-group">
+                    <label for="patternSplitPinRadius">Pin radius [mm], 0 = size from section <span id="val_patternSplitPinRadius">0.00</span></label>
+                    <input type="number" id="patternSplitPinRadius" min="0" max="12" value="0" step="0.1">
+                </div>
+                <div class="control-group">
+                    <label for="patternSplitPinDepth">Pin depth [mm] <span id="val_patternSplitPinDepth">3.00</span></label>
+                    <input type="number" id="patternSplitPinDepth" min="0.5" max="30" value="3" step="0.5">
+                </div>
+                <div class="control-group">
+                    <label for="patternSplitPinClearance">Pin fit clearance [mm] <span id="val_patternSplitPinClearance">0.15</span></label>
+                    <input type="number" id="patternSplitPinClearance" min="0" max="1" value="0.15" step="0.05">
+                </div>
+                <div class="info-text">A keyed boss is added to the first half and a matching socket to the second, so the printed halves rejoin in one orientation only. The socket is opened by the fit clearance. A pin that would break through the wall is refused with the maximum the section allows.</div>
+                <div class="control-group">
                     <label for="plugMouldPullAxis">Two-part mould pull axis</label>
                     <select id="plugMouldPullAxis">
                         <option value="Z" selected>Z — mould splits top/bottom</option>

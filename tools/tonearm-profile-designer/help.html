@@ -767,6 +767,13 @@
         <tr><td>Horizontal split (zCenter)</td><td>Two halves cut along the local centerline of each ring (Z = ring center).</td></tr>
         <tr><td>Pattern split across length</td><td>Freeform/trace geometry only. Cuts the pattern across its length into two closed halves for printers whose build volume is shorter than the arm. Each half is checked for closure before it is written, and the clearance slider opens a gap between them. Hollow and the two parametric splits are generated from the parametric ring cache and are refused for freeform geometry.</td></tr>
     </table>
+    <h3>Registration on the cut face</h3>
+    <p>When the pattern is split, a keyed boss is added to the first half and a matching socket to the second, so the
+    printed halves rejoin in one orientation only: the pin profile is a circle with a single chord flat, which a plain
+    round pin would not give. The socket is the same profile opened by the fit clearance, so the pin can actually
+    enter it. Leave the pin radius at 0 to have it sized from the cut section; a radius that would break through the
+    wall is refused, and the message states the maximum the section allows. Unticking the box leaves plain flat cut
+    faces.</p>
     <h3>Casting pattern allowance</h3>
     <p>The cross-section scale in the export panel multiplies every section of a freeform pattern by a percentage and leaves the traced length unchanged, so a printed pattern can allow for the shrinkage of a mould taken off it and of the part later laid up inside. Negative values shrink the sections. A factor that would drive any section outside the supported ring range is refused rather than clamped, since clamping would silently change the pattern's shape on the stations that hit the limit. The Onshape 1:1 export refuses a non-zero allowance, because it is defined as an exact reference whose sidecar states that no shrinkage compensation was applied.</p>
     <p>The <strong>Check mould release</strong> button in the export panel runs this test on the pattern as it would be

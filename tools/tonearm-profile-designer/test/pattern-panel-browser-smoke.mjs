@@ -89,7 +89,8 @@ try {
                 state.geometryMode = 'freeform';
                 state.freeformLoftActive = FreeformLoftKernel.defaultState('straight_low_mass_lt_arm');
 
-                out.controls = ['plugCrossSectionScalePercent', 'plugSplitPositionPercent', 'plugMouldPullAxis', 'plugMouldAuditBtn']
+                out.controls = ['plugCrossSectionScalePercent', 'plugSplitPositionPercent', 'plugMouldPullAxis', 'plugMouldAuditBtn',
+                    'patternSplitRegistration', 'patternSplitPinRadius', 'patternSplitPinDepth', 'patternSplitPinClearance']
                     .every(id => !!document.getElementById(id));
 
                 // Accepting direction: the default pattern releases along Z.
@@ -115,6 +116,16 @@ try {
                 const halves = getFreeformPatternSplitGeometries(getFreeformLoftExportGeometry());
                 out.splitApplied = halves.error ? ('ERROR ' + halves.error) : halves.partA.userData.patternSplitPositionPercent;
 
+                // The registration checkbox must reach the exported halves in both positions.
+                document.getElementById('patternSplitRegistration').checked = true;
+                document.getElementById('patternSplitRegistration').dispatchEvent(new Event('change', { bubbles: true }));
+                const pinnedHalves = getFreeformPatternSplitGeometries(getFreeformLoftExportGeometry());
+                out.pinnedRegistration = pinnedHalves.error ? ('ERROR ' + pinnedHalves.error) : pinnedHalves.partA.userData.patternSplitRegistration;
+                document.getElementById('patternSplitRegistration').checked = false;
+                document.getElementById('patternSplitRegistration').dispatchEvent(new Event('change', { bubbles: true }));
+                const plainHalves = getFreeformPatternSplitGeometries(getFreeformLoftExportGeometry());
+                out.plainRegistration = plainHalves.error ? ('ERROR ' + plainHalves.error) : plainHalves.partA.userData.patternSplitRegistration;
+
                 // The allowance control must reach the exported mesh.
                 state.exportType = 'solid';
                 const scale = document.getElementById('plugCrossSectionScalePercent');
@@ -135,6 +146,8 @@ try {
     check(result.splitState === 30, 'the split position control must reach application state');
     check(result.splitApplied === 30, 'the split position must reach the exported halves, got ' + result.splitApplied);
     check(Math.abs(Number(result.scaleApplied) - 1.02) < 1e-9, 'the allowance control must reach the exported mesh, got ' + result.scaleApplied);
+    check(/"radiusMm"/.test(String(result.pinnedRegistration)), 'the registration checkbox must produce a pin on the exported halves, got ' + result.pinnedRegistration);
+    check(result.plainRegistration === 'none', 'unchecking registration must produce plain cut faces, got ' + result.plainRegistration);
     check(result.report === true, 'the technical report must carry the casting pattern provenance section');
 
     console.log(JSON.stringify({ status: 'PASS_WITH_SCOPE', test: 'pattern-panel-browser-smoke', assertions, chrome }, null, 2));

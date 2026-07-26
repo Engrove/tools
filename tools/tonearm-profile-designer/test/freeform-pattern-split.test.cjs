@@ -63,6 +63,35 @@ for (const key of ['partA', 'partB']) {
     check(split.meshClosure(spaced[key]).closed === true, key + ' must stay closed when a clearance is applied');
 }
 
+// ---- registration: boss and socket keep both halves closed and mate with clearance ----
+const pinned = split.splitPattern(source, { axis: 'X', registration: { depthMm: 3, clearanceMm: 0.15 } });
+check(pinned.ok === true, 'a cut with a registration pin must succeed: ' + (pinned.error || ''));
+check(pinned.registration.autoSized === true, 'an unset pin radius must be sized from the cut section');
+check(pinned.registration.radiusMm > 0, 'the auto-sized pin must have a positive radius');
+check(pinned.partA.metadata.registration.feature === 'boss', 'the first half must carry the boss');
+check(pinned.partB.metadata.registration.feature === 'socket', 'the second half must carry the socket');
+for (const key of ['partA', 'partB']) {
+    const closure = split.meshClosure(pinned[key]);
+    check(closure.closed === true, key + ' must stay closed with a registration feature, got boundary=' + closure.boundaryEdgeCount + ' nonManifold=' + closure.nonManifoldEdgeCount);
+    check(closure.degenerateFaceCount === 0, key + ' must contain no degenerate faces with a registration feature');
+}
+// A boss adds material and a socket removes more than the boss adds, because the socket carries the fit
+// clearance. If these moved the same way the pin could not enter its socket.
+const plainA = signedVolume(result.partA), plainB = signedVolume(result.partB);
+check(signedVolume(pinned.partA) > plainA, 'the boss half must gain material');
+check(signedVolume(pinned.partB) < plainB, 'the socket half must lose material');
+check((signedVolume(pinned.partB) - plainB) < -(signedVolume(pinned.partA) - plainA),
+    'the socket must be larger than the boss, otherwise the printed pin cannot enter');
+
+// ---- registration fails closed rather than breaching the wall ----
+const oversized = split.splitPattern(source, { axis: 'X', registration: { radiusMm: 40, depthMm: 3 } });
+check(oversized.ok === false, 'a pin wider than the section must be refused');
+check(/does not fit the cut section/.test(oversized.error || ''), 'the refusal must say the pin does not fit: ' + oversized.error);
+check(split.splitPattern(source, { axis: 'X', registration: { radiusMm: 1, depthMm: 10000 } }).ok === false, 'a pin deeper than the half must be refused');
+check(split.splitPattern(source, { axis: 'X', registration: { radiusMm: -1, depthMm: 3 } }).ok === false, 'a negative pin radius must be refused');
+check(split.splitPattern(source, { axis: 'X', registration: { radiusMm: 1, depthMm: 3, flatFraction: 1.5 } }).ok === false, 'a flat fraction outside 0..1 must be refused');
+check(split.splitPattern(source, { axis: 'X', registration: null }).partA.metadata.registration === null, 'registration must stay opt-in');
+
 // ---- rejected: a cut outside or on the extent, and an unclosed source ----
 const extent = geometry.bbox;
 for (const at of [extent.minX - 5, extent.maxX + 5, extent.minX]) {

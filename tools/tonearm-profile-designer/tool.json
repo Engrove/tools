@@ -29,6 +29,7 @@
     "Save and reopen complete sessions and export STL, Onshape sidecar JSON, 3D PNG, AI Vibe JSON and technical Markdown reports.",
     "Scale a trace-derived casting pattern's cross-sections by a chosen percentage while keeping the traced length, and record the applied allowance.",
     "Divide a freeform pattern across its length into two closed halves with an optional clearance, for printers whose build volume is shorter than the arm.",
+    "Add a keyed registration boss and matching socket to the split faces so the printed halves rejoin in a single orientation, sized from the cut section and refused when the pin would breach the wall.",
     "Check whether a pattern can be withdrawn from a two-part mould along a chosen pull axis from the export panel, and report the parting line and near-vertical surface area.",
     "Record the pattern allowance, split position, section exponent, traced and lofted lengths, recovered end stations and mould-release verdict in the technical report.",
     "Choose the cross-section exponent used when two orthographic silhouettes are converted to sections, since the silhouettes fix width and height but not corner fullness.",

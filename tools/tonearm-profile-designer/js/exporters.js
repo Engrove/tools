@@ -202,7 +202,12 @@ function getFreeformPatternSplitGeometries(sourceGeometry) {
     const result = window.FreeformPatternSplit.splitPattern(mesh, {
         axis: 'X',
         at: minX + (maxX - minX) * fraction,
-        clearanceMm: Number(state.splitClearance) || 0
+        clearanceMm: Number(state.splitClearance) || 0,
+        registration: state.patternSplitRegistration === false ? null : {
+            radiusMm: Number(state.patternSplitPinRadius) || 0,
+            depthMm: Number(state.patternSplitPinDepth) || 3,
+            clearanceMm: Number(state.patternSplitPinClearance) || 0
+        }
     });
     if (!result.ok) return { error: 'Export blocked: ' + result.error };
     const parts = {};
@@ -224,7 +229,8 @@ function getFreeformPatternSplitGeometries(sourceGeometry) {
             patternSplitAtMm: result.atMm,
             patternSplitClearanceMm: result.clearanceMm,
             patternSplitHalf: key,
-            patternSplitPositionPercent: Math.round(fraction * 10000) / 100
+            patternSplitPositionPercent: Math.round(fraction * 10000) / 100,
+            patternSplitRegistration: result.registration ? JSON.stringify(result.registration) : 'none'
         });
         parts[key] = geometry;
     }

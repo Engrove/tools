@@ -30,8 +30,12 @@ short build volume. A separate audit reports whether the pattern releases from a
 chosen pull axis, together with the parting line. That audit is a ray-sampled geometric check on the
 exported mesh, not a tooling simulation.
 
+Split halves carry a keyed registration boss and socket so they rejoin in one orientation; the pin is sized
+from the cut section unless a radius is given, and one that would breach the wall is refused rather than
+written.
+
 All of it is driven from the export panel: the allowance percentage, the split position as a percentage of
-the pattern length, the mould pull axis and a Check mould release button. The operator decisions and the
+the pattern length, the registration pin, the mould pull axis and a Check mould release button. The operator decisions and the
 resulting verdict, together with the section exponent, the traced and lofted lengths and any end station the
 converter moved inward, are recorded in the technical report so a printed pattern can be traced back to the
 choices that produced it.
