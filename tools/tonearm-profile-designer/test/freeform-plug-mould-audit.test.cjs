@@ -94,5 +94,20 @@ check(mouldAudit.auditDemouldability(openMesh, {}).status === 'BLOCKER', 'an unc
 const line = mouldAudit.partingLine(meshOf(base), { pullAxis: 'Z', stations: 12 });
 check(line.length > 0, 'a parting line must be produced for a closed pattern');
 check(line.every(point => point.maxMm >= point.minMm), 'every parting-line station must bracket the section');
+check(line[0].stationAxis === 'x' && line[0].widthAxis === 'y' && line[0].pullAxis === 'z',
+    'a Z pull on a long arm must walk stations along the arm and measure width across it');
+
+// ---- the station axis is never the pull axis ----
+// Walking stations along the pull direction reports the station coordinate back as the parting height,
+// so each axis is checked for a station axis perpendicular to the pull and a genuinely distinct width.
+['X', 'Y', 'Z'].forEach(axis => {
+    const perAxis = mouldAudit.partingLine(meshOf(base), { pullAxis: axis, stations: 8 });
+    check(perAxis.length > 0, 'a parting line must be produced for a ' + axis + ' pull');
+    const first = perAxis[0];
+    check(first.pullAxis === axis.toLowerCase(), 'the ' + axis + ' parting line must report the requested pull axis');
+    check(first.stationAxis !== first.pullAxis, 'the ' + axis + ' station axis must not be the pull axis');
+    check(first.widthAxis !== first.pullAxis && first.widthAxis !== first.stationAxis,
+        'the ' + axis + ' width axis must be the remaining axis');
+});
 
 console.log(JSON.stringify({ status: 'PASS_WITH_SCOPE', test: 'freeform-plug-mould-audit', assertions }, null, 2));

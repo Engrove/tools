@@ -1,0 +1,96 @@
+{
+  "$schema": "../../schema/tool.schema.json",
+  "schemaVersion": "1.0.0",
+  "slug": "trace-to-plug",
+  "name": "Engrove Trace to Plug",
+  "shortName": "Trace to Plug",
+  "summary": "Turn calibrated Engrove Manual Trace views into a printable casting pattern, with mould release and split checks in one linear workflow.",
+  "description": "A PC-only, browser-local workflow that takes a contract-validated Engrove Manual Trace project package and walks it through interpretation, casting allowance, two-part mould release checking and printable export in five explicit steps. Geometry comes only from traced views; the tool carries no parametric tonearm architecture, and every operator assumption is recorded with the exported pattern.",
+  "category": "engineering-design-application",
+  "tags": ["casting pattern", "3D printing", "Manual Trace", "mould making", "composite tooling"],
+  "keywords": ["trace to plug", "casting pattern generator", "two part mould release check", "3D printed plug pattern", "Manual Trace to STL", "shrinkage compensation pattern"],
+  "entry": "index.html",
+  "buildOutputDir": "dist",
+  "public": true,
+  "hidden": false,
+  "language": "en",
+  "version": "1.0.0",
+  "updated": "2026-07-26",
+  "canonicalPath": "/tools/trace-to-plug/",
+  "icon": "🧩",
+  "ogImage": "/assets/tool-default-1200x630.png",
+  "robots": "index,follow",
+  "capabilities": [
+    "Import a contract-validated .engrove-trace-project package and build a pattern from the traced views alone.",
+    "Choose the cross-section fullness used where two orthographic silhouettes leave the section shape undetermined, and record the choice with the pattern.",
+    "Apply a casting allowance that scales every section by a percentage while keeping the traced length unchanged.",
+    "Check whether the pattern can be withdrawn from a two-part mould along a chosen pull axis, and report the parting line.",
+    "Split the pattern across its length into two closed halves with a keyed registration boss and socket for printers with a short build volume.",
+    "Export the pattern or its halves as STL, together with a Markdown record of every operator decision that shaped it.",
+    "Prepare an AI prompt carrying the full pattern context and apply a pasted response only after it validates against the response contract.",
+    "Run entirely in the desktop browser without uploading operator files to an application server."
+  ],
+  "inputs": [
+    {"name": "trace_project_package", "type": ".engrove-trace-project package", "required": true, "description": "A contract-validated multi-view Manual Trace package carrying calibrated top and side views."},
+    {"name": "pattern_parameters", "type": "desktop form controls", "required": false, "description": "Section fullness, casting allowance, split position and registration pin settings."},
+    {"name": "ai_response", "type": "JSON pasted by the operator", "required": false, "description": "A pattern adjustment proposal validated against the response contract before it may change geometry."}
+  ],
+  "outputs": [
+    {"name": "pattern_mesh", "type": "binary or ASCII STL", "description": "The closed casting pattern as it will be printed, allowance included."},
+    {"name": "pattern_split_halves", "type": "binary or ASCII STL pair", "description": "Two closed halves with a keyed boss and socket, each checked for closure before it is written."},
+    {"name": "pattern_record", "type": "Markdown", "description": "The traced source, every operator decision, the mould release verdict and the stated limitations."},
+    {"name": "ai_prompt", "type": "text", "description": "A prompt carrying the current pattern context and the strict response contract."}
+  ],
+  "whenToUse": [
+    "Use to turn calibrated Manual Trace views into a pattern for a two-part mould.",
+    "Use to check whether a shape will release from a mould before printing it.",
+    "Use to divide a long pattern into printable halves that rejoin in one orientation."
+  ],
+  "whenNotToUse": [
+    "Do not use it to design a tonearm from parameters; it builds only from traced views.",
+    "Do not treat the mould release check as a tooling, mould-flow or process simulation.",
+    "Do not use an uncalibrated or axis-ambiguous trace as dimensional manufacturing truth."
+  ],
+  "limitations": [
+    "A pattern requires one top-plane and one side-plane view with a millimetre scale, an engineering origin and usable contour geometry.",
+    "Two orthographic silhouettes fix each section's width and height but not its corner fullness; that remains an operator assumption recorded with the pattern.",
+    "The mould release check is sampled on the exported mesh at the exported tessellation, so a coarser mesh is a different solid than a finer one.",
+    "STL is a mesh reference output, not a parametric STEP or manufacturing-ready B-rep model.",
+    "Three.js rendering and browser downloads require a current desktop browser with WebGL and local download permission."
+  ],
+  "privacy": {"processing": "local", "storesApplicationUserDataOnServer": false, "requiresAccount": false, "requiresOAuth": false},
+  "access": {"cost": "free", "registrationRequired": false},
+  "claims": {
+    "mayClaim": [
+      "The tool starts empty and builds geometry only after an explicit package import.",
+      "Pattern geometry is derived from the traced views and the operator's recorded decisions, with no parametric fallback.",
+      "Imported packages and pasted AI responses are validated before they may change geometry.",
+      "Files are processed locally in the browser and are not uploaded to an application backend."
+    ],
+    "negativeClaimBoundaries": [
+      "A source-level or local browser check is not proof of Cloudflare deployment or production availability.",
+      "A closed STL and a release verdict do not prove that a mould will produce an acceptable part.",
+      "The two-part mould release check is a ray-sampled geometric test on the exported mesh; it is not a mould-flow, tooling or process simulation.",
+      "A cross-section fullness chosen by the operator is an assumption about section shape, not a measurement derived from the traced silhouettes."
+    ],
+    "mustNotClaim": [
+      "Do not claim metrology-grade dimensional accuracy without independently verified calibration and source imagery.",
+      "Do not claim manufacturing, CAD or FEA validation from this browser application alone.",
+      "Do not claim that an AI response was applied without passing the response contract."
+    ]
+  },
+  "faq": [
+    {"question": "What do I need before I start?", "answer": "A .engrove-trace-project package exported from Engrove Manual Trace containing a calibrated top view and a calibrated side view of the same object."},
+    {"question": "Why does the tool ask me to choose a section fullness?", "answer": "A top view and a side view fix how wide and how tall each section is, but not whether its corners are round or square. That choice is yours, and it is recorded with the exported pattern because it changes the pattern's volume."},
+    {"question": "Why would a pattern fail the mould release check?", "answer": "Because some part of it sits behind other material along the pull direction, so a cured two-part mould would lock onto it. Try another pull axis, or change the shape."},
+    {"question": "Does the AI see my files?", "answer": "No. The tool builds a prompt for you to run wherever you like and validates whatever you paste back. Nothing is sent from the application."}
+  ],
+  "evidence": [
+    {"type": "source", "label": "Trace to Plug source", "url": "https://github.com/Engrove/tools/tree/main/tools/trace-to-plug"},
+    {"type": "test", "label": "Pattern pipeline, mesh and record regressions", "url": "https://github.com/Engrove/tools/tree/main/tools/trace-to-plug/test"},
+    {"type": "test", "label": "Chromium workflow smoke against the built runtime", "url": "https://github.com/Engrove/tools/blob/main/tools/trace-to-plug/test/workflow-browser-smoke.mjs"},
+    {"type": "source", "label": "Engrove Manual Trace source", "url": "https://github.com/Engrove/tools/tree/main/tools/manual-trace"},
+    {"type": "documentation", "label": "Engrove Tools repository documentation", "url": "https://github.com/Engrove/tools"}
+  ],
+  "relatedTools": ["manual-trace", "tonearm-profile-designer"]
+}

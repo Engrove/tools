@@ -24,6 +24,11 @@ on:
       - 'tools/tonearm-profile-designer/scripts/**'
       - 'tools/tonearm-profile-designer/test/**'
       - 'tools/tonearm-profile-designer/tools/**'
+      # Trace to Plug copies the kernel from Tonearm Profile Designer rather than forking it, so a change
+      # to either tool has to re-run both suites.
+      - 'tools/tonearm-profile-designer/js/freeform-*.js'
+      - 'tools/tonearm-profile-designer/js/math.js'
+      - 'tools/trace-to-plug/**'
       - '.github/workflows/manual-trace-project-package-contract.yml'
 
 permissions:
@@ -132,6 +137,45 @@ jobs:
           path: |
             tonearm-import-smoke.log
             pattern-panel-smoke.log
+          if-no-files-found: error
+          retention-days: 3
+
+  trace-to-plug-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.16.0'
+      - name: Trace to Plug syntax
+        run: |
+          node --check tools/trace-to-plug/js/pattern-state.js
+          node --check tools/trace-to-plug/js/pattern-mesh.js
+          node --check tools/trace-to-plug/js/pattern-record.js
+          node --check tools/trace-to-plug/js/pattern-ai.js
+          node --check tools/trace-to-plug/js/pattern-viewer.js
+          node --check tools/trace-to-plug/js/pattern-workflow.js
+          node --check tools/trace-to-plug/scripts/build.mjs
+          node --check tools/trace-to-plug/scripts/test.mjs
+          node --check tools/trace-to-plug/test/workflow-browser-smoke.mjs
+      - name: Kernel copied verbatim from its owning tool
+        run: |
+          set -o pipefail
+          npm --prefix tools/trace-to-plug run build
+          for module in tools/trace-to-plug/dist/js/kernel/*.js; do
+            diff -q "tools/tonearm-profile-designer/js/$(basename "$module")" "$module"
+          done
+      - name: Trace to Plug regression and Chromium workflow smoke
+        run: |
+          set -o pipefail
+          npm --prefix tools/trace-to-plug test 2>&1 | tee trace-to-plug-suite.log
+      - name: Upload Trace to Plug diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trace-to-plug-suite-${{ github.sha }}
+          path: trace-to-plug-suite.log
           if-no-files-found: error
           retention-days: 3
 

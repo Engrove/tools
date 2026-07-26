@@ -204,6 +204,10 @@
     /**
      * Parting line for the audited pull axis: the extreme silhouette of the pattern at each sampled station
      * along its longest axis. These are the points a flat parting board must reach for a two-part mould.
+     *
+     * The station axis is chosen from the two axes perpendicular to the pull, longest first. It cannot be
+     * the pull axis itself: walking stations along the pull direction would report the station coordinate
+     * back as the parting height, which is why this is derived from the bounds rather than fixed to x.
      */
     function partingLine(mesh, options) {
         const opts = options || {};
@@ -211,10 +215,16 @@
         if (!Object.prototype.hasOwnProperty.call(AXES, axisName)) return [];
         const keys = ['x', 'y', 'z'];
         const pullKey = keys[AXES[axisName]];
-        const stationKey = keys[(AXES[axisName] + 1) % 3] === 'x' ? 'x' : 'x';
-        const widthKey = keys.filter(key => key !== pullKey && key !== stationKey)[0];
         const vertices = (mesh && mesh.vertices) || [];
         if (!vertices.length) return [];
+        const across = keys.filter(key => key !== pullKey);
+        const spanOf = key => {
+            let low = Infinity, high = -Infinity;
+            vertices.forEach(vertex => { low = Math.min(low, vertex[key]); high = Math.max(high, vertex[key]); });
+            return high - low;
+        };
+        const stationKey = spanOf(across[0]) >= spanOf(across[1]) ? across[0] : across[1];
+        const widthKey = across[0] === stationKey ? across[1] : across[0];
         let sMin = Infinity, sMax = -Infinity;
         vertices.forEach(vertex => { sMin = Math.min(sMin, vertex[stationKey]); sMax = Math.max(sMax, vertex[stationKey]); });
         const steps = Math.max(4, Math.min(128, Math.round(finite(opts.stations, 24))));
@@ -230,6 +240,11 @@
             });
             if (!Number.isFinite(wMin) || !Number.isFinite(wMax)) continue;
             line.push({
+                // The axis keys travel with every point so a consumer can place it in 3D without having to
+                // re-derive which axis this call chose to walk.
+                stationAxis: stationKey,
+                widthAxis: widthKey,
+                pullAxis: pullKey,
                 stationMm: round(s, 4),
                 minMm: round(wMin, 4),
                 maxMm: round(wMax, 4),
