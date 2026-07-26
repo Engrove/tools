@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<!--
+    AI-CODING NOTE:
+    Responsibility: Present the five linear Trace to Plug steps and the 3D preview.
+    Inputs: Operator actions only; the document holds no geometry and no state.
+    Outputs: DOM the workflow controller binds to by id.
+    Safe edits: Layout, copy and controls that the controller binds and records.
+    Do not: Add a control the controller does not read, or a readout no measurement fills.
+    Verification: test/workflow-browser-smoke.mjs
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Engrove Trace to Plug</title>
+<meta name="description" content="Turn calibrated Engrove Manual Trace views into a printable casting pattern, with mould release and split checks in one linear workflow.">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+<header class="masthead">
+    <div class="brand">
+        <span class="brand-mark" aria-hidden="true">🧩</span>
+        <div>
+            <h1>Trace to Plug</h1>
+            <p>Traced views in. Printable casting pattern out.</p>
+        </div>
+    </div>
+    <button type="button" id="openAI" class="ghost">Ask an AI about this pattern</button>
+</header>
+
+<nav class="stepper" aria-label="Workflow steps">
+    <button type="button" id="tab-import" class="step"><span>1</span>Import</button>
+    <button type="button" id="tab-interpret" class="step"><span>2</span>Interpret</button>
+    <button type="button" id="tab-compensate" class="step"><span>3</span>Compensate</button>
+    <button type="button" id="tab-verify" class="step"><span>4</span>Verify</button>
+    <button type="button" id="tab-export" class="step"><span>5</span>Export</button>
+</nav>
+
+<p id="status" class="status status-ok" role="status" aria-live="polite">Starting…</p>
+
+<main class="workspace">
+
+    <section class="panels">
+
+        <!-- 1 ------------------------------------------------------------------------------------ -->
+        <article id="panel-import" class="panel">
+            <h2>1 · Import the traced object</h2>
+            <p class="lede">Bring in the <code>.engrove-trace-project</code> package you exported from Engrove Manual Trace. It must contain a calibrated <strong>top</strong> view and a calibrated <strong>side</strong> view of the same object.</p>
+            <div id="dropZone" class="dropzone">
+                <p>Drop the package here</p>
+                <label class="filepick">
+                    <input type="file" id="packageFile" accept=".engrove-trace-project">
+                    <span>or choose a file</span>
+                </label>
+            </div>
+            <dl class="readout">
+                <dt>Package</dt><dd id="readSource">nothing imported</dd>
+                <dt>Project</dt><dd id="readProject">—</dd>
+                <dt>Geometric views</dt><dd id="readViews">0</dd>
+            </dl>
+            <p class="note">Nothing leaves this machine. The package is read, checked against the trace contract and converted in the browser.</p>
+        </article>
+
+        <!-- 2 ------------------------------------------------------------------------------------ -->
+        <article id="panel-interpret" class="panel" hidden>
+            <h2>2 · Interpret the views as a solid</h2>
+            <p class="lede">Your two views fix how <em>wide</em> and how <em>tall</em> the object is at every point along its length. They cannot tell whether its corners are round or square, so that part is your call.</p>
+
+            <label class="control">
+                <span class="control-label">Section fullness <output id="outSectionFullness">2.60</output></span>
+                <input type="range" id="sectionFullness" min="0.35" max="8" step="0.05" value="2.6">
+                <span class="hint">Lower is a sharp diamond, 2 is a true ellipse, higher approaches a rectangle with rounded corners.</span>
+            </label>
+
+            <label class="control">
+                <span class="control-label">Stations along the length <output id="outStationCount">14</output></span>
+                <input type="range" id="stationCount" min="6" max="24" step="1" value="14">
+                <span class="hint">How many cross-sections are sampled from the traced outline. More follows the trace more closely.</span>
+            </label>
+
+            <dl class="readout">
+                <dt>Traced length</dt><dd id="readTracedLength">—</dd>
+                <dt>Lofted length</dt><dd id="readLoftedLength">—</dd>
+                <dt>Rings</dt><dd id="readRings">—</dd>
+                <dt>End stations recovered</dt><dd id="readInsets">—</dd>
+            </dl>
+            <p class="note">The lofted length should match the traced length. If it does not, the trace has an unusable end and the pattern is shorter than the object.</p>
+            <button type="button" class="primary" data-goto="compensate">Next: casting allowance</button>
+        </article>
+
+        <!-- 3 ------------------------------------------------------------------------------------ -->
+        <article id="panel-compensate" class="panel" hidden>
+            <h2>3 · Add the casting allowance</h2>
+            <p class="lede">A pattern is not the finished part. Every section is scaled by the percentage below, while the <strong>length stays exactly as traced</strong> — so the plug gets fatter or thinner without ever getting longer or shorter.</p>
+
+            <label class="control">
+                <span class="control-label">Allowance <output id="outAllowance">0.00 %</output></span>
+                <input type="range" id="allowancePercent" min="-5" max="10" step="0.1" value="0">
+                <span class="hint">Positive makes the plug larger than the traced object; negative makes it smaller. Use it for mould shrinkage, gelcoat build and the finish you will sand off.</span>
+            </label>
+
+            <label class="control control-inline">
+                <span class="control-label">Print material density (g/cm³)</span>
+                <input type="number" id="printDensity" min="0.1" max="10" step="0.01" value="1.24">
+            </label>
+
+            <dl class="readout">
+                <dt>Triangles</dt><dd id="readTriangles">—</dd>
+                <dt>Mesh</dt><dd id="readClosed">—</dd>
+                <dt>Volume</dt><dd id="readVolume">—</dd>
+                <dt>Bounding box</dt><dd id="readBbox">—</dd>
+                <dt>Printed mass</dt><dd id="readMass">—</dd>
+            </dl>
+            <button type="button" class="primary" data-goto="verify">Next: check it releases</button>
+        </article>
+
+        <!-- 4 ------------------------------------------------------------------------------------ -->
+        <article id="panel-verify" class="panel" hidden>
+            <h2>4 · Check it comes out of the mould</h2>
+            <p class="lede">A two-part mould has to lift off the pattern in two directions. If any part of the plug sits behind other material along that direction, the cured mould locks onto it and you will break one of them getting them apart.</p>
+
+            <label class="control control-inline">
+                <span class="control-label">Pull direction</span>
+                <select id="pullAxis">
+                    <option value="Z">Z · mould halves lift up and down</option>
+                    <option value="Y">Y · mould halves part sideways</option>
+                    <option value="X">X · mould halves part along the length</option>
+                </select>
+            </label>
+            <button type="button" id="doRelease" class="primary">Run the release check</button>
+
+            <dl class="readout">
+                <dt>Verdict</dt><dd id="readRelease">not checked</dd>
+                <dt>Locking rays</dt><dd id="readUndercuts">—</dd>
+                <dt>Near-vertical surface</dt><dd id="readDraft">—</dd>
+                <dt>Parting line</dt><dd id="readParting">—</dd>
+            </dl>
+            <p class="note">The yellow line in the preview is where the parting board meets the plug. The red lines, if any, mark where the mould locks.</p>
+
+            <h3>Too long for your printer?</h3>
+            <label class="control control-inline">
+                <input type="checkbox" id="splitEnabled">
+                <span class="control-label">Cut the pattern into two halves</span>
+            </label>
+            <div class="subcontrols">
+                <label class="control">
+                    <span class="control-label">Cut position <output id="outSplitPosition">50 %</output></span>
+                    <input type="range" id="splitPositionPercent" min="5" max="95" step="1" value="50">
+                </label>
+                <label class="control control-inline">
+                    <span class="control-label">Cut clearance (mm)</span>
+                    <input type="number" id="splitClearanceMm" min="0" max="2" step="0.05" value="0.1">
+                </label>
+                <label class="control control-inline">
+                    <input type="checkbox" id="registrationEnabled" checked>
+                    <span class="control-label">Add a keyed peg and socket so the halves only fit one way</span>
+                </label>
+                <label class="control control-inline">
+                    <span class="control-label">Peg radius (mm, 0 = size it for me)</span>
+                    <input type="number" id="pinRadiusMm" min="0" max="12" step="0.1" value="0">
+                </label>
+                <label class="control control-inline">
+                    <span class="control-label">Peg depth (mm)</span>
+                    <input type="number" id="pinDepthMm" min="0.5" max="30" step="0.5" value="3">
+                </label>
+                <label class="control control-inline">
+                    <span class="control-label">Peg fit clearance (mm)</span>
+                    <input type="number" id="pinClearanceMm" min="0" max="1" step="0.05" value="0.15">
+                </label>
+                <button type="button" id="doSplit" class="primary">Cut the pattern</button>
+            </div>
+            <dl class="readout">
+                <dt>Halves</dt><dd id="readHalves">exported whole</dd>
+                <dt>Peg</dt><dd id="readPin">—</dd>
+            </dl>
+            <button type="button" class="primary" data-goto="export">Next: export</button>
+        </article>
+
+        <!-- 5 ------------------------------------------------------------------------------------ -->
+        <article id="panel-export" class="panel" hidden>
+            <h2>5 · Export what you will print</h2>
+            <p class="lede">The STL is the pattern exactly as shown, allowance included. It is written only if it is a closed, correctly wound solid — an open shell would slice into something you did not model.</p>
+
+            <label class="control control-inline">
+                <span class="control-label">STL format</span>
+                <select id="exportFormat">
+                    <option value="stl_binary">Binary STL (smaller)</option>
+                    <option value="stl_ascii">ASCII STL (readable)</option>
+                </select>
+            </label>
+            <label class="control control-inline">
+                <input type="checkbox" id="exportRecord" checked>
+                <span class="control-label">Also write the record sheet describing every decision above</span>
+            </label>
+            <button type="button" id="doExport" class="primary" disabled>Export</button>
+
+            <h3>Then, away from this application</h3>
+            <ol class="afterwards">
+                <li>Print the pattern. If you cut it, print both halves and key them together.</li>
+                <li>Fill, prime and sand it until it is glass smooth. Every scratch is copied into the mould, and from the mould into the part.</li>
+                <li>Wax and apply release agent, build the parting board to the yellow line, then lay up the first glassfibre mould half.</li>
+                <li>Strip the board, wax the flange, lay up the second half, then part the mould and remove the plug.</li>
+                <li>Lay the final part up in carbon fibre inside the finished mould.</li>
+            </ol>
+        </article>
+
+    </section>
+
+    <section class="preview">
+        <div id="viewport" class="viewport"></div>
+        <div class="viewbar">
+            <button type="button" data-frame="iso">Iso</button>
+            <button type="button" data-frame="top">Top</button>
+            <button type="button" data-frame="side">Side</button>
+            <button type="button" data-frame="front">Front</button>
+        </div>
+    </section>
+
+</main>
+
+<dialog id="aiModal" class="modal">
+    <h2>Ask an AI about this pattern</h2>
+    <p class="lede">Nothing is sent from this application. Copy the prompt into whichever assistant you use, then paste its answer back. The answer is checked against a strict contract before it is allowed to change anything, and it can only change the decisions listed inside the prompt.</p>
+
+    <label class="control">
+        <span class="control-label">What do you want to ask for? (optional)</span>
+        <input type="text" id="aiNotes" placeholder="e.g. the plug keeps locking the mould near the wide end">
+    </label>
+
+    <label class="control">
+        <span class="control-label">1 · Copy this prompt</span>
+        <textarea id="aiPrompt" rows="10" readonly></textarea>
+    </label>
+    <button type="button" id="aiCopy" class="ghost">Copy prompt</button>
+
+    <label class="control">
+        <span class="control-label">2 · Paste the answer here</span>
+        <textarea id="aiResponse" rows="6" placeholder='{"schema":"engrove-trace-to-plug-ai-response-v1", ...}'></textarea>
+    </label>
+    <div id="aiDiagnostics" class="diagnostics" aria-live="polite"></div>
+
+    <div class="modal-actions">
+        <button type="button" id="aiApply" class="primary">Check and apply</button>
+        <button type="button" id="aiClose" class="ghost">Close</button>
+    </div>
+</dialog>
+
+<script src="vendor/three.min.js"></script>
+<script src="vendor/OrbitControls.js"></script>
+
+<script src="js/kernel/math.js"></script>
+<script src="js/kernel/freeform-centerline.js"></script>
+<script src="js/kernel/freeform-rings.js"></script>
+<script src="js/kernel/freeform-features.js"></script>
+<script src="js/kernel/freeform-schema.js"></script>
+<script src="js/kernel/freeform-loft-kernel.js"></script>
+<script src="js/kernel/freeform-analysis-adapter.js"></script>
+<script src="js/kernel/freeform-section-properties.js"></script>
+<script src="js/kernel/freeform-resonance-analysis.js"></script>
+<script src="js/kernel/freeform-geometry-audit.js"></script>
+<script src="js/kernel/freeform-physical-analysis.js"></script>
+<script src="js/kernel/freeform-plug-mould-audit.js"></script>
+<script src="js/kernel/freeform-pattern-split.js"></script>
+<script src="js/kernel/manual-trace-3d-adapter.js"></script>
+<script src="js/kernel/trace-project-package-reader.js"></script>
+<script src="js/kernel/trace-project-package-semantics.js"></script>
+<script src="js/kernel/trace-project-package-validator.js"></script>
+<script src="js/kernel/trace-project-package-adapter.js"></script>
+
+<script src="js/pattern-state.js"></script>
+<script src="js/pattern-ai.js"></script>
+<script src="js/pattern-mesh.js"></script>
+<script src="js/pattern-record.js"></script>
+<script src="js/pattern-viewer.js"></script>
+<script src="js/pattern-workflow.js"></script>
+<script>
+    window.addEventListener('DOMContentLoaded', function() {
+        window.traceToPlug = window.PatternWorkflow.start();
+    });
+</script>
+
+</body>
+</html>
