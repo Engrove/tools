@@ -27,6 +27,10 @@
     "Construct a deterministic Freeform centerline-and-ring loft from calibrated orthographic top and side silhouette bounds and Manual Trace station data.",
     "Preserve TD053F parametric Cobra and classic geometry controls, Freeform AI workbench, cartridge picker, solver, LT mechanism preview and physical analysis.",
     "Save and reopen complete sessions and export STL, Onshape sidecar JSON, 3D PNG, AI Vibe JSON and technical Markdown reports.",
+    "Scale a trace-derived casting pattern's cross-sections by a chosen percentage while keeping the traced length, and record the applied allowance.",
+    "Divide a freeform pattern across its length into two closed halves with an optional clearance, for printers whose build volume is shorter than the arm.",
+    "Check whether a pattern can be withdrawn from a two-part mould along a chosen pull axis, and report the parting line and near-vertical surface area.",
+    "Choose the cross-section exponent used when two orthographic silhouettes are converted to sections, since the silhouettes fix width and height but not corner fullness.",
     "Run entirely in the desktop browser without uploading operator files to an application server."
   ],
   "inputs": [
@@ -37,6 +41,7 @@
   "outputs": [
     {"name": "tonearm_session", "type": "JSON", "description": "A resumable application session including active geometry and Manual Trace import provenance."},
     {"name": "tonearm_mesh", "type": "binary or ASCII STL", "description": "The explicitly selected active parametric or accepted Freeform mesh."},
+    {"name": "pattern_split_halves", "type": "binary or ASCII STL pair", "description": "Two closed halves of a freeform casting pattern cut across its length, each checked for closure before it is written."},
     {"name": "technical_report", "type": "Markdown", "description": "A runtime snapshot of controls, analysis, source audit and stated limitations."},
     {"name": "visual_reference", "type": "PNG", "description": "An 800 by 600 pixel image of the active 3D model."},
     {"name": "ai_and_onshape_sidecars", "type": "JSON", "description": "Structured AI Vibe and Onshape handoff metadata for the active design."}
@@ -70,7 +75,9 @@
     "negativeClaimBoundaries": [
       "A source-level or local browser check is not proof of Cloudflare deployment or production availability.",
       "Deterministic trace conversion does not establish that the source image, calibration or operator contour is correct.",
-      "A closed STL mesh and analytical proxy results do not prove manufacturability, structural performance or audio performance."
+      "A closed STL mesh and analytical proxy results do not prove manufacturability, structural performance or audio performance.",
+      "The two-part mould release check is a ray-sampled geometric test on the exported pattern mesh; it is not a mould-flow, tooling or process simulation.",
+      "A cross-section exponent chosen by the operator is an assumption about section shape, not a measurement derived from the traced silhouettes."
     ],
     "mustNotClaim": [
       "Do not claim metrology-grade dimensional accuracy without independently verified calibration and source imagery.",

@@ -428,6 +428,13 @@ function exportSelectedGeometry() {
         const parts = generateSplitGeometry({ splitMode: 'horizontal', clearance: state.splitClearance });
         geometries.push(getExportGeometryWithAccessories(parts.partA), getExportGeometryWithAccessories(parts.partB));
         filenames.push('tonearm_split_horizontal_A', 'tonearm_split_horizontal_B');
+    } else {
+        // Without this the button would do nothing at all: an unmatched export type leaves the geometry
+        // list empty and the writer loop simply has nothing to iterate.
+        alert(exportType === 'split_pattern_length'
+            ? 'Export blocked: the pattern split across length is produced from a freeform/trace loft. Switch geometryMode to freeform, or choose a parametric export type.'
+            : 'Export blocked: export type "' + exportType + '" is not produced by the parametric geometry path.');
+        return;
     }
     }
 

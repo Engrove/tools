@@ -19,6 +19,17 @@ Accepted input:
 - `.engrove-trace-project` multi-view packages, whose declared view types and engineering axes are authoritative for plane assignment;
 - paired `engrove_manual_trace.svg` exports containing `engrove_trace_json_binding` metadata.
 
+The section exponent used when silhouettes are converted to cross-sections is an operator input, not a
+measurement: two orthographic silhouettes fix a section's width and height but not its corner fullness.
+The chosen value and whether it came from the operator or the default are recorded in the import
+provenance.
+
+For casting-pattern work the export panel can scale a freeform pattern's cross-sections by a percentage
+while keeping the traced length, and can cut the pattern across its length into two closed halves for a
+short build volume. A separate audit reports whether the pattern releases from a two-part mould along a
+chosen pull axis, together with the parting line. That audit is a ray-sampled geometric check on the
+exported mesh, not a tooling simulation.
+
 The importer validates file size, schema identity, finite coordinates, scale, origin, unique engineering axes, supported geometry and point-count limits. JSON coordinates remain authoritative. SVG input is parsed as inert XML and only the Manual Trace metadata and supported geometry elements are read.
 
 To create a loft, the import set must contain at least:

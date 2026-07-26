@@ -43,8 +43,15 @@ check(JSON.stringify(scaled.centerline) === JSON.stringify(sanitizedBase.centerl
 // The bounding box can still shift by a fraction of a percent: an end section whose plane is tilted
 // relative to X projects a little further along X once it grows. The centerline length is the invariant.
 check(Math.abs(scaledBox.length / baseBox.length - 1) < 0.0005, 'cross-section scaling must not change pattern length materially');
-check(Math.abs(scaledBox.width / baseBox.width - 1.05) < 1e-4, 'cross-section scaling must scale width by the factor');
-check(Math.abs(scaledBox.height / baseBox.height - 1.05) < 1e-4, 'cross-section scaling must scale height by the factor');
+// Asserted per ring rather than on the bounding box. A bounding box mixes section size with centerline
+// offset, so on an arm with a lateral bend the box would grow by less than the factor even though every
+// section scaled exactly; that would make a bounding-box assertion pass here and fail on real geometry.
+sanitizedBase.rings.forEach((ring, index) => {
+    const scaledRing = scaled.rings[index];
+    // Tolerance is the kernel's documented 6-decimal rounding quantum, not an arbitrary epsilon.
+    check(Math.abs(scaledRing.widthMm - ring.widthMm * 1.05) < 1e-6, 'ring ' + ring.id + ' width must scale by the factor');
+    check(Math.abs(scaledRing.heightMm - ring.heightMm * 1.05) < 1e-6, 'ring ' + ring.id + ' height must scale by the factor');
+});
 check(scaled.plugCompensation.crossSectionScale === 1.05, 'the applied scale must be recorded as provenance');
 check(scaled.plugCompensation.lengthPreserved === true, 'the provenance must state that length was preserved');
 
