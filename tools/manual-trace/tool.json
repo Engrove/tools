@@ -10,7 +10,7 @@
   "tags": ["tracing", "SVG", "geometry", "metrology", "CAD preparation"],
   "keywords": ["manual vector trace tool", "SVG auto trace editor", "engineering contour digitizer", "image measurement calibration", "AI readable geometry JSON", "Engrove trace project"],
   "entry": "index.html",
-  "buildOutputDir": ".",
+  "buildOutputDir": "dist",
   "public": true,
   "hidden": false,
   "language": "en",
