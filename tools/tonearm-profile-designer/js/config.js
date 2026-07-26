@@ -161,6 +161,7 @@ const state = {
     // Currently unused by any export or rendering pipeline.
     splitBase: 'solid',
     splitClearance: 0.0,
+    plugCrossSectionScalePercent: 0,
     meshSegments: 60,
     meshStepX: 1.0,
     draftMinDeg: 1.0,

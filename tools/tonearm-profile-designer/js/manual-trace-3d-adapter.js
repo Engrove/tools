@@ -28,6 +28,11 @@
     // Search resolution and bound for moving a degenerate end station inward, as a fraction of the
     // common trace length. The limit keeps a recovered end within 2% of the traced extreme.
     const END_STATION_INSET_STEP = 1e-3;
+    // Two orthographic silhouettes fix a section's width and height but not its corner fullness, so the
+    // exponent is an operator choice, not a measurement. 2.6 stays the default because it is what the
+    // existing imports were built with; the supported span matches the ring schema.
+    const SECTION_EXPONENT_DEFAULT = 2.6;
+    const SECTION_EXPONENT_RANGE = Object.freeze([0.35, 8]);
     const END_STATION_INSET_LIMIT = 2e-2;
 
     function fail(code, message, detail) {
@@ -463,6 +468,13 @@
         if (!Number.isFinite(length) || length < DIMENSION_LIMITS.length[0] || length > DIMENSION_LIMITS.length[1]) {
             fail('TRACE_LENGTH_LIMIT', 'Common trace length ' + round(length, 3) + ' mm is outside ' + DIMENSION_LIMITS.length.join('–') + ' mm.');
         }
+        const requestedExponent = options && options.superellipseExponent;
+        const sectionExponent = requestedExponent === undefined || requestedExponent === null || requestedExponent === ''
+            ? SECTION_EXPONENT_DEFAULT
+            : Number(requestedExponent);
+        if (!Number.isFinite(sectionExponent) || sectionExponent < SECTION_EXPONENT_RANGE[0] || sectionExponent > SECTION_EXPONENT_RANGE[1]) {
+            fail('TRACE_SECTION_EXPONENT_INVALID', 'Section exponent ' + String(requestedExponent) + ' is outside the supported ' + SECTION_EXPONENT_RANGE.join('–') + ' range.');
+        }
         const stations = buildStations(top, side, minX, maxX, options && options.stationCount);
         // The station grid always contains the exact longitudinal extremes, where a closed silhouette has
         // zero transverse extent by construction. Aborting there is a false positive, and dropping the
@@ -563,7 +575,7 @@
                 rotationDeg: 0,
                 tiltDeg: 0,
                 cornerSharpness: 0.35,
-                superellipseExponent: 2.6,
+                superellipseExponent: sectionExponent,
                 asymmetryY: 0,
                 asymmetryZ: 0,
                 topRidgeHeightMm: 0,
@@ -593,7 +605,9 @@
                 loftedLongitudinalRangeMm: { min: round(spanMinX, 6), max: round(spanMinX + spanLength, 6), loftedLength: round(spanLength, 6) },
                 stationCount: samples.length,
                 endStationInsets: endStationInsets,
-                sectionAssumption: 'superellipse_2_6_from_orthographic_width_height_bounds',
+                sectionAssumption: 'superellipse_exponent_' + sectionExponent + '_from_orthographic_width_height_bounds',
+                sectionExponent: sectionExponent,
+                sectionExponentSource: requestedExponent === undefined || requestedExponent === null || requestedExponent === '' ? 'default' : 'operator',
                 svgRole: 'visual_pair_and_geometry_carrier_when_json_is_absent; JSON remains authoritative when paired'
             },
             assumptions: [

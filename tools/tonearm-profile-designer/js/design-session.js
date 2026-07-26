@@ -247,12 +247,16 @@
         try {
             const s = canonicalState();
             const stationInput = byId('manualTraceStationCount');
+            // Two silhouettes do not determine section fullness, so the exponent is an operator input
+            // rather than a measurement. An empty field keeps the adapter's documented default.
+            const exponentInput = byId('manualTraceSectionExponent');
             const base = root.FreeformLoftKernel && typeof root.FreeformLoftKernel.defaultState === 'function'
                 ? root.FreeformLoftKernel.defaultState('straight_low_mass_lt_arm')
                 : {};
             const proposed = root.ManualTrace3DAdapter.buildFreeformState(imported.map(entry => entry.trace), {
                 baseState: base,
-                stationCount: stationInput ? Number(stationInput.value) : 14
+                stationCount: stationInput ? Number(stationInput.value) : 14,
+                superellipseExponent: exponentInput && exponentInput.value !== '' ? Number(exponentInput.value) : undefined
             });
             const sanitized = root.FreeformLoftKernel && typeof root.FreeformLoftKernel.sanitizeState === 'function'
                 ? root.FreeformLoftKernel.sanitizeState(proposed)

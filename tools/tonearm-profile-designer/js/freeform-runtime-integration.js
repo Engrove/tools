@@ -325,7 +325,10 @@
         const go = buildFreeformGeometry(s, opts);
         if (go && go.error) throw new Error(go.error);
         const geometry = buildThreeBufferGeometryFromFreeformGeometry(go, three || root.THREE);
+        // The kernel mesh is carried alongside the render geometry so downstream pattern operations can
+        // work on indexed triangles instead of re-deriving topology from a flattened position buffer.
         geometry.userData = Object.assign({}, geometry.userData || {}, {
+            sourceMesh: go.mesh,
             geometryMode: 'freeform',
             sourceState: 'state.freeformLoftActive',
             source: 'freeformLoftActive',

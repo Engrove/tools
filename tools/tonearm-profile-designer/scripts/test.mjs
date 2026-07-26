@@ -28,6 +28,7 @@ const tests = [
   path.join('test', 'trace-project-package-adapter.test.cjs'),
   path.join('test', 'trace-project-package-roundtrip.test.cjs'),
   path.join('test', 'freeform-plug-mould-audit.test.cjs'),
+  path.join('test', 'freeform-pattern-split.test.cjs'),
   ...readdirSync(path.join(root, 'tools'))
     .filter(name => name.endsWith('.js') && !unavailable.has(name))
     .sort()

@@ -88,6 +88,10 @@ Verification: npm test, repository build gates, and desktop browser smoke tests.
                     <span>Fallback station count</span>
                     <input id="manualTraceStationCount" type="number" min="6" max="24" step="1" value="14">
                 </label>
+                <label class="station-count-row" for="manualTraceSectionExponent">
+                    <span>Section exponent (2 = ellipse, higher = squarer)</span>
+                    <input id="manualTraceSectionExponent" type="number" min="0.35" max="8" step="0.05" value="2.6">
+                </label>
                 <button id="manualTraceBuildBtn" type="button" disabled>Build accepted-active loft</button>
                 <div id="manualTraceImportStatus" class="manual-trace-status info" aria-live="polite">Add calibrated Manual Trace top and side files.</div>
             </div>
@@ -494,7 +498,16 @@ Verification: npm test, repository build gates, and desktop browser smoke tests.
                     <option value="solid">Solid reference body</option>
                     <option value="split_vertical">Vertical split (Y=0)</option>
                     <option value="split_horizontal">Horizontal split (zCenter)</option>
+                    <option value="split_pattern_length">Pattern split across length (build volume, freeform)</option>
                 </select>
+            </div>
+
+            <div id="plugPatternOptions" class="sub-options" style="margin-top:8px; border-left:3px solid #8e44ad; padding-left:8px;">
+                <div class="control-group">
+                    <label for="plugCrossSectionScalePercent">Casting pattern: cross-section scale [%] <span id="val_plugCrossSectionScalePercent">0.00</span></label>
+                    <input type="number" id="plugCrossSectionScalePercent" min="-5" max="10" value="0" step="0.05">
+                </div>
+                <div class="info-text">Freeform/trace geometry only. Scales every section by this percentage and leaves the traced length unchanged, to allow for mould and laminate shrinkage. Ignored by the Onshape 1:1 export, which is defined as an exact reference with no compensation.</div>
             </div>
 
             <div id="splitOptions" class="sub-options" style="display:none; margin-top:8px; border-left:3px solid #e74c3c; padding-left:8px;">
@@ -2619,6 +2632,7 @@ TD051 is a package-level runtime/schema/spec/test contract. It does not prove br
 <script src="js/freeform-resonance-analysis.js"></script>
 <script src="js/freeform-geometry-audit.js"></script>
 <script src="js/freeform-plug-mould-audit.js"></script>
+<script src="js/freeform-pattern-split.js"></script>
 <script src="js/freeform-form-fidelity.js"></script>
 <script src="js/freeform-target-compliance.js"></script>
 <script src="js/freeform-mode-audit.js"></script>

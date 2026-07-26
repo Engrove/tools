@@ -41,7 +41,7 @@ const Session = {
     ],
 
     EXTRA_INPUT_IDS: ['splitClearance', 'targetEffectiveMass', 'targetLFResonance', 'targetVTF', 'targetFirstBendingMode', 'targetSlendernessMin', 'targetSlendernessMax',
-        'meshSegments', 'meshStepX', 'draftMinDeg', 'rearSupportBridgeLength', 'rearSupportBridgeRadius',
+        'meshSegments', 'meshStepX', 'draftMinDeg', 'plugCrossSectionScalePercent', 'rearSupportBridgeLength', 'rearSupportBridgeRadius',
         'rearSupportBridgeOverlap', 'canopyRidgeHeight', 'canopyRidgeWidthFraction', 'canopyRidgeSharpness',
         'wireRouteRadius', 'wireRouteYOffset', 'wireRouteZOffset',
         'titaniumPlateLength', 'titaniumPlateWidth', 'titaniumPlateThickness', 'titaniumPlateMass',

@@ -52,6 +52,20 @@ function getPrimaryArmwandGeometry(fallbackGeometryFactory) {
 
 
 // Backward-compatible marker for TD052B acceptance: TD052B freeform export blocker.
+/**
+ * Resolves the casting-pattern cross-section scale for this export. The Onshape 1:1 export declares an
+ * exact reference with no shrinkage compensation, so a pattern allowance is refused there rather than
+ * quietly written into a mesh whose own sidecar states that no compensation was applied.
+ */
+function resolvePlugCrossSectionScale() {
+    const percent = Number(state && state.plugCrossSectionScalePercent);
+    if (!Number.isFinite(percent) || percent === 0) return { factor: 1, percent: 0 };
+    if (state.exportType === EXPORT_TYPES.ONSHAPE_1TO1 || state.exportType === 'onshape_1to1') {
+        return { factor: 1, percent: 0, refusedReason: 'onshape_1to1_is_an_exact_reference' };
+    }
+    return { factor: 1 + percent / 100, percent };
+}
+
 function getFreeformLoftExportGeometry() {
     if (!state || state.geometryMode !== 'freeform') return null;
     if (!state.freeformLoftActive) return { error: 'EXPORT_BLOCKED: geometryMode=freeform but freeformLoftActive is missing; silent parametric fallback is forbidden.' };
@@ -59,7 +73,23 @@ function getFreeformLoftExportGeometry() {
         typeof window.FreeformRuntimeIntegration.exportFreeformMeshGeometry !== 'function') {
         return { error: 'TD053F freeform export/source-audit blocker: FreeformRuntimeIntegration unavailable.' };
     }
-    const result = window.FreeformRuntimeIntegration.exportFreeformMeshGeometry(THREE, state, {
+    const plugScale = resolvePlugCrossSectionScale();
+    if (plugScale.refusedReason) {
+        return { error: 'Export blocked: a casting-pattern cross-section scale of ' + state.plugCrossSectionScalePercent + '% is set, but the Onshape 1:1 export is defined as an exact reference with no shrinkage compensation. Set the scale to 0, or choose another export type.' };
+    }
+    let exportState = state;
+    if (plugScale.factor !== 1) {
+        if (!window.FreeformLoftKernel || typeof window.FreeformLoftKernel.scaleCrossSection !== 'function') {
+            return { error: 'Export blocked: the casting-pattern scale needs FreeformLoftKernel.scaleCrossSection, which is unavailable.' };
+        }
+        try {
+            const scaled = window.FreeformLoftKernel.scaleCrossSection(state.freeformLoftActive, plugScale.factor);
+            exportState = Object.assign({}, state, { freeformLoftActive: scaled });
+        } catch (error) {
+            return { error: 'Export blocked: ' + (error && error.message ? error.message : String(error)) };
+        }
+    }
+    const result = window.FreeformRuntimeIntegration.exportFreeformMeshGeometry(THREE, exportState, {
         stationCount: 24,
         segmentCount: Math.min(64, Math.max(24, typeof getMeshSegments === 'function' ? Math.round(getMeshSegments() / 2) : 32))
     });
@@ -76,10 +106,54 @@ function getFreeformLoftExportGeometry() {
         geo.userData.source = 'freeformLoftActive';
         geo.userData.stlSource = 'freeformLoftKernel';
         geo.userData.silentFallbackDetected = false;
+        geo.userData.plugCrossSectionScale = plugScale.factor;
+        geo.userData.plugCrossSectionScalePercent = plugScale.percent;
+        geo.userData.exactOneToOne = plugScale.factor === 1;
     }
     return geo;
 }
 
+
+/**
+ * Cuts the freeform pattern into two printable halves across its length. Each half is checked for closure
+ * independently before it is handed on: a cut that left a face open would otherwise reach the STL writer
+ * as a shell that no slicer can fill.
+ */
+function getFreeformPatternSplitGeometries(sourceGeometry) {
+    if (!window.FreeformPatternSplit || typeof window.FreeformPatternSplit.splitPattern !== 'function') {
+        return { error: 'Export blocked: the pattern split needs FreeformPatternSplit, which is unavailable.' };
+    }
+    const mesh = sourceGeometry && sourceGeometry.userData ? sourceGeometry.userData.sourceMesh : null;
+    if (!mesh) return { error: 'Export blocked: the freeform export did not carry a source mesh to split.' };
+    const result = window.FreeformPatternSplit.splitPattern(mesh, {
+        axis: 'X',
+        clearanceMm: Number(state.splitClearance) || 0
+    });
+    if (!result.ok) return { error: 'Export blocked: ' + result.error };
+    const parts = {};
+    for (const [key, half] of [['partA', result.partA], ['partB', result.partB]]) {
+        const closure = window.FreeformPatternSplit.meshClosure(half);
+        if (!closure.closed) {
+            return { error: 'Export blocked: pattern split half ' + key + ' is not closed (boundary=' + closure.boundaryEdgeCount + ', nonManifold=' + closure.nonManifoldEdgeCount + ').' };
+        }
+        const positions = [];
+        half.faces.forEach(face => face.forEach(index => {
+            const vertex = half.vertices[index];
+            positions.push(vertex.x, vertex.y, vertex.z);
+        }));
+        const geometry = new THREE.BufferGeometry();
+        geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+        geometry.computeVertexNormals();
+        geometry.userData = Object.assign({}, sourceGeometry.userData || {}, {
+            patternSplitAxis: result.axis,
+            patternSplitAtMm: result.atMm,
+            patternSplitClearanceMm: result.clearanceMm,
+            patternSplitHalf: key
+        });
+        parts[key] = geometry;
+    }
+    return parts;
+}
 
 function getHeadshellSlotsExportGeometry() {
     if (!window.HeadshellSlots ||
@@ -321,8 +395,15 @@ function exportSelectedGeometry() {
             alert((freeformGeo && freeformGeo.error) ? freeformGeo.error : 'TD053F freeform export blocker: missing freeform geometry.');
             return;
         }
-        geometries.push(freeformGeo);
-        filenames.push('tonearm_td052b_freeform_loft');
+        if (exportType === 'split_pattern_length') {
+            const halves = getFreeformPatternSplitGeometries(freeformGeo);
+            if (halves.error) { alert(halves.error); return; }
+            geometries.push(halves.partA, halves.partB);
+            filenames.push('tonearm_pattern_split_A', 'tonearm_pattern_split_B');
+        } else {
+            geometries.push(freeformGeo);
+            filenames.push('tonearm_td052b_freeform_loft');
+        }
     } else {
         const val = validateExportGeometry(state.exportType, state);
         if (!val.isValid) {
@@ -352,6 +433,7 @@ function exportSelectedGeometry() {
 
     geometries.forEach((geo, index) => {
         const fname = filenames[index] + (exportFormat === 'stl_binary' ? '.stl' : '.asc.stl');
+        let lastAudit = null;
         if (typeof validateFinalExportMeshTopology === 'function') {
             const audit = validateFinalExportMeshTopology(geo, {
                 mode: fname,
@@ -361,6 +443,7 @@ function exportSelectedGeometry() {
                 alert('Export aborted: Geometry error (' + (audit && audit.errorMsg ? audit.errorMsg : 'final export mesh audit failed') + ')');
                 return;
             }
+            lastAudit = audit;
             if (geo && geo.userData) {
                 geo.userData = Object.assign({}, geo.userData || {}, audit.metrics || {});
             }
@@ -376,8 +459,8 @@ function exportSelectedGeometry() {
                     exportType,
                     geometryMode: 'freeform',
                     exportGeometrySource: 'freeformLoftKernel',
-                    isValid: !!(geo && geo.userData && geo.userData.finalBoundaryEdgeCount === 0),
-                    metrics: (geo && geo.userData) ? geo.userData : null
+                    isValid: !!(lastAudit && lastAudit.isValid),
+                    metrics: lastAudit ? lastAudit.metrics : null
                 }
                 : LAST_EXPORT_VALIDATION;
             exportOnshapeSidecarJSON(sidecarValidation, filenames[index]);
