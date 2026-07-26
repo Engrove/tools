@@ -3,6 +3,10 @@
 // Copyright (C) 2026 Engrove
 
 
+// Export variants whose geometry comes from the parametric ring cache and therefore cannot be produced
+// from a freeform/trace loft.
+const FREEFORM_UNSUPPORTED_EXPORT_TYPES = ['hollow', 'split_vertical', 'split_horizontal'];
+
 function getCobraEggshellExportGeometry() {
     if (typeof isCobraEggshellRuntimeGeometryDebugEnabled !== 'function' ||
         !isCobraEggshellRuntimeGeometryDebugEnabled(state)) {
@@ -305,6 +309,13 @@ function exportSelectedGeometry() {
     const filenames = [];
 
     if (state && state.geometryMode === 'freeform') {
+        // Hollow and split variants are derived from the parametric ring cache, which freeform/trace
+        // geometry never populates. Silently exporting a solid instead would hand the operator a plug
+        // that is not the part they asked for, so an unsupported selection is refused by name.
+        if (FREEFORM_UNSUPPORTED_EXPORT_TYPES.indexOf(exportType) >= 0) {
+            alert('Export blocked: export type "' + exportType + '" is generated from the parametric ring cache and is not available for freeform/trace geometry. Choose the solid plug export instead.');
+            return;
+        }
         const freeformGeo = getFreeformLoftExportGeometry();
         if (!freeformGeo || freeformGeo.error) {
             alert((freeformGeo && freeformGeo.error) ? freeformGeo.error : 'TD053F freeform export blocker: missing freeform geometry.');
@@ -357,7 +368,19 @@ function exportSelectedGeometry() {
         if (exportFormat === 'stl_binary') exportGeometryAsBinarySTL(geo, fname);
         else exportGeometryAsAsciiSTL(geo, fname);
         if (exportType === EXPORT_TYPES.ONSHAPE_1TO1 || exportType === 'onshape_1to1') {
-            exportOnshapeSidecarJSON(LAST_EXPORT_VALIDATION, filenames[index]);
+            // LAST_EXPORT_VALIDATION is only written by the parametric path. In freeform mode it still
+            // holds whatever a previous parametric export validated, so the sidecar would describe a
+            // different mesh than the STL beside it. Report the audit of the mesh actually written.
+            const sidecarValidation = (state && state.geometryMode === 'freeform')
+                ? {
+                    exportType,
+                    geometryMode: 'freeform',
+                    exportGeometrySource: 'freeformLoftKernel',
+                    isValid: !!(geo && geo.userData && geo.userData.finalBoundaryEdgeCount === 0),
+                    metrics: (geo && geo.userData) ? geo.userData : null
+                }
+                : LAST_EXPORT_VALIDATION;
+            exportOnshapeSidecarJSON(sidecarValidation, filenames[index]);
         }
     });
 }

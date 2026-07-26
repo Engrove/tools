@@ -9,6 +9,10 @@
     const RESPONSE_SCHEMA = 'tonearm-designer-ai-freeform-loft-response';
     const RESPONSE_VERSION = 1;
     const MODE = 'freeform_centerline_ring_loft';
+    const PLUG_COMPENSATION_SCHEMA = 'engrove-freeform-plug-compensation-v1';
+    // Millimetre-dimensioned cross-section fields. Fractions and angles describe section shape rather
+    // than size and must not scale, or the pattern would change form instead of growing.
+    const PLUG_SCALED_RING_FIELDS = Object.freeze(['widthMm', 'heightMm', 'wallThicknessMm', 'topRidgeHeightMm']);
     const APP_VERSION = 'V28.8.0-Fas20-AIResponseApplyRuntime';
 
     function finite(value, fallback) {
@@ -90,7 +94,51 @@
             features: fApi.sanitizeFeaturePatch(base.features)
         };
         if (provenance) sanitized.sourceProvenance = provenance;
+        if (base.plugCompensation && base.plugCompensation.schema === PLUG_COMPENSATION_SCHEMA) {
+            sanitized.plugCompensation = clone(base.plugCompensation);
+        }
         return sanitized;
+    }
+
+    /**
+     * Scales every ring cross-section by one factor and leaves the centerline untouched, so the pattern
+     * keeps the traced length exactly while its sections grow or shrink. This is the plug allowance for
+     * casting: a polyester mould taken off the printed pattern, and the part later laid up inside it,
+     * both shrink, so the pattern must be proportionally larger in section but the same length.
+     * Sections are checked against the ring limits and rejected rather than clamped, because a clamped
+     * section would silently change the pattern's shape on exactly the stations that hit the limit.
+     */
+    function scaleCrossSection(freeformState, factor) {
+        const scale = Number(factor);
+        if (!Number.isFinite(scale) || scale <= 0) {
+            throw new Error('Cross-section scale must be a finite positive number; received ' + String(factor) + '.');
+        }
+        const state = sanitizeState(freeformState || getCurrentFreeformState());
+        const limits = getRingsAPI().limits;
+        const scaled = clone(state);
+        scaled.rings = state.rings.map(ring => {
+            const next = clone(ring);
+            PLUG_SCALED_RING_FIELDS.forEach(field => {
+                const value = finite(ring[field], 0) * scale;
+                const limit = limits[field];
+                if (limit && value !== 0 && (value < limit.min || value > limit.max)) {
+                    throw new Error('Cross-section scale ' + scale + ' puts ' + field + ' of ring ' + ring.id + ' at ' + round(value, 4) + ' mm, outside the supported ' + limit.min + '–' + limit.max + ' mm range.');
+                }
+                next[field] = round(value, 6);
+            });
+            return next;
+        });
+        const previous = state.plugCompensation && Number.isFinite(Number(state.plugCompensation.crossSectionScale))
+            ? Number(state.plugCompensation.crossSectionScale)
+            : 1;
+        scaled.plugCompensation = {
+            schema: PLUG_COMPENSATION_SCHEMA,
+            crossSectionScale: round(previous * scale, 9),
+            lengthPreserved: true,
+            scaledFields: PLUG_SCALED_RING_FIELDS.slice(),
+            intent: 'casting_pattern_allowance'
+        };
+        return scaled;
     }
 
     function applyPreset(name) {
@@ -1030,6 +1078,7 @@
         knownGoodResponse,
         buildLoftMesh,
         buildFreeformGeometry,
+        scaleCrossSection,
         validateClosedMesh,
         createIntermediateGeometryObject
     });
