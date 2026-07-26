@@ -171,17 +171,32 @@
         let cxSigned = 0, cySigned = 0, czSigned = 0;
         let cxAbs = 0, cyAbs = 0, czAbs = 0;
 
+        // The tetrahedra are built from a reference apex. Signed volume is apex-independent for a closed
+        // surface, but the sum of absolute tetra volumes is not: with the apex at the world origin, an
+        // object that sits far from it produces huge opposing tetrahedra and a signedAbsVolumeRatio that
+        // measures distance rather than mesh consistency. A Manual Trace import puts the origin at the
+        // stylus with the arm extending away from it, which is exactly that case, so the apex is placed
+        // at the bounding-box centre and the resulting centre of mass is shifted back afterwards.
+        const apex = {
+            x: (b.minX + b.maxX) / 2,
+            y: (b.minY + b.maxY) / 2,
+            z: (b.minZ + b.maxZ) / 2
+        };
+
         faces.forEach(face => {
             const a = vertices[face[0]];
             const bb = vertices[face[1]];
             const c = vertices[face[2]];
             if (!a || !bb || !c) return;
-            const v = dot(a, cross(bb, c)) / 6;
+            const ra = sub(a, apex);
+            const rb = sub(bb, apex);
+            const rc = sub(c, apex);
+            const v = dot(ra, cross(rb, rc)) / 6;
             if (!Number.isFinite(v)) return;
             const centroid4 = {
-                x: (a.x + bb.x + c.x) / 4,
-                y: (a.y + bb.y + c.y) / 4,
-                z: (a.z + bb.z + c.z) / 4
+                x: (ra.x + rb.x + rc.x) / 4,
+                y: (ra.y + rb.y + rc.y) / 4,
+                z: (ra.z + rb.z + rc.z) / 4
             };
             signedVolume += v;
             absTetraVolume += Math.abs(v);
@@ -190,16 +205,16 @@
         });
 
         const signedCom = (Number.isFinite(signedVolume) && Math.abs(signedVolume) > 1e-9) ? {
-            x: cxSigned / signedVolume,
-            y: cySigned / signedVolume,
-            z: czSigned / signedVolume,
+            x: cxSigned / signedVolume + apex.x,
+            y: cySigned / signedVolume + apex.y,
+            z: czSigned / signedVolume + apex.z,
             method: 'signed_tetra_mesh'
         } : null;
 
         const absCom = (Number.isFinite(absTetraVolume) && absTetraVolume > 1e-9) ? {
-            x: cxAbs / absTetraVolume,
-            y: cyAbs / absTetraVolume,
-            z: czAbs / absTetraVolume,
+            x: cxAbs / absTetraVolume + apex.x,
+            y: cyAbs / absTetraVolume + apex.y,
+            z: czAbs / absTetraVolume + apex.z,
             method: 'absolute_tetra_winding_fallback'
         } : null;
 

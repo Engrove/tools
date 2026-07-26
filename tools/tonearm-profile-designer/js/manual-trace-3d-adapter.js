@@ -25,6 +25,10 @@
     const PLANES = Object.freeze(['top', 'side', 'front']);
     const AXIS_BASES = Object.freeze(['image_x', 'image_y', 'screen_z']);
     const DIMENSION_LIMITS = Object.freeze({ width: [3, 45], height: [2, 35], length: [10, 280] });
+    // Search resolution and bound for moving a degenerate end station inward, as a fraction of the
+    // common trace length. The limit keeps a recovered end within 2% of the traced extreme.
+    const END_STATION_INSET_STEP = 1e-3;
+    const END_STATION_INSET_LIMIT = 2e-2;
 
     function fail(code, message, detail) {
         const error = new Error(message);
@@ -460,45 +464,83 @@
             fail('TRACE_LENGTH_LIMIT', 'Common trace length ' + round(length, 3) + ' mm is outside ' + DIMENSION_LIMITS.length.join('–') + ' mm.');
         }
         const stations = buildStations(top, side, minX, maxX, options && options.stationCount);
-        // The station grid always contains the exact longitudinal extremes, where a closed silhouette
-        // has zero transverse extent by construction. A below-minimum section there is geometric
-        // degeneracy, not an out-of-range design, so the station is dropped and reported instead of
-        // aborting the conversion. Interior violations and any above-maximum section still fail closed.
-        const droppedEndStations = [];
-        const samples = stations.map((x, index) => {
-            const isEnd = index === 0 || index === stations.length - 1;
+        // The station grid always contains the exact longitudinal extremes, where a closed silhouette has
+        // zero transverse extent by construction. Aborting there is a false positive, and dropping the
+        // station would shorten the arm by a whole grid step, so an end station is moved inward to the
+        // nearest section that clears the minimum. Interior violations and any above-maximum section
+        // still fail closed, and the applied inset is reported rather than applied silently.
+        const endStationInsets = [];
+        const sectionAt = x => {
             const topBounds = boundsAtX(top, x);
             const sideBounds = boundsAtX(side, x);
             if (!topBounds || !sideBounds) return null;
-            const width = topBounds.max - topBounds.min;
-            const height = sideBounds.max - sideBounds.min;
+            return {
+                topBounds,
+                sideBounds,
+                width: topBounds.max - topBounds.min,
+                height: sideBounds.max - sideBounds.min
+            };
+        };
+        const withinMinimum = section => !!section
+            && section.width >= DIMENSION_LIMITS.width[0]
+            && section.height >= DIMENSION_LIMITS.height[0];
+        const resolveEndStation = (x, inward) => {
+            const step = length * END_STATION_INSET_STEP;
+            const limit = length * END_STATION_INSET_LIMIT;
+            for (let distance = step; distance <= limit + 1e-9; distance += step) {
+                const probe = x + inward * distance;
+                const section = sectionAt(probe);
+                if (withinMinimum(section)) {
+                    endStationInsets.push({ sourceXMm: round(x, 6), resolvedXMm: round(probe, 6), insetMm: round(distance, 6), reason: 'degenerate_silhouette_at_longitudinal_extreme' });
+                    return probe;
+                }
+            }
+            return null;
+        };
+        const resolved = stations.map((x, index) => {
+            const isEnd = index === 0 || index === stations.length - 1;
+            if (!isEnd || withinMinimum(sectionAt(x))) return x;
+            const probe = resolveEndStation(x, index === 0 ? 1 : -1);
+            if (probe === null) {
+                fail('TRACE_END_SECTION_DEGENERATE', 'The silhouette at X=' + round(x, 3) + ' mm stays below the minimum ' + DIMENSION_LIMITS.width[0] + ' mm width or ' + DIMENSION_LIMITS.height[0] + ' mm height for the first ' + round(length * END_STATION_INSET_LIMIT, 3) + ' mm of the trace; the traced end is too thin to loft.');
+            }
+            return probe;
+        });
+        const samples = resolved.map((x, index) => {
+            const section = sectionAt(x);
+            if (!section) return null;
+            const width = section.width;
+            const height = section.height;
             if (width > DIMENSION_LIMITS.width[1]) {
                 fail('TRACE_WIDTH_LIMIT', 'Trace width ' + round(width, 3) + ' mm at X=' + round(x, 3) + ' is outside ' + DIMENSION_LIMITS.width.join('–') + ' mm.');
             }
             if (height > DIMENSION_LIMITS.height[1]) {
                 fail('TRACE_HEIGHT_LIMIT', 'Trace height ' + round(height, 3) + ' mm at X=' + round(x, 3) + ' is outside ' + DIMENSION_LIMITS.height.join('–') + ' mm.');
             }
-            const belowWidth = width < DIMENSION_LIMITS.width[0];
-            const belowHeight = height < DIMENSION_LIMITS.height[0];
-            if ((belowWidth || belowHeight) && !isEnd) {
-                if (belowWidth) fail('TRACE_WIDTH_LIMIT', 'Trace width ' + round(width, 3) + ' mm at X=' + round(x, 3) + ' is outside ' + DIMENSION_LIMITS.width.join('–') + ' mm.');
-                fail('TRACE_HEIGHT_LIMIT', 'Trace height ' + round(height, 3) + ' mm at X=' + round(x, 3) + ' is outside ' + DIMENSION_LIMITS.height.join('–') + ' mm.');
+            if (width < DIMENSION_LIMITS.width[0]) {
+                fail('TRACE_WIDTH_LIMIT', 'Trace width ' + round(width, 3) + ' mm at X=' + round(x, 3) + ' is outside ' + DIMENSION_LIMITS.width.join('–') + ' mm.');
             }
-            if (belowWidth || belowHeight) {
-                droppedEndStations.push({ sourceXMm: round(x, 6), widthMm: round(width, 6), heightMm: round(height, 6), reason: 'degenerate_silhouette_at_longitudinal_extreme' });
-                return null;
+            if (height < DIMENSION_LIMITS.height[0]) {
+                fail('TRACE_HEIGHT_LIMIT', 'Trace height ' + round(height, 3) + ' mm at X=' + round(x, 3) + ' is outside ' + DIMENSION_LIMITS.height.join('–') + ' mm.');
             }
             return {
                 sourceX: x,
-                x: x - minX,
-                s: (x - minX) / length,
-                y: (topBounds.min + topBounds.max) / 2,
-                z: (sideBounds.min + sideBounds.max) / 2,
+                y: (section.topBounds.min + section.topBounds.max) / 2,
+                z: (section.sideBounds.min + section.sideBounds.max) / 2,
                 width,
                 height
             };
         }).filter(Boolean);
         if (samples.length < 4) fail('TRACE_STATION_COVERAGE', 'Fewer than four common top/side stations could be resolved.');
+        // The loft samples s across the full [0,1] range, so the centerline must span it. Normalizing
+        // over the retained stations keeps that true after an end inset; absolute geometry stays in x.
+        const spanMinX = samples[0].sourceX;
+        const spanLength = samples[samples.length - 1].sourceX - spanMinX;
+        if (!(spanLength > 0)) fail('TRACE_STATION_COVERAGE', 'Resolved stations do not span a positive longitudinal range.');
+        samples.forEach(sample => {
+            sample.x = sample.sourceX - spanMinX;
+            sample.s = (sample.sourceX - spanMinX) / spanLength;
+        });
         const first = samples[0];
         const last = samples[samples.length - 1];
         const centerlinePoints = samples.map((sample, index) => ({
@@ -548,8 +590,9 @@
                 sourceKind: 'engrove_manual_trace',
                 files: list.map(trace => ({ fileName: trace.fileName, packageType: trace.packageType, geometrySchema: trace.geometrySchema, plane: trace.plane, detectedPlane: trace.detectedPlane, contourCount: trace.contourCount, unitPerPixel: trace.unitPerPixel, originRole: trace.originRole })),
                 commonLongitudinalSourceRangeMm: { min: round(minX, 6), max: round(maxX, 6), translatedLength: round(length, 6) },
+                loftedLongitudinalRangeMm: { min: round(spanMinX, 6), max: round(spanMinX + spanLength, 6), loftedLength: round(spanLength, 6) },
                 stationCount: samples.length,
-                droppedEndStations: droppedEndStations,
+                endStationInsets: endStationInsets,
                 sectionAssumption: 'superellipse_2_6_from_orthographic_width_height_bounds',
                 svgRole: 'visual_pair_and_geometry_carrier_when_json_is_absent; JSON remains authoritative when paired'
             },

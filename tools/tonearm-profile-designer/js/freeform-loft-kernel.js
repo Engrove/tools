@@ -754,7 +754,12 @@
     }
 
     function frameForTangent(tangent) {
-        const t = normalizeVec(tangent || { x: 1, y: 0, z: 0 });
+        // A centerline that does not span the full s range yields a zero tangent at the clamped ends.
+        // Without this guard the frame loses normalZ, every ring on that span collapses onto a line, and
+        // the loft silently emits degenerate triangles that only surface at the export topology gate.
+        const raw = tangent || { x: 1, y: 0, z: 0 };
+        const rawLength = Math.sqrt(raw.x*raw.x + raw.y*raw.y + raw.z*raw.z);
+        const t = normalizeVec(rawLength < 1e-6 ? { x: 1, y: 0, z: 0 } : raw);
         const worldZ = { x: 0, y: 0, z: 1 };
         let nY = cross(worldZ, t);
         if (Math.sqrt(nY.x*nY.x + nY.y*nY.y + nY.z*nY.z) < 1e-6) nY = { x: 0, y: 1, z: 0 };
@@ -810,8 +815,11 @@
             const b = stations[i + 1].startIndex;
             for (let j = 0; j < segmentCount; j++) {
                 const j2 = (j + 1) % segmentCount;
-                faces.push([a + j, b + j, b + j2]);
-                faces.push([a + j, b + j2, a + j2]);
+                // Wound so the surface normal points out of the solid, consistently with the end caps.
+                // Orientation is what makes the shell a solid: the signed mesh volume, and therefore mass,
+                // COM and inertia, are only meaningful when every directed edge is traversed exactly once.
+                faces.push([a + j, b + j2, b + j]);
+                faces.push([a + j, a + j2, b + j2]);
             }
         }
 
