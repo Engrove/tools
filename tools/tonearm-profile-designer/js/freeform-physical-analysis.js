@@ -308,10 +308,15 @@
         const combined = combineCom(bodyMassG, bodyCom, featureAnalysis);
         const totalMassG = combined.massG;
         const totalCom = combined.com;
-        const pivot = { x: 237.05, y: 0, z: 0 };
+        // Pivot and effective length come from the geometry itself when the arm was imported from a
+        // Manual Trace; only a natively designed arm carries the Cobra N1-P2 invariant.
+        const armReference = root.FreeformAnalysisAdapter && typeof root.FreeformAnalysisAdapter.resolveArmReference === 'function'
+            ? root.FreeformAnalysisAdapter.resolveArmReference(state)
+            : { pivot: { x: 237.05, y: 0, z: 0 }, effectiveLengthMm: 237.05, source: 'cobra_architecture_invariant' };
+        const pivot = armReference.pivot;
         const inertiaDebug = inertiaAboutPivotWithDebug(mesh, bodyMassG, featureAnalysis, totalCom, pivot);
         const inertia = inertiaDebug.totalInertiaPivotGmm2;
-        const effectiveLengthMm = 237.05;
+        const effectiveLengthMm = armReference.effectiveLengthMm;
         const pivotInertiaVerticalGmm2 = inertia.Iyy;
         const pivotInertiaHorizontalGmm2 = inertia.Izz;
         const centerlineLen = centerlineLength(state, mesh);
@@ -372,6 +377,8 @@
             bodyMassG: round(bodyMassG, 6),
             effectiveMassVerticalG: round(resonance.effectiveMassVerticalG, 6),
             effectiveMassHorizontalG: round(resonance.effectiveMassHorizontalG, 6),
+            effectiveLengthMm: round(effectiveLengthMm, 6),
+            effectiveLengthSource: armReference.source,
             COM: totalCom,
             COG: clone(totalCom),
             totalCOM: clone(totalCom),
@@ -447,7 +454,8 @@
                 effectiveMassVerticalG: analysis.effectiveMassVerticalG,
                 effectiveMassHorizontalG: analysis.effectiveMassHorizontalG,
                 method: 'pivotInertia/effectiveLength^2 deterministic proxy',
-                effectiveLengthMm
+                effectiveLengthMm: round(effectiveLengthMm, 6),
+                effectiveLengthSource: armReference.source
             },
             resonance: {
                 verticalHz: analysis.cartridgeArmResonanceVerticalHz,

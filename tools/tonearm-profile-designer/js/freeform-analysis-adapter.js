@@ -18,6 +18,50 @@
         return Number.isFinite(n) ? n : fallback;
     }
 
+    // The Cobra/Alien-LT architecture pins stylus-to-pivot (N1-P2) to this length, so it stays the
+    // reference for natively designed arms. Trace-imported geometry describes a different physical arm,
+    // and M_eff = I/L^2 is only meaningful against that arm's own stylus-to-pivot distance.
+    const COBRA_EFFECTIVE_LENGTH_MM = 237.05;
+
+    function centerlineDatum(state, id) {
+        const points = state && state.centerline && Array.isArray(state.centerline.points) ? state.centerline.points : [];
+        for (let index = 0; index < points.length; index++) {
+            if (points[index] && points[index].id === id) return points[index];
+        }
+        return null;
+    }
+
+    /**
+     * Resolves the pivot position and effective length the inertia and effective-mass proxies are
+     * measured against. Manual Trace conversion emits the protected `stylus_front` and `pivot_reference`
+     * datums, so an imported arm carries its own length; anything else keeps the Cobra invariant.
+     */
+    function resolveArmReference(state) {
+        const provenance = (state && state.sourceProvenance) || {};
+        if (provenance.sourceKind === 'engrove_manual_trace') {
+            const stylus = centerlineDatum(state, 'stylus_front');
+            const pivotDatum = centerlineDatum(state, 'pivot_reference');
+            if (stylus && pivotDatum) {
+                const dx = finite(pivotDatum.x, 0) - finite(stylus.x, 0);
+                const dy = finite(pivotDatum.y, 0) - finite(stylus.y, 0);
+                const dz = finite(pivotDatum.z, 0) - finite(stylus.z, 0);
+                const length = Math.sqrt(dx * dx + dy * dy + dz * dz);
+                if (Number.isFinite(length) && length > 0) {
+                    return {
+                        pivot: { x: finite(pivotDatum.x, 0), y: finite(pivotDatum.y, 0), z: finite(pivotDatum.z, 0) },
+                        effectiveLengthMm: length,
+                        source: 'manual_trace_centerline_datums'
+                    };
+                }
+            }
+        }
+        return {
+            pivot: { x: COBRA_EFFECTIVE_LENGTH_MM, y: 0, z: 0 },
+            effectiveLengthMm: COBRA_EFFECTIVE_LENGTH_MM,
+            source: 'cobra_architecture_invariant'
+        };
+    }
+
     function round(value, digits) {
         const f = Math.pow(10, digits || 6);
         return Math.round(Number(value) * f) / f;
@@ -326,7 +370,8 @@
         const totalMassG = bodyMassG + massParts.accessoryTotalG;
         const com = solid.com;
         const inertia = inertiaProxy(mesh, Math.max(totalMassG, 0.001), com);
-        const effectiveLengthMm = 237.05;
+        const armReference = resolveArmReference(state);
+        const effectiveLengthMm = armReference.effectiveLengthMm;
         const effectiveMassProxyG = inertia.iyyGmm2 > 0 ? inertia.iyyGmm2 / (effectiveLengthMm * effectiveLengthMm) : totalMassG * 0.55;
         const compliance = finite(state.analysisTargets && state.analysisTargets.compliance10Hz, 12);
         const resonance = estimateResonance(effectiveMassProxyG, compliance);
@@ -385,7 +430,8 @@
             effectiveMassProxy: {
                 effectiveMassG: round(effectiveMassProxyG, 6),
                 method: 'Iyy/effectiveLength^2 proxy',
-                effectiveLengthMm
+                effectiveLengthMm: round(effectiveLengthMm, 6),
+                effectiveLengthSource: armReference.source
             },
             resonance: {
                 verticalHz: round(resonance, 6),
@@ -446,7 +492,9 @@
     }
 
     root.FreeformAnalysisAdapter = Object.freeze({
+        COBRA_EFFECTIVE_LENGTH_MM,
         makeAdapterInput,
+        resolveArmReference,
         triangleMeshVolumeAndCOM,
         areaWeightedCentroid,
         inertiaProxy,

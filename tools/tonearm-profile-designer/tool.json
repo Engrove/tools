@@ -23,6 +23,7 @@
   "capabilities": [
     "Start with an empty workspace and create geometry only after an explicit import, session open or new-parametric action.",
     "Import multiple Engrove Manual Trace JSON, .engrove-trace, .engrove-project and paired SVG files with per-file plane classification and provenance.",
+    "Import a contract-validated multi-view .engrove-trace-project package whose declared view types and engineering axes drive plane assignment directly.",
     "Construct a deterministic Freeform centerline-and-ring loft from calibrated orthographic top and side silhouette bounds and Manual Trace station data.",
     "Preserve TD053F parametric Cobra and classic geometry controls, Freeform AI workbench, cartridge picker, solver, LT mechanism preview and physical analysis.",
     "Save and reopen complete sessions and export STL, Onshape sidecar JSON, 3D PNG, AI Vibe JSON and technical Markdown reports.",
@@ -79,7 +80,7 @@
   },
   "faq": [
     {"question": "Why does the tool open with an empty viewport?", "answer": "A new session intentionally has no active design. Import calibrated Manual Trace files, open a saved session, or explicitly create a parametric design."},
-    {"question": "Which Manual Trace files can I import?", "answer": "The importer accepts Engrove Manual Trace JSON exports, resumable .engrove-trace or .engrove-project packages, and paired SVG exports containing the Engrove trace binding metadata."},
+    {"question": "Which Manual Trace files can I import?", "answer": "The importer accepts Engrove Manual Trace JSON exports, resumable .engrove-trace or .engrove-project packages, contract-validated multi-view .engrove-trace-project packages, and paired SVG exports containing the Engrove trace binding metadata."},
     {"question": "What is required to create a trace-derived 3D model?", "answer": "Provide calibrated top and side views with finite millimetre scale, an engineering origin, non-ambiguous axes and usable silhouette contours. The importer blocks incomplete geometry instead of guessing silently."},
     {"question": "Does the imported model exactly reproduce every 3D surface?", "answer": "No. Orthographic silhouettes determine longitudinal center, width and height at sampled stations. Cross-section family and interpolation between views remain explicit deterministic assumptions."}
   ],

@@ -367,6 +367,7 @@
         <li>A finite positive millimetre scale, an engineering origin, unique axis mappings and usable contour geometry in each file.</li>
     </ul>
     <p>The importer accepts Manual Trace JSON, <code>.engrove-trace</code>, <code>.engrove-project</code> and paired SVG exports. Plane classification is read from <code>trace_frame.axes</code>; use the per-file selector only when correcting an older artifact with stale/default axes.</p>
+    <p>A multi-view <code>.engrove-trace-project</code> package is imported as a single file. It carries its own view types and engineering axes, so plane assignment comes from the package contract and the per-file selector stays locked; a view whose declared type contradicts its declared axes is rejected rather than reinterpreted.</p>
     <p>JSON coordinates are authoritative. SVG is parsed as inert XML and contributes only supported geometry plus the Engrove binding metadata. External references and active SVG content are rejected.</p>
     <h3>How the loft is derived</h3>
     <p>Manual Trace stations are reused when present; otherwise a deterministic station grid is sampled across the common top/side X range. Top-view intersections define center Y and width. Side-view intersections define center Z and height. The remaining cross-section surface uses a declared superellipse assumption because two silhouettes cannot uniquely determine a complete 3D body.</p>
