@@ -14,11 +14,11 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const unavailable = new Set([
-  'fas18_ai_vibe_3d_manufacturing_acceptance.js',
-  'td051b_schema_reference_cleanup_acceptance.js',
-  'td052_freeform_schema_acceptance.js'
-]);
+// No harness is skipped. The two schema acceptances need a real Draft 2020-12 validator, which they
+// deliberately take from Python's jsonschema rather than adding an npm dependency, and the manufacturing
+// acceptance now reads a repository-owned session fixture. Both prerequisites are provided by the
+// environment and by CI, so an unavailable harness is a failure to fix rather than a status to record.
+const unavailable = new Set();
 const tests = [
   path.join('test', 'manual-trace-adapter.test.cjs'),
   path.join('test', 'manual-trace-freeform-integration.test.cjs'),
@@ -48,11 +48,7 @@ const summary = {
   executed: tests.length,
   passed: tests.length - failed.length,
   failed: failed.length,
-  unavailable: [
-    { test: 'tools/fas18_ai_vibe_3d_manufacturing_acceptance.js', reason: 'Upstream ZIP omits tonearm_session_2026-07-05T18-53-03.json required by the harness.' },
-    { test: 'tools/td051b_schema_reference_cleanup_acceptance.js', reason: 'Harness requires the external Python jsonschema package; equivalent runtime-schema guards remain in the portable suite.' },
-    { test: 'tools/td052_freeform_schema_acceptance.js', reason: 'Harness requires the external Python jsonschema package; equivalent runtime-schema guards remain in the portable suite.' }
-  ],
+  unavailable: [...unavailable].sort().map(name => ({ test: path.join('tools', name), reason: 'Declared unavailable by the runner.' })),
   failures: failed
 };
 console.log(JSON.stringify(summary, null, 2));

@@ -79,7 +79,21 @@ npm run check:determinism
 npm run check:sanitation
 ```
 
-The upstream ZIP contains 70 Node acceptance harnesses. Three are classified `NOT_AVAILABLE` in this environment: two require the external Python `jsonschema` package and one references a session fixture omitted from the ZIP. They are retained in `tools/` for provenance. All remaining portable upstream harnesses plus port-specific empty-session and Manual Trace conversion regressions are run by `npm test`.
+The upstream ZIP contains 70 Node acceptance harnesses. All of them run: `npm test` executes every harness
+in `tools/` plus the port-specific regressions in `test/`, and reports no unavailable entries.
+
+Two of the harnesses validate the AI response schema with a real JSON Schema Draft 2020-12 implementation.
+They deliberately take it from Python's `jsonschema` rather than adding an npm dependency, and they treat
+its absence as a blocker rather than a skip, so the test environment needs it:
+
+```bash
+python3 -m pip install jsonschema
+```
+
+The manufacturing acceptance originally read `tonearm_session_2026-07-05T18-53-03.json`, which the supplied
+ZIP omitted. It now reads `tools/fixtures/fas18_manufacturing_session.json`, a repository-owned session
+collected from the application's own `Session.collect()` on the default parametric design; only the
+`inputs`, `selects` and `checkboxes` blocks are consumed, which is what the original supplied.
 
 `npm ci` is intentionally dependency-free. The local Three.js vendor files are byte-verified against the reviewed `three@0.128.0` package during the port and are covered by the repository sanitation and asset-size gates.
 

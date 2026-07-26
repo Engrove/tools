@@ -23,6 +23,7 @@ on:
       - 'tools/tonearm-profile-designer/index.html'
       - 'tools/tonearm-profile-designer/scripts/**'
       - 'tools/tonearm-profile-designer/test/**'
+      - 'tools/tonearm-profile-designer/tools/**'
       - '.github/workflows/manual-trace-project-package-contract.yml'
 
 permissions:
@@ -88,6 +89,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22.16.0'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Schema acceptance validator
+        run: python -m pip install --disable-pip-version-check jsonschema
       - name: Tonearm package import syntax
         run: |
           node --check tools/tonearm-profile-designer/js/trace-project-package-reader.js
@@ -132,6 +138,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22.16.0'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Schema acceptance validator
+        run: python -m pip install --disable-pip-version-check jsonschema
       - name: Manual Trace regression
         run: node --test test/manual-trace-snap-policy.test.mjs
       - name: Clean generated output

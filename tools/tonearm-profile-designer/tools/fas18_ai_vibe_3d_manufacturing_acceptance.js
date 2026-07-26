@@ -39,7 +39,10 @@ class BufferGeometry {
   toNonIndexed() { if (!this.index) return this.clone(); const pos=this.getAttribute('position').array; const out=[]; for (const idx of this.index.array) out.push(pos[idx*3],pos[idx*3+1],pos[idx*3+2]); const g=new BufferGeometry(); g.setAttribute('position', new Float32BufferAttribute(out,3)); g.groups=this.groups.map(x=>Object.assign({},x)); g.userData=Object.assign({},this.userData); return g; }
 }
 const THREE = { Vector3, BufferGeometry, BufferAttribute, Float32BufferAttribute };
-const session = JSON.parse(fs.readFileSync(path.join(ROOT, '..', '..', 'tonearm_session_2026-07-05T18-53-03.json'), 'utf8'));
+// The supplied TD053F ZIP omitted tonearm_session_2026-07-05T18-53-03.json, so this harness reads a
+// repository-owned equivalent collected from the application's own Session.collect() on the default
+// parametric design. Only inputs/selects/checkboxes are consumed, which is what the original supplied.
+const session = JSON.parse(fs.readFileSync(path.join(ROOT, 'tools', 'fixtures', 'fas18_manufacturing_session.json'), 'utf8'));
 let code = '';
 ['js/config.js','js/math.js','js/geometry.js','js/ai-vibe-3d.js'].forEach(rel => { code += fs.readFileSync(path.join(ROOT, rel), 'utf8') + '\n'; });
 code += `
